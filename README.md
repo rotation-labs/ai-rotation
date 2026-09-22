@@ -15,15 +15,18 @@ GitHub Actions (weekdays 21:30 UTC)
 All RRG math (baskets, RS-Ratio, RS-Momentum, quadrants) runs in the viewer's browser, so the page needs no server.
 If a fetch fails (Yahoo rate limit, a benchmark missing, or more than 10% of tickers missing) the job stops and the previous version stays live.
 
-## One-time setup (about 5 minutes)
+## Deployment
 
-1. Create a new **public** repository on GitHub (e.g. `ai-rotation`). GitHub Pages on a free account requires a public repo.
-2. Upload the contents of this folder to it: on the repo page choose **Add file → Upload files**, drag everything in (including the hidden `.github` folder), and commit to `main`.
-   From a terminal instead: `git init && git add . && git commit -m "init" && git branch -M main && git remote add origin https://github.com/<you>/ai-rotation.git && git push -u origin main`
-3. In the repo go to **Settings → Pages** and set **Source** to **GitHub Actions**.
-4. Go to the **Actions** tab, open **Update AI Rotation Graph**, and click **Run workflow**. After roughly 2 minutes the site is live at `https://<you>.github.io/ai-rotation/` (the link also appears on the finished run).
+The site is deployed from this repository to GitHub Pages at
+**https://rotation-labs.github.io/ai-rotation/**
 
-From then on it refreshes automatically Monday to Friday. Scheduled runs can start a few minutes late when GitHub is busy.
+Pages is configured with **Settings → Pages → Source: GitHub Actions**. The
+`Update AI Rotation Graph` workflow builds and deploys on three triggers: the
+weekday cron, any push to `main`, and the manual **Run workflow** button.
+
+To stand this up somewhere else: create a public repo, push these files
+(including the hidden `.github` folder), set Pages source to GitHub Actions,
+then run the workflow once from the Actions tab.
 
 ## Everyday changes
 
