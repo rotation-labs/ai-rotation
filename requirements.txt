@@ -1,2 +1,6 @@
-yfinance>=0.2.54
-pandas>=2.2
+# Pinned to the versions the pipeline was verified against. yfinance changes
+# the shape of its return values across releases and fetch.py depends on
+# yf.download(...)["Close"]; an unpinned floor lets CI pick up a breaking
+# release silently. Bump deliberately and re-run scripts/fetch.py locally.
+yfinance==1.7.0
+pandas==3.0.6
