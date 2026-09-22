@@ -1,0 +1,324 @@
+{
+  "benchmarks": [
+    "SPY",
+    "QQQ",
+    "RSP",
+    "SMH",
+    "SOXX"
+  ],
+  "foreign_listings": {
+    "HYNIX": "000660.KS",
+    "SAMSUNG": "005930.KS",
+    "NANYA": "2408.TW",
+    "KIOXIA": "285A.T",
+    "PHISON": "8299.TWO",
+    "ALCHIP": "3661.TW",
+    "GUC": "3443.TW",
+    "MEDIATEK": "2454.TW",
+    "INNOLIGHT": "300308.SZ",
+    "EOPTOLINK": "300502.SZ",
+    "LASERTEC": "6920.T",
+    "TOKYOELEC": "8035.T",
+    "ASMI": "ASM.AS",
+    "SHINETSU": "4063.T",
+    "SUMCO": "3436.T",
+    "BESI": "BESI.AS",
+    "HANMI": "042700.KS",
+    "DISCO": "6146.T",
+    "IBIDEN": "4062.T",
+    "UNIMICRON": "3037.TW",
+    "ADVANTEST": "6857.T",
+    "INFINEON": "IFX.DE",
+    "WIWYNN": "6669.TW",
+    "QUANTA": "2382.TW",
+    "FOXCONN": "2317.TW",
+    "SIEMENSEN": "ENR.DE",
+    "MHI": "7011.T"
+  },
+  "groups": {
+    "semis": {
+      "Compute": {
+        "GPU / Accel": [
+          "NVDA",
+          "AMD"
+        ],
+        "CPU": [
+          "ARM",
+          "INTC",
+          "AMD"
+        ],
+        "Custom ASIC": [
+          "AVGO",
+          "MRVL"
+        ],
+        "ASIC Design Svcs": [
+          "ALCHIP",
+          "GUC",
+          "MEDIATEK"
+        ],
+        "Edge AI & FPGA": [
+          "AMBA",
+          "LSCC",
+          "SYNA",
+          "CEVA"
+        ]
+      },
+      "Memory & Storage": {
+        "DRAM / HBM": [
+          "MU",
+          "HYNIX",
+          "SAMSUNG",
+          "NANYA"
+        ],
+        "NAND": [
+          "SNDK",
+          "KIOXIA"
+        ],
+        "Controllers & Interface": [
+          "RMBS",
+          "SIMO",
+          "PHISON"
+        ],
+        "HDD": [
+          "WDC",
+          "STX"
+        ]
+      },
+      "Networking": {
+        "Copper / Scale-up": [
+          "ALAB",
+          "CRDO"
+        ],
+        "Optical DSP / SiPh": [
+          "MRVL",
+          "AVGO",
+          "TSEM",
+          "POET"
+        ],
+        "Optical Modules": [
+          "FN",
+          "AAOI",
+          "INNOLIGHT",
+          "EOPTOLINK",
+          "SMTC"
+        ],
+        "Lasers & InP": [
+          "LITE",
+          "COHR",
+          "AXTI"
+        ],
+        "Timing & Mixed-signal": [
+          "SITM",
+          "SLAB",
+          "MXL"
+        ]
+      },
+      "Fab & Equipment": {
+        "Foundry": [
+          "TSM",
+          "GFS",
+          "UMC",
+          "TSEM"
+        ],
+        "Litho & Mask": [
+          "ASML",
+          "LASERTEC"
+        ],
+        "Dep & Etch": [
+          "AMAT",
+          "LRCX",
+          "TOKYOELEC",
+          "ASMI"
+        ],
+        "Process Control": [
+          "KLAC",
+          "ONTO",
+          "NVMI",
+          "CAMT"
+        ],
+        "Semicap Subsystems": [
+          "MKSI",
+          "AEIS",
+          "UCTT",
+          "ICHR"
+        ],
+        "Materials & Wafers": [
+          "ENTG",
+          "SHINETSU",
+          "SUMCO"
+        ]
+      },
+      "Packaging & Test": {
+        "OSAT": [
+          "AMKR",
+          "ASX"
+        ],
+        "Pkg Equip / HBM": [
+          "BESI",
+          "KLIC",
+          "HANMI",
+          "DISCO"
+        ],
+        "Substrates & PCB": [
+          "IBIDEN",
+          "UNIMICRON",
+          "TTMI"
+        ],
+        "ATE": [
+          "TER",
+          "ADVANTEST",
+          "COHU"
+        ],
+        "Optical Test": [
+          "AEHR",
+          "FORM",
+          "VIAV",
+          "KEYS"
+        ],
+        "EDA": [
+          "SNPS",
+          "CDNS"
+        ]
+      },
+      "Power & Analog": {
+        "DC Power / VRM": [
+          "MPWR",
+          "VICR",
+          "INFINEON"
+        ],
+        "GaN / SiC": [
+          "NVTS",
+          "POWI",
+          "WOLF",
+          "AOSL"
+        ],
+        "Analog": [
+          "TXN",
+          "ADI"
+        ],
+        "Auto & MCU": [
+          "NXPI",
+          "MCHP",
+          "ON",
+          "STM"
+        ],
+        "Mobile & RF": [
+          "QCOM",
+          "SWKS",
+          "QRVO"
+        ]
+      }
+    },
+    "ecosystem": {
+      "Compute & Cloud": {
+        "Semis": [
+          "SMH"
+        ],
+        "Hyperscalers": [
+          "MSFT",
+          "GOOGL",
+          "AMZN",
+          "META",
+          "ORCL"
+        ],
+        "Neoclouds": [
+          "CRWV",
+          "NBIS"
+        ],
+        "Miners → HPC": [
+          "IREN",
+          "CIFR",
+          "WULF",
+          "APLD",
+          "CORZ"
+        ]
+      },
+      "Hardware": {
+        "OEM Servers": [
+          "DELL",
+          "SMCI",
+          "HPE"
+        ],
+        "ODMs": [
+          "WIWYNN",
+          "QUANTA",
+          "FOXCONN",
+          "CLS"
+        ],
+        "DC Networking": [
+          "ANET",
+          "CSCO"
+        ],
+        "Optical Systems": [
+          "CIEN",
+          "NOK"
+        ],
+        "Connectors & Fiber": [
+          "APH",
+          "GLW",
+          "TEL"
+        ]
+      },
+      "Power": {
+        "IPPs": [
+          "VST",
+          "CEG",
+          "TLN",
+          "NRG"
+        ],
+        "Nuclear & Fuel": [
+          "CCJ",
+          "OKLO",
+          "SMR",
+          "BWXT",
+          "LEU"
+        ],
+        "Turbines & Onsite": [
+          "GEV",
+          "SIEMENSEN",
+          "MHI",
+          "BE"
+        ],
+        "Grid Equipment": [
+          "ETN",
+          "HUBB",
+          "POWL"
+        ],
+        "Thermal": [
+          "VRT",
+          "MOD",
+          "NVT",
+          "TT"
+        ]
+      },
+      "Build & Host": {
+        "DC Construction": [
+          "PWR",
+          "EME",
+          "FIX",
+          "STRL",
+          "MTZ"
+        ],
+        "DC REITs": [
+          "EQIX",
+          "DLR"
+        ]
+      },
+      "Software": {
+        "Data Infra": [
+          "SNOW",
+          "DDOG",
+          "MDB"
+        ],
+        "AI Apps": [
+          "PLTR",
+          "NOW",
+          "CRM"
+        ],
+        "Software ETF": [
+          "IGV"
+        ]
+      }
+    }
+  }
+}

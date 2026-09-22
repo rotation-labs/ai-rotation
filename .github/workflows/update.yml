@@ -1,0 +1,47 @@
+name: Update AI Rotation Graph
+
+on:
+  schedule:
+    # 21:30 UTC Mon-Fri = 5:30pm New York in summer, 4:30pm in winter (after the US close)
+    - cron: "30 21 * * 1-5"
+  workflow_dispatch: {}      # "Run workflow" button for manual refreshes
+  push:
+    branches: [main]         # rebuild whenever you edit baskets or the template
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Fetch prices
+        run: python scripts/fetch.py
+      - name: Build page
+        run: python scripts/build.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
