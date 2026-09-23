@@ -189,7 +189,7 @@ svg .dimmed{opacity:.1}
       <p><b>What it measures.</b> Relative price performance. It says which groups are outperforming or losing momentum against a benchmark, not how much money is flowing into them; there are no flow, volume or positioning data here. This is an RRG-style chart that approximates the JdK Relative Rotation Graph (RRG and Relative Rotation Graph are registered marks of RRG Research); levels differ from StockCharts, but quadrants and rotation behave the same way.</p>
       <p><b>Baskets.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded: a portfolio rebalanced to equal weight every bar, not buy-and-hold, and not a tradable index. A subsector equal-weights its stocks; a layer or tier equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed twice in one layer counts once. Equal weight shows breadth; a cap-weighted basket would mostly show its largest member.</p>
       <p><b>Formulae.</b> RS = price ÷ benchmark. RS-Ratio = 100 × EMA(3) of RS ÷ its moving average over the horizon (10 weeks on the 10-week horizon, 21 sessions on the 1-month one). RS-Momentum = EMA(3) of the one-bar change in RS-Ratio. The two horizons answer different questions and can disagree.</p>
-      <p><b>Replay.</b> Replay shows today's baskets through past prices, not the baskets as they would have been defined at the time; the <em>trading on this date</em> count shows how many members existed then. Deliberate membership changes recorded in the configuration are applied historically from the date they were made.</p>
+      <p><b>Replay.</b> Replay shows today's baskets through past prices, not the baskets as they would have been defined at the time; the <em>trading on this date</em> count shows how many members existed then. Deliberate membership changes recorded in the configuration are applied historically from the date they were made (<span id="mbn"></span>).</p>
     </details>
     <details>
       <summary>Data &amp; sources</summary>
@@ -281,10 +281,44 @@ function combine(arrs){
   return out;
 }
 const SC={};
+// ---- Membership changelog ----
+// Each entry: in this basket (and every level above it) the ticker counts only within
+// [from, until). Adding, removing and moving a name are all entries. With none - the default -
+// every current member counts across all history, and replay says it is showing today's roster.
+const ENTRIES=((D.membership||{}).entries||[]).filter(e=>e&&e.ticker&&e.basket);
+const bpath=b=>b.kind==='sub'?`${b.parent.label} / ${b.label}`:b.label;
+function leaves(n){          // the baskets that hold tickers directly under a node
+  if(n.kind==='sub')return [n];
+  if(n.kind==='family')return n.members?[n]:n.children.filter(c=>c.kind==='sub');
+  if(n.kind==='domain')return n.children.flatMap(leaves);
+  if(n.kind==='stack')return root.children.flatMap(leaves);
+  return [];
+}
+function windows(n){         // ticker -> the [from, until) windows it counts in, under node n
+  if(n._w)return n._w;
+  const W=new Map(),add=(t,w)=>{if(!W.has(t))W.set(t,[]);W.get(t).push(w);};
+  const ls=leaves(n),paths=new Set(ls.map(bpath));
+  for(const b of ls)for(const t of b.members||[]){
+    const e=ENTRIES.find(x=>x.ticker===t&&x.basket===bpath(b));
+    add(t,e?[e.from||null,e.until||null]:[null,null]);}
+  for(const e of ENTRIES)
+    if(paths.has(e.basket)&&!ls.some(b=>bpath(b)===e.basket&&(b.members||[]).includes(e.ticker)))add(e.ticker,[e.from||null,e.until||null]);
+  return n._w=W;
+}
+const inW=(ws,d)=>ws.some(([f,u])=>(!f||d>=f)&&(!u||d<u));
+const MASK={};
+function wpx(t,ws){          // a ticker's prices, blanked outside its membership windows
+  const s=D.px[t];if(!s)return null;
+  if(ws.some(([f,u])=>!f&&!u))return s;
+  const k=t+'|'+JSON.stringify(ws);
+  return MASK[k]||(MASK[k]=s.map((v,i)=>inW(ws,D.dates[i])?v:null));
+}
 function series(n){
   if(SC[n.id])return SC[n.id];
   let r;
-  if(n.kind==='stock')r=D.px[n.ticker];
+  if(ENTRIES.length&&(n.kind==='sub'||n.kind==='family'||n.kind==='domain'))
+    r=combine([...windows(n)].map(([t,ws])=>wpx(t,ws)).filter(Boolean));
+  else if(n.kind==='stock')r=D.px[n.ticker];
   else if(n.kind==='sub')r=n.members.length===1?D.px[n.members[0]]:combine(n.members.map(t=>D.px[t]));
   else if(n.kind==='family'){
     // Equal-weight the layer's unique constituents, not its subsectors. Weighting
@@ -497,8 +531,10 @@ function render(fast,withList){
   // the basket was smaller then, so say so.
   {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='domain'?deep(cur)
      :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='sectors'?cur.children.map(c=>c.ticker):null;
-   if(ts&&ts.length){const live=ts.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length;
-     ROSTER=live<ts.length?{live,total:ts.length}:null;}else ROSTER=null;}
+   let as=ts;
+   if(ENTRIES.length&&ts&&cur.kind!=='sectors'){const d=D.dates[idx[end]];as=[...windows(cur)].filter(([,ws])=>inW(ws,d)).map(([x])=>x);}
+   if(as&&as.length){const live=as.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length,ts2=as;
+     ROSTER=live<ts2.length?{live,total:ts2.length}:null;}else ROSTER=null;}
   $('prov').hidden=!PROV;
   ROWS=[];
   for(const c of kids(cur)){
@@ -741,16 +777,19 @@ function changes(vis){
 {const at={};for(const f of root.children)for(const t of uniq(f))(at[t]=at[t]||[]).push(f.label);
  const multi=Object.entries(at).filter(([,v])=>v.length>1).sort();
  $('multi').textContent=multi.length?`${multi.map(([k,v])=>`${k} (${v.join(', ')})`).join(', ')} each appear in two layers and count toward each; within a layer a name listed in two subsectors counts once.`:'';}
+$('mbn').textContent=ENTRIES.length?`${ENTRIES.length} recorded`:'none recorded yet';
 // Built from the data so a newly added foreign listing can never be missing from it.
 $('gloss').textContent=Object.entries(D.names||{}).filter(([k])=>D.px[k]).map(([k,v])=>`${k} ${v}`).join(' · ');
 const tk=t=>{const c=D.names&&D.names[t];return c?`<span title="${c}" style="text-decoration:underline dotted;text-underline-offset:3px">${t}</span>`:t;};
+// Members as of the replayed date once changes are recorded; otherwise today's roster.
+const asOf=nd=>ENTRIES.length&&VIEW?[...windows(nd)].filter(([,ws])=>inW(ws,D.dates[VIEW.idx[VIEW.end]])).map(([t])=>t):(nd.members||uniq(nd));
 function members(cur){
   const m=$('members');
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
   if(cur.kind==='sectors'){m.innerHTML=`The eleven SPDR sector ETFs, each measured against ${st.bench==='auto'?'SPY':st.bench}: `+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ')+rost;return;}
-  if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.map(tk).join(', ')}.`+rost;return;}
-  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.map(tk).join(', ')}.`+rost;
-  else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.map(tk).join(' ')}`).join(' · ')+rost;
+  if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${asOf(cur).map(tk).join(', ')}.`+rost;return;}
+  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${asOf(cur).map(tk).join(', ')}.`+rost;
+  else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${asOf(s).map(tk).join(' ')}`).join(' · ')+rost;
   else m.innerHTML=`Each ${cur.kind==='stack'&&!st.layers?'tier':'layer'} equal-weights its distinct stocks. `+kids(cur).map(f=>`<b>${f.label}</b> ${(f.kind==='domain'?deep(f):uniq(f)).length}`).join(' · ')+rost;
 }
 function focus(){
@@ -822,7 +861,7 @@ function loadHistory(){
     const ix=st.frame==='W'?weekIdx:dayIdx,keep=st.end!=null?D.dates[ix[st.end]]:null;
     D.dates=h.dates;for(const k in h.px)D.px[k]=h.px[k];
     N=D.dates.length;weekIdx=buildWeekIdx();dayIdx=[...Array(N).keys()];
-    for(const c of [SC,RC])for(const k in c)delete c[k];
+    for(const c of [SC,RC,MASK])for(const k in c)delete c[k];
     if(keep&&st.endLegacy==null){st.endDate=keep;st.end=null;}
     render();return true;
   }).catch(()=>{HIST=null;render();return null;});   // offline or file://: stay on the recent window

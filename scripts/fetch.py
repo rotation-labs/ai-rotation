@@ -153,9 +153,9 @@ def main():
     groups = CFG["groups"]
     foreign = CFG["foreign_listings"]
     changes = {k: v for k, v in CFG.get("membership_changes", {}).items() if not k.startswith("_")}
-    removed = [r["ticker"] for r in changes.get("removed", [])]
+    historical = [e["ticker"] for e in changes.get("entries", [])]   # may no longer be in groups
     names = sorted(set(CFG["benchmarks"]) | set(CFG.get("sectors", {}))
-                   | set(tickers(groups)) | set(removed))
+                   | set(tickers(groups)) | set(historical))
     sym = {n: foreign.get(n, n) for n in names}
     fx_syms = sorted({FX[k][0] for k in FX if any(s.endswith(k) for s in sym.values())})
 

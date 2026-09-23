@@ -986,8 +986,7 @@
     "Precision Diagnostics": "XBI"
   },
   "membership_changes": {
-    "_doc": "Record deliberate thematic changes so replay shows a basket as it was. 'added' excludes a name before its date; 'removed' keeps a name in its old basket (by 'Layer' or 'Layer / Subsector') for [from, until). Renames and classification fixes are not changes in membership - don't record them.",
-    "added": {},
-    "removed": []
+    "_doc": "Each entry says: in this basket (and every level above it), this ticker counts only within [from, until). Adding a name on a date: {ticker, basket, from}. Removing one: {ticker, basket, until} (keep the entry after deleting the name from 'groups', so replay still shows it before that date). Moving one: an 'until' entry for the old basket and a 'from' entry for the new. basket is 'Layer / Subsector', or just 'Layer' for a layer that lists stocks directly. Do not record renames or classification fixes: those correct today's definition rather than change history.",
+    "entries": []
   }
 }
