@@ -9,7 +9,7 @@
   color-scheme:dark;
   --ground:#0d0e10; --panel:#131519; --raised:#1a1d22; --hover:#1f2329;
   --line:#22262c; --line2:#2d3239;
-  --text:#e6e8eb; --muted:#8b919a; --faint:#798092;
+  --text:#e6e8eb; --muted:#8b919a; --faint:#838aa2;
   --lead:#6cc28a; --imp:#7ea5e2; --weak:#e2b25c; --lag:#e2746b;
   --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"Geist Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -20,7 +20,7 @@
     color-scheme:light;
     --ground:#f6f7f9; --panel:#fff; --raised:#eef1f4; --hover:#e5e9ee;
     --line:#e1e5ea; --line2:#c8cfd7;
-    --text:#14171a; --muted:#59616b; --faint:#6c7075;
+    --text:#14171a; --muted:#59616b; --faint:#64686d;
     --lead:#297e4e; --imp:#3568ad; --weak:#8e691c; --lag:#bd4438;
     --shadow:rgba(16,20,26,.16);
   }
@@ -197,7 +197,7 @@ svg .dimmed{opacity:.1}
 
   <nav id="nav" aria-label="Baskets"></nav>
 
-  <div class="chartwrap">
+  <main class="chartwrap" aria-label="Rotation chart">
     <div class="cmp" id="cmp" hidden>
       <div class="cmph"><b>Compare</b><span>A relative to B, each equal-weighted; the line rises when A outperforms</span><button type="button" id="cmpx" class="cmpx" aria-label="Close compare">✕</button></div>
       <div class="cmpsides">
@@ -213,11 +213,11 @@ svg .dimmed{opacity:.1}
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
     <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0" step="any"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="play">▶ Play</button><button type="button" id="latest">Latest</button></div>
-  </div>
+  </main>
 
   <aside id="list" aria-label="Quadrants"></aside>
 
-  <div class="notes">
+  <section class="notes" aria-label="Basket details and help">
     <div class="members" id="members"></div>
     <details>
       <summary>How to read this</summary>
@@ -244,7 +244,7 @@ svg .dimmed{opacity:.1}
       <p><span id="gloss"></span></p>
     </details>
     <p class="foot" id="foot"></p>
-  </div>
+  </section>
 </div>
 
 <script id="data" type="application/json">__DATA__</script>
