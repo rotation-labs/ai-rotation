@@ -669,6 +669,7 @@
     "BKNG": "Booking Holdings",
     "BOTZ": "Global X Robotics & AI ETF",
     "BRKR": "Bruker",
+    "BTC": "Bitcoin in USD (BTC-USD)",
     "BWXT": "BWX Technologies",
     "CAMT": "Camtek",
     "CAT": "Caterpillar",
@@ -683,6 +684,7 @@
     "CHKP": "Check Point Software",
     "CIEN": "Ciena",
     "CIFR": "Cipher Digital",
+    "CL": "WTI crude oil futures (CL=F)",
     "CLS": "Celestica",
     "CMI": "Cummins",
     "COHR": "Coherent",
@@ -707,6 +709,7 @@
     "DOOSANROBO": "Doosan Robotics",
     "DT": "Dynatrace",
     "DUOL": "Duolingo",
+    "DXY": "US Dollar Index (DX-Y.NYB)",
     "DY": "Dycom Industries",
     "EBAY": "eBay",
     "EMC": "Elite Material",
@@ -715,6 +718,7 @@
     "EOPTOLINK": "Eoptolink",
     "EQIX": "Equinix",
     "EQT": "EQT",
+    "ES": "S&P 500 E-mini futures (ES=F)",
     "ESTC": "Elastic",
     "ETN": "Eaton",
     "ETR": "Entergy",
@@ -729,6 +733,7 @@
     "FROG": "JFrog",
     "FSLY": "Fastly",
     "FTNT": "Fortinet",
+    "GC": "Gold futures (GC=F)",
     "GENB": "Generate Biomedicines",
     "GEV": "GE Vernova",
     "GFS": "GlobalFoundries",
@@ -742,6 +747,7 @@
     "HANMI": "Hanmi Semiconductor",
     "HARMONIC": "Harmonic Drive Systems",
     "HDHYUNDAIELEC": "HD Hyundai Electric",
+    "HG": "Copper futures (HG=F)",
     "HITACHI": "Hitachi",
     "HPE": "Hewlett Packard Enterprise",
     "HSAI": "Hesai",
@@ -807,6 +813,7 @@
     "NFLX": "Netflix",
     "NOK": "Nokia",
     "NOW": "ServiceNow",
+    "NQ": "Nasdaq-100 E-mini futures (NQ=F)",
     "NRG": "NRG Energy",
     "NTAP": "NetApp",
     "NTRA": "Natera",
@@ -853,6 +860,7 @@
     "RPD": "Rapid7",
     "RR": "Richtech Robotics",
     "RSP": "Invesco S&P 500 Equal Weight ETF",
+    "RTY": "Russell 2000 E-mini futures (RTY=F)",
     "RVTY": "Revvity",
     "RXRX": "Recursion Pharmaceuticals",
     "S": "SentinelOne",
@@ -920,10 +928,12 @@
     "UCTT": "Ultra Clean",
     "UMC": "United Microelectronics",
     "UNIMICRON": "Unimicron",
+    "US10Y": "US 10-year Treasury yield (^TNX)",
     "VEEV": "Veeva Systems",
     "VIAV": "Viavi Solutions",
     "VICR": "Vicor",
     "VICTORYGIANT": "Victory Giant Technology",
+    "VIX": "Cboe Volatility Index (^VIX)",
     "VPG": "Vishay Precision Group",
     "VRNS": "Varonis Systems",
     "VRT": "Vertiv",
@@ -964,6 +974,48 @@
     "XLU": "Utilities",
     "XLRE": "Real Estate",
     "XLP": "Consumer Staples"
+  },
+  "macro": {
+    "ES": {
+      "symbol": "ES=F",
+      "label": "S&P 500"
+    },
+    "NQ": {
+      "symbol": "NQ=F",
+      "label": "Nasdaq-100"
+    },
+    "RTY": {
+      "symbol": "RTY=F",
+      "label": "Russell 2000"
+    },
+    "US10Y": {
+      "symbol": "^TNX",
+      "label": "US 10Y yield"
+    },
+    "CL": {
+      "symbol": "CL=F",
+      "label": "Crude oil"
+    },
+    "VIX": {
+      "symbol": "^VIX",
+      "label": "VIX"
+    },
+    "GC": {
+      "symbol": "GC=F",
+      "label": "Gold"
+    },
+    "HG": {
+      "symbol": "HG=F",
+      "label": "Copper"
+    },
+    "DXY": {
+      "symbol": "DX-Y.NYB",
+      "label": "US dollar"
+    },
+    "BTC": {
+      "symbol": "BTC-USD",
+      "label": "Bitcoin"
+    }
   },
   "starts": {
     "CCXI": "2026-06-24"
