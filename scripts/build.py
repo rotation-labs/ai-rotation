@@ -1,5 +1,6 @@
 """Inject build/data.json into template.html and write a complete site/index.html."""
 import json
+import shutil
 import struct
 from pathlib import Path
 
@@ -55,4 +56,8 @@ out = ROOT / "site" / "index.html"
 out.parent.mkdir(exist_ok=True)
 out.write_text(page)
 (ROOT / "site" / "favicon.ico").write_bytes(favicon())
-print(f"wrote {out} ({len(page) / 1024:.0f} KB, prices through {asof})")
+fonts = ROOT / "site" / "fonts"
+fonts.mkdir(exist_ok=True)
+for f in sorted((ROOT / "assets" / "fonts").glob("*.woff2")):
+    shutil.copy2(f, fonts / f.name)
+print(f"wrote {out} ({len(page) / 1024:.0f} KB, prices through {asof}) + favicon + {len(list(fonts.glob('*.woff2')))} fonts")

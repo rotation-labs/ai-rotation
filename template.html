@@ -1,8 +1,10 @@
 <title>AI Rotation Graph</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
 <style>
+/* Self-hosted so the page makes no third-party request at all: the Google Fonts
+   stylesheet was the only one, and it disclosed every visitor to a third party.
+   Both families are variable, so one file each covers every weight in use. */
+@font-face{font-family:'Geist';src:url(fonts/geist.woff2) format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url(fonts/geist-mono.woff2) format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
 :root{
   color-scheme:dark;
   --ground:#0d0e10; --panel:#131519; --raised:#1a1d22; --hover:#1f2329;
@@ -92,13 +94,14 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .qh b{font-weight:600;font-size:13px}
 .qh span{color:var(--faint);font-size:11.5px}
 .qh .n{margin-left:auto;font-family:var(--mono)}
-.qrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto 52px 12px;align-items:center;gap:10px;width:100%;background:none;border:0;border-radius:6px;padding:6px 4px;text-align:left}
+.qrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto 52px 12px;align-items:center;gap:10px;width:100%;background:none;border:0;border-radius:6px;padding:6px 4px;text-align:left}
 .qrow:hover,.qrow.focus{background:var(--panel)}
 .qrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qrow .ar{display:inline-block;color:var(--muted);font-size:12px;width:12px;text-align:center}
 .qrow .ten{color:var(--faint);font-size:11px;min-width:26px;text-align:right}
 .qrow .rel{text-align:right;font-size:12px}
 .qrow .go{color:var(--faint)}
+.frag{font-size:9.5px;font-weight:600;padding:1px 4px;border-radius:3px;color:var(--weak);border:1px solid var(--weak);font-family:var(--mono);white-space:nowrap}
 .new{font-size:9.5px;letter-spacing:.08em;font-weight:600;padding:1px 4px;border-radius:3px;margin-left:6px;vertical-align:1px;color:var(--ground)}
 .empty{color:var(--faint);font-size:12px;padding:6px 4px}
 .pos{color:var(--lead)} .neg{color:var(--lag)}
@@ -152,6 +155,7 @@ svg .dimmed{opacity:.1}
       <summary>How to read this</summary>
       <p><b>Axes.</b> Right of center means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above center means that relative strength is accelerating (RS-Momentum above 100). The two raw measures have very different spreads, so each axis is divided by its own dispersion across what is on screen and labelled in standard deviations: +1 means one σ from the crossover, and one σ is the same visual distance on both axes. The window is square and centered, so a rotation traces a circle rather than an ellipse. Groups tend to rotate clockwise: Improving → Leading → Weakening → Lagging.</p>
       <p><b>Levels.</b> Full stack compares the 11 layers of the AI trade against SPY. Open a layer to see its subsectors (semis layers are measured against SMH, so you see rotation within semis rather than the semis beta), then open a subsector to see its stocks.</p>
+      <p><b>Stability.</b> The smoothing choices here (EMA 3 on relative strength, a 10-week or 21-day baseline, one-bar momentum) change the answer more than most readers would guess. Every node is also run under four defensible alternatives — four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing at all — and a badge such as 2/5 marks a call that only holds under the settings shown. Treat those as provisional.</p>
       <p><b>Lists.</b> Each quadrant is sorted strongest first. The arrow is the direction of the last step, the small number is time spent in that quadrant, NEW marks a crossing in the last two bars, and the percentage is relative performance over the tail.</p>
       <p><b>Method.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded — a portfolio rebalanced back to equal weight every bar, not a buy-and-hold basket. For volatile, dispersed baskets the two differ. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. AVGO, MRVL and TSEM each sit in two different layers, so they appear as members of two separate baskets; AMD sits in two Compute subsectors but counts once toward the Compute layer. Foreign listings are converted to USD and carried forward on local holidays; note that an Asian close lands 13-15 hours before the US close it is paired with, so on daily bars those names read one session behind the US tape, which matters most where a basket is mostly Asian: HYNIX SK Hynix · SAMSUNG Samsung Electronics · NANYA Nanya Technology · KIOXIA Kioxia · PHISON Phison · ALCHIP Alchip · GUC Global Unichip · MEDIATEK MediaTek · INNOLIGHT Zhongji Innolight · EOPTOLINK Eoptolink · LASERTEC Lasertec · TOKYOELEC Tokyo Electron · ASMI ASM International · SHINETSU Shin-Etsu Chemical · SUMCO SUMCO · BESI BE Semiconductor · HANMI Hanmi Semiconductor · DISCO Disco · IBIDEN Ibiden · UNIMICRON Unimicron · ADVANTEST Advantest · INFINEON Infineon · WIWYNN Wiwynn · QUANTA Quanta Computer · FOXCONN Hon Hai · SIEMENSEN Siemens Energy · MHI Mitsubishi Heavy.</p>
       <p id="asof"></p>
@@ -228,13 +232,19 @@ const dayIdx=[...Array(N).keys()];
 const partialWeek=new Date(D.dates[N-1]+'T12:00:00Z').getUTCDay()!==5;
 function ema(a,p){const k=2/(p+1);let e=null;return a.map(v=>v==null?(e=null,null):(e=e==null?v:e+k*(v-e)));}
 function sma(a,n){return a.map((v,i)=>{if(v==null||i<n-1)return null;let s=0;for(let j=i-n+1;j<=i;j++){if(a[j]==null)return null;s+=a[j];}return s/n;});}
-function rrg(px,bx,idx,n){
+function rrg(px,bx,idx,n,o){
+  const e=o&&o.e!=null?o.e:3,bn=o&&o.n!=null?o.n:n,m=o&&o.m!=null?o.m:1;
   const rs=idx.map(i=>px[i]!=null&&bx[i]!=null?100*px[i]/bx[i]:null);
-  const sm=ema(rs,3),base=sma(sm,n);
+  const sm=e<=1?rs.slice():ema(rs,e),base=sma(sm,bn);
   const rsr=sm.map((v,i)=>v!=null&&base[i]!=null?100*v/base[i]:null);
-  const roc=rsr.map((v,i)=>i&&v!=null&&rsr[i-1]!=null?100*v/rsr[i-1]:null);
-  return {rs,rsr,rsm:ema(roc,3)};
+  const roc=rsr.map((v,i)=>i>=m&&v!=null&&rsr[i-m]!=null?100*v/rsr[i-m]:null);
+  return {rs,rsr,rsm:e<=1?roc:ema(roc,e)};
 }
+// EMA(3) on RS, an SMA baseline and a one-bar momentum are load-bearing choices that the
+// page never disclosed. Re-run each node under four equally defensible alternatives and
+// report how many agree with the displayed quadrant, so a fragile call looks different
+// from a robust one.
+const ALTS=n=>[{m:4},{e:5,n:Math.round(n*1.4)},{n:Math.round(n*2.6)},{e:1}];
 // Boundary convention: a node sitting exactly on 100 counts as the stronger side
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
@@ -351,8 +361,13 @@ function render(){
     const q=quad(x,y);let ten=1,prev=null;
     for(let i=end-1;i>=Math.max(0,end-30);i--){if(r.rsr[i]==null||r.rsm[i]==null)break;const qi=quad(r.rsr[i],r.rsm[i]);if(qi!==q){prev=qi;break;}ten++;}
     const a=r.rs[end-st.tail],b=r.rs[end];
+    const alts=ALTS(n);let agree=1;
+    for(const o of alts){
+      const rr=rrg(series(c),bx,idx,n,o);
+      if(rr.rsr[end]!=null&&rr.rsm[end]!=null&&quad(rr.rsr[end],rr.rsm[end])===q)agree++;
+    }
     ROWS.push({node:c,label:c.label,pts,x,y,q,hdg,ten,prev,rel:a&&b?(b/a-1)*100:null,open:c.children.length>0,
-      rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null)});
+      rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null),stab:agree,stabN:alts.length+1});
   }
   // The two axes are both 100-centred but not on the same scale: RS-Ratio is a deviation
   // from a 10-bar baseline, RS-Momentum the one-bar change of that already-smoothed ratio,
@@ -467,7 +482,7 @@ function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
   t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
-    <span class="num">RS ${r.x.toFixed(2)} (${(r.sx-100>=0?'+':'')}${(r.sx-100).toFixed(1)}σ) · Mom ${r.y.toFixed(2)} (${(r.sy-100>=0?'+':'')}${(r.sy-100).toFixed(1)}σ) · ${pct(r.rel)} over tail</span>${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
+    <span class="m">${r.stab} of ${r.stabN} smoothing settings agree on ${Q[r.q].n}</span><br><span class="num">RS ${r.x.toFixed(2)} (${(r.sx-100>=0?'+':'')}${(r.sx-100).toFixed(1)}σ) · Mom ${r.y.toFixed(2)} (${(r.sy-100>=0?'+':'')}${(r.sy-100).toFixed(1)}σ) · ${pct(r.rel)} over tail</span>${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
   if(x+t.offsetWidth>box.width-4)x=e.clientX-box.left-t.offsetWidth-16;
   t.style.left=Math.max(0,x)+'px';t.style.top=y+'px';
@@ -483,6 +498,7 @@ function list(rows){
     for(const r of rs){
       const b=document.createElement('button');b.type='button';b.className='qrow';b.dataset.id=r.node.id;
       b.innerHTML=`<span class="nm">${r.label}${coName(r.node)?`<span class="co">${coName(r.node)}</span>`:''}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
+        <span>${r.stab<=3?`<span class="frag" title="Only ${r.stab} of ${r.stabN} smoothing settings put this in ${Q[q].n}">${r.stab}/${r.stabN}</span>`:''}</span>
         <span class="ar" style="transform:rotate(${-r.hdg}deg)" title="Heading ${r.hdg.toFixed(0)}°">➝</span>
         <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}</span>
         <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
