@@ -13,6 +13,8 @@ GitHub Actions (weekdays 21:30 UTC)
 ```
 
 All RRG math (baskets, RS-Ratio, RS-Momentum, quadrants) runs in the viewer's browser, so the page needs no server.
+
+Reading the page: view state lives in the URL hash, so any view can be linked and the back button works. `/` focuses the search box. Both axes are scaled to standard deviations and the window is square, so equal distances mean the same thing either way. A badge such as `2/5` marks a quadrant that only holds under the smoothing settings shown — the page re-runs every node under four alternatives. The current, unfinished week is drawn hollow and never earns a NEW badge.
 If a fetch fails (Yahoo rate limit, a benchmark missing, or more than 10% of tickers missing) the job stops and the previous version stays live.
 
 ## Deployment
@@ -31,7 +33,8 @@ then run the workflow once from the Actions tab.
 ## Everyday changes
 
 - **Edit baskets:** change `config/baskets.json` (families → baskets → tickers) and commit. Any push to `main` triggers a rebuild.
-  Non-US tickers get a short name in `foreign_listings` mapped to their Yahoo symbol (e.g. `"HYNIX": "000660.KS"`). Supported suffixes: `.KS .T .TW .TWO .SZ .SS .HK .AS .DE .PA`.
+  Non-US tickers get a short name in `foreign_listings` mapped to their Yahoo symbol (e.g. `"HYNIX": "000660.KS"`), and a display name in `names` (e.g. `"HYNIX": "SK Hynix"`) so the chart is readable without the glossary. Supported suffixes: `.KS .T .TW .TWO .SZ .SS .HK .AS .DE .PA`.
+- **Fonts:** `assets/fonts/*.woff2` are vendored and copied into `site/` at build time, so the page makes no third-party request. See `assets/fonts/NOTICE.md`.
 - **Change the schedule:** edit the `cron` line in `.github/workflows/update.yml` (times are UTC).
 - **Refresh right now:** Actions → Update AI Rotation Graph → Run workflow.
 - **Custom domain:** Settings → Pages → Custom domain.
