@@ -259,6 +259,7 @@
           "QUANTA",
           "FOXCONN",
           "CLS",
+          "SANM",
           "INVENTEC",
           "WISTRON",
           "GIGABYTE"
@@ -867,6 +868,7 @@
     "SAIL": "SailPoint",
     "SAMSUNG": "Samsung Electronics",
     "SANHUA": "Zhejiang Sanhua Intelligent Controls",
+    "SANM": "Sanmina",
     "SCHNEIDER": "Schneider Electric",
     "SCREEN": "SCREEN Holdings",
     "SDGR": "Schrodinger",
@@ -1039,6 +1041,12 @@
   },
   "membership_changes": {
     "_doc": "Each entry says: in this basket (and every level above it), this ticker counts only within [from, until). Adding a name on a date: {ticker, basket, from}. Removing one: {ticker, basket, until} (keep the entry after deleting the name from 'groups', so replay still shows it before that date). Moving one: an 'until' entry for the old basket and a 'from' entry for the new. basket is 'Layer / Subsector', or just 'Layer' for a layer that lists stocks directly. Do not record renames or classification fixes: those correct today's definition rather than change history.",
-    "entries": []
+    "entries": [
+      {
+        "ticker": "SANM",
+        "basket": "Servers & Storage / ODMs",
+        "from": "2026-09-23"
+      }
+    ]
   }
 }
