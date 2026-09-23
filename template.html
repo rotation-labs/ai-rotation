@@ -93,6 +93,8 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .foot{color:var(--faint);font-size:11.5px;margin:12px 0 0}
 .members{font-size:12px;color:var(--muted)}
 .members b{color:var(--text);font-weight:500}
+.nm .co{color:var(--muted);font-weight:400;font-size:11px;margin-left:6px}
+.roster{color:var(--weak)}
 
 svg g.s{transition:opacity .15s}
 svg .dimmed{opacity:.1}
@@ -131,7 +133,7 @@ svg .dimmed{opacity:.1}
       <p><b>Axes.</b> Right of center means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above center means that relative strength is accelerating (RS-Momentum above 100). The two raw measures have very different spreads, so each axis is divided by its own dispersion across what is on screen and labelled in standard deviations: +1 means one σ from the crossover, and one σ is the same visual distance on both axes. The window is square and centered, so a rotation traces a circle rather than an ellipse. Groups tend to rotate clockwise: Improving → Leading → Weakening → Lagging.</p>
       <p><b>Levels.</b> Full stack compares the 11 layers of the AI trade against SPY. Open a layer to see its subsectors (semis layers are measured against SMH, so you see rotation within semis rather than the semis beta), then open a subsector to see its stocks.</p>
       <p><b>Lists.</b> Each quadrant is sorted strongest first. The arrow is the direction of the last step, the small number is time spent in that quadrant, NEW marks a crossing in the last two bars, and the percentage is relative performance over the tail.</p>
-      <p><b>Method.</b> Baskets are equal-weight and rebalanced daily. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. AVGO, MRVL and TSEM each sit in two different layers, so they appear as members of two separate baskets; AMD sits in two Compute subsectors but counts once toward the Compute layer. Foreign listings are converted to USD and carried forward on local holidays: HYNIX SK Hynix · SAMSUNG Samsung Electronics · NANYA Nanya Technology · KIOXIA Kioxia · PHISON Phison · ALCHIP Alchip · GUC Global Unichip · MEDIATEK MediaTek · INNOLIGHT Zhongji Innolight · EOPTOLINK Eoptolink · LASERTEC Lasertec · TOKYOELEC Tokyo Electron · ASMI ASM International · SHINETSU Shin-Etsu Chemical · SUMCO SUMCO · BESI BE Semiconductor · HANMI Hanmi Semiconductor · DISCO Disco · IBIDEN Ibiden · UNIMICRON Unimicron · ADVANTEST Advantest · INFINEON Infineon · WIWYNN Wiwynn · QUANTA Quanta Computer · FOXCONN Hon Hai · SIEMENSEN Siemens Energy · MHI Mitsubishi Heavy.</p>
+      <p><b>Method.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded — a portfolio rebalanced back to equal weight every bar, not a buy-and-hold basket. For volatile, dispersed baskets the two differ. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. AVGO, MRVL and TSEM each sit in two different layers, so they appear as members of two separate baskets; AMD sits in two Compute subsectors but counts once toward the Compute layer. Foreign listings are converted to USD and carried forward on local holidays; note that an Asian close lands 13-15 hours before the US close it is paired with, so on daily bars those names read one session behind the US tape, which matters most where a basket is mostly Asian: HYNIX SK Hynix · SAMSUNG Samsung Electronics · NANYA Nanya Technology · KIOXIA Kioxia · PHISON Phison · ALCHIP Alchip · GUC Global Unichip · MEDIATEK MediaTek · INNOLIGHT Zhongji Innolight · EOPTOLINK Eoptolink · LASERTEC Lasertec · TOKYOELEC Tokyo Electron · ASMI ASM International · SHINETSU Shin-Etsu Chemical · SUMCO SUMCO · BESI BE Semiconductor · HANMI Hanmi Semiconductor · DISCO Disco · IBIDEN Ibiden · UNIMICRON Unimicron · ADVANTEST Advantest · INFINEON Infineon · WIWYNN Wiwynn · QUANTA Quanta Computer · FOXCONN Hon Hai · SIEMENSEN Siemens Energy · MHI Mitsubishi Heavy.</p>
       <p id="asof"></p>
     </details>
     <p class="foot" id="foot"></p>
@@ -165,6 +167,9 @@ for(const dm of DOMAINS){
   }
 }
 const lineage=n=>{const a=[];while(n){a.unshift(n);n=n.parent;}return a;};
+// Foreign listings carry short ad-hoc symbols (HYNIX, ALCHIP) that are not real tickers.
+// Decode them wherever there is room, so the glossary is not the only way to read the chart.
+const coName=n=>n&&n.kind==='stock'&&D.names?D.names[n.ticker]||'':'';
 // Distinct tickers under a layer, in tree order; a name in two of its subsectors appears once.
 const uniq=f=>{const s=new Set();for(const c of f.children)for(const t of c.members)s.add(t);return [...s];};
 
@@ -217,6 +222,7 @@ const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null};
 let PROV=false;
 let SIG={x:1,y:1};
+let ROSTER=null;
 try{const s=JSON.parse(localStorage.getItem('rrg-v3')||'null');if(s)Object.assign(st,s,{end:null,hover:null,hoverQ:null});}catch(e){}
 if(!NODES[st.node])st.node='stack';
 const save=()=>{try{localStorage.setItem('rrg-v3',JSON.stringify({node:st.node,bench:st.bench,frame:st.frame,tail:st.tail}))}catch(e){}};
@@ -278,6 +284,12 @@ function render(){
   $('replayv').textContent=fmtD(D.dates[idx[end]]);
   $('latest').hidden=end===idx.length-1;
   PROV=st.frame==='W'&&partialWeek&&end===idx.length-1;
+  // Replaying backwards projects today's roster onto a past date: CRWV starts 2025-03-28,
+  // WOLF restarts 2025-09-29. combine() handles the nulls, but the reader cannot see that
+  // the basket was smaller then, so say so.
+  {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='stack'?[]:null;
+   if(ts&&ts.length){const live=ts.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length;
+     ROSTER=live<ts.length?{live,total:ts.length}:null;}else ROSTER=null;}
   $('prov').hidden=!PROV;
   ROWS=[];
   for(const c of cur.children){
@@ -383,7 +395,7 @@ const pct=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
 function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
-  t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b> <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
+  t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
     <span class="num">RS ${r.x.toFixed(2)} (${(r.sx-100>=0?'+':'')}${(r.sx-100).toFixed(1)}σ) · Mom ${r.y.toFixed(2)} (${(r.sy-100>=0?'+':'')}${(r.sy-100).toFixed(1)}σ) · ${pct(r.rel)} over tail</span>${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
   if(x+t.offsetWidth>box.width-4)x=e.clientX-box.left-t.offsetWidth-16;
@@ -399,7 +411,7 @@ function list(rows){
     if(!rs.length)sec.insertAdjacentHTML('beforeend','<div class="empty">None</div>');
     for(const r of rs){
       const b=document.createElement('button');b.type='button';b.className='qrow';b.dataset.id=r.node.id;
-      b.innerHTML=`<span class="nm">${r.label}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
+      b.innerHTML=`<span class="nm">${r.label}${coName(r.node)?`<span class="co">${coName(r.node)}</span>`:''}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
         <span class="ar" style="transform:rotate(${-r.hdg}deg)" title="Heading ${r.hdg.toFixed(0)}°">➝</span>
         <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}</span>
         <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
@@ -420,8 +432,9 @@ function list(rows){
 }
 function members(cur){
   const m=$('members');
-  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.join(', ')}.`;
-  else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.join(' ')}`).join(' · ');
+  const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
+  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.join(', ')}.`+rost;
+  else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.join(' ')}`).join(' · ')+rost;
   else m.innerHTML='Each layer equal-weights its constituent stocks. '+root.children.map(f=>`<b>${f.label}</b> ${uniq(f).length}`).join(' · ');
 }
 function focus(){

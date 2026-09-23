@@ -317,5 +317,34 @@
         ]
       }
     }
+  },
+  "names": {
+    "HYNIX": "SK Hynix",
+    "SAMSUNG": "Samsung Electronics",
+    "NANYA": "Nanya Technology",
+    "KIOXIA": "Kioxia",
+    "PHISON": "Phison",
+    "ALCHIP": "Alchip",
+    "GUC": "Global Unichip",
+    "MEDIATEK": "MediaTek",
+    "INNOLIGHT": "Zhongji Innolight",
+    "EOPTOLINK": "Eoptolink",
+    "LASERTEC": "Lasertec",
+    "TOKYOELEC": "Tokyo Electron",
+    "ASMI": "ASM International",
+    "SHINETSU": "Shin-Etsu Chemical",
+    "SUMCO": "SUMCO",
+    "BESI": "BE Semiconductor",
+    "HANMI": "Hanmi Semiconductor",
+    "DISCO": "Disco",
+    "IBIDEN": "Ibiden",
+    "UNIMICRON": "Unimicron",
+    "ADVANTEST": "Advantest",
+    "INFINEON": "Infineon",
+    "WIWYNN": "Wiwynn",
+    "QUANTA": "Quanta Computer",
+    "FOXCONN": "Hon Hai",
+    "SIEMENSEN": "Siemens Energy",
+    "MHI": "Mitsubishi Heavy"
   }
 }

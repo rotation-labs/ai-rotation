@@ -4,7 +4,7 @@ Foreign listings are converted to USD and forward-filled onto the US trading cal
 Exits non-zero (so the scheduled job fails and the last good site stays live) if the
 benchmark data is missing or too many tickers fail.
 """
-import json, sys, time
+import json, math, sys, time
 from pathlib import Path
 import pandas as pd
 import yfinance as yf
@@ -20,6 +20,19 @@ STALE_SESSIONS = 5   # drop a listing whose last print is more than this many US
 FX = {".KS": ("KRW=X", "div"), ".T": ("JPY=X", "div"), ".TW": ("TWD=X", "div"), ".TWO": ("TWD=X", "div"),
       ".SZ": ("CNY=X", "div"), ".SS": ("CNY=X", "div"), ".HK": ("HKD=X", "div"),
       ".AS": ("EURUSD=X", "mul"), ".DE": ("EURUSD=X", "mul"), ".PA": ("EURUSD=X", "mul")}
+
+
+def sigfig(v, n=5):
+    """Round to significant figures, not decimal places.
+
+    Prices are only ever consumed as ratios, so absolute precision is wasted, but a flat
+    2dp would quantise a sub-dollar listing badly: NANYA trades near $0.77, where half a
+    cent is 0.65% - bigger than plenty of daily moves. Five significant figures caps the
+    relative error at 0.005% for every series and still cuts the gzipped payload ~16%.
+    """
+    if v == 0:
+        return 0.0
+    return round(v, -int(math.floor(math.log10(abs(v)))) + (n - 1))
 
 
 def download(symbols, tries=3):
@@ -84,7 +97,7 @@ def main():
         first = p.index[0]
         q = p.reindex(p.index.union(us)).ffill().reindex(us)
         q[q.index < first] = float("nan")
-        px[n] = [None if pd.isna(v) else round(float(v), 4) for v in q]
+        px[n] = [None if pd.isna(v) else sigfig(float(v)) for v in q]
 
     for b in CFG["benchmarks"]:
         if b not in px:
@@ -105,7 +118,9 @@ def main():
 
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps({"asof": str(us[-1].date()), "dates": [str(x.date()) for x in us],
-                               "px": px, "groups": groups}, separators=(",", ":")))
+                               "px": px, "groups": groups,
+                               "names": {k: v for k, v in CFG.get("names", {}).items() if k in px}},
+                              separators=(",", ":")))
     print(f"wrote {OUT} - {len(px)} series through {us[-1].date()}")
 
 
