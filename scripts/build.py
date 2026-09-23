@@ -34,7 +34,9 @@ asof = json.loads(data)["asof"]
 head, body = tpl.split('<div class="app">', 1)
 body = '<div class="app">' + body.replace("__DATA__", data.replace("</", "<\\/"))
 
-desc = "Relative rotation graph of the AI trade across five tiers of its value chain, from silicon to applied AI, down to the stocks."
+# Counted from the data, so the link preview cannot drift from the page again.
+desc = (f"Relative rotation graph of the AI trade across {len(json.loads(data)['groups'])} tiers of its value chain, "
+        "from chips to applications, down to the individual stocks.")
 page = f"""<!doctype html>
 <html lang="en">
 <head>

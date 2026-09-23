@@ -1,10 +1,13 @@
 {
   "benchmarks": [
-    "SPY",
+    "BOTZ",
+    "IGV",
     "QQQ",
     "RSP",
     "SMH",
-    "SOXX"
+    "SOXX",
+    "SPY",
+    "XBI"
   ],
   "foreign_listings": {
     "HYNIX": "000660.KS",
@@ -145,15 +148,15 @@
           "SUMCO",
           "TOKYOOHKA"
         ],
-        "EDA": [
-          "SNPS",
-          "CDNS"
-        ],
         "China SemiCap": [
           "NAURA",
           "AMEC"
         ]
       },
+      "Design Software & IP": [
+        "SNPS",
+        "CDNS"
+      ],
       "Packaging & Test": {
         "OSAT": [
           "AMKR",
@@ -229,7 +232,7 @@
     },
     "compute": {
       "Accelerators": {
-        "GPU / Accel": [
+        "Merchant Accelerators": [
           "NVDA",
           "AMD",
           "CBRS"
@@ -540,7 +543,6 @@
       "Robotics": {
         "Humanoids & Robot Makers": [
           "CCXI",
-          "BOT",
           "UBTECH",
           "DOOSANROBO",
           "RAINBOWROBO",
@@ -665,14 +667,14 @@
     "BESI": "BE Semiconductor",
     "BIDU": "Baidu",
     "BKNG": "Booking Holdings",
-    "BOT": "Robostrategy",
+    "BOTZ": "Global X Robotics & AI ETF",
     "BRKR": "Bruker",
     "BWXT": "BWX Technologies",
     "CAMT": "Camtek",
     "CAT": "Caterpillar",
     "CBRS": "Cerebras",
     "CCJ": "Cameco",
-    "CCXI": "Agility Robotics (Churchill Capital XI SPAC)",
+    "CCXI": "Agility Robotics (via Churchill Capital XI SPAC; deal pending)",
     "CDNS": "Cadence Design Systems",
     "CEG": "Constellation Energy",
     "CERT": "Certara",
@@ -751,6 +753,7 @@
     "IBIDEN": "Ibiden",
     "ICHR": "Ichor",
     "IESC": "IES Holdings",
+    "IGV": "iShares Expanded Tech-Software ETF",
     "ILMN": "Illumina",
     "INFINEON": "Infineon",
     "INNOLIGHT": "Zhongji Innolight",
@@ -933,6 +936,7 @@
     "WOLF": "Wolfspeed",
     "WRD": "WeRide",
     "WULF": "TeraWulf",
+    "XBI": "SPDR S&P Biotech ETF",
     "XLB": "Materials Select Sector SPDR",
     "XLC": "Communication Services Select Sector SPDR",
     "XLE": "Energy Select Sector SPDR",
@@ -960,5 +964,30 @@
     "XLU": "Utilities",
     "XLRE": "Real Estate",
     "XLP": "Consumer Staples"
+  },
+  "starts": {
+    "CCXI": "2026-06-24"
+  },
+  "peer_benchmarks": {
+    "Accelerators": "SOXX",
+    "Networking Chips": "SOXX",
+    "Optical Components": "SOXX",
+    "Power Generation": "XLU",
+    "Grid & Electrical": "XLI",
+    "Cooling & DC Construction": "XLI",
+    "Infrastructure Software": "IGV",
+    "Cybersecurity": "IGV",
+    "Application Software": "IGV",
+    "Robotics": "BOTZ",
+    "Bioprocessing & Lab Tools": "XLV",
+    "Biotech AI": "XBI",
+    "Genomics & Sequencing": "XBI",
+    "Discovery Platforms": "XBI",
+    "Precision Diagnostics": "XBI"
+  },
+  "membership_changes": {
+    "_doc": "Record deliberate thematic changes so replay shows a basket as it was. 'added' excludes a name before its date; 'removed' keeps a name in its old basket (by 'Layer' or 'Layer / Subsector') for [from, until). Renames and classification fixes are not changes in membership - don't record them.",
+    "added": {},
+    "removed": []
   }
 }

@@ -88,6 +88,9 @@ def exchange_tz(symbol):
     return EXCHANGE_TZ[suf] if suf else "America/New_York"
 
 
+PROXY = {}   # symbol -> dates whose close came from an intraday bar, not the official close
+
+
 def fill_unfinalised(frame, lookback=3):
     """Fill empty daily closes on recent US sessions from that session's intraday bars.
 
@@ -137,6 +140,7 @@ def fill_unfinalised(frame, lookback=3):
                 hit = col[col.index == d]
                 if len(hit):
                     frame.at[d, s] = float(hit.iloc[-1])
+                    PROXY.setdefault(s, set()).add(d)
                     filled += 1
     if filled:
         print(f"filled {filled} unfinalised daily close(s) from intraday bars", file=sys.stderr)
@@ -148,8 +152,10 @@ def fill_unfinalised(frame, lookback=3):
 def main():
     groups = CFG["groups"]
     foreign = CFG["foreign_listings"]
+    changes = {k: v for k, v in CFG.get("membership_changes", {}).items() if not k.startswith("_")}
+    removed = [r["ticker"] for r in changes.get("removed", [])]
     names = sorted(set(CFG["benchmarks"]) | set(CFG.get("sectors", {}))
-                   | set(tickers(groups)))
+                   | set(tickers(groups)) | set(removed))
     sym = {n: foreign.get(n, n) for n in names}
     fx_syms = sorted({FX[k][0] for k in FX if any(s.endswith(k) for s in sym.values())})
 
@@ -171,9 +177,15 @@ def main():
         sys.exit("SPY data missing - aborting so the previous site stays up")
     us = raw["SPY"].dropna().index
 
+    # A symbol can carry history that predates the business it now names: CCXI traded as an
+    # empty ~$10 SPAC shell until the Agility Robotics deal was announced on 2026-06-24.
+    starts = {k: pd.Timestamp(v) for k, v in CFG.get("starts", {}).items()}
+
     px, missing, stale = {}, [], []
     for n, s in sym.items():
         p = raw[s].dropna() if s in raw else pd.Series(dtype=float)
+        if n in starts:
+            p = p[p.index >= starts[n]]
         if len(p) < 60:
             missing.append(n)
             continue
@@ -212,7 +224,14 @@ def main():
                                # ad-hoc display codes (HYNIX, FANUC) rather than real tickers:
                                # the page decodes these inline, and shows every other name on hover
                                "adhoc": sorted(k for k in foreign if k in px),
-                               "sectors": {k: v for k, v in CFG.get("sectors", {}).items() if k in px}},
+                               "sectors": {k: v for k, v in CFG.get("sectors", {}).items() if k in px},
+                               "benchmarks": [b for b in CFG["benchmarks"] if b in px],
+                               "peers": CFG.get("peer_benchmarks", {}),
+                               "membership": changes,
+                               # closes still standing in for an official close, by display name
+                               "proxy": {n: sorted(str(d.date()) for d in PROXY[s] if d in us)
+                                         for n, s in sym.items() if s in PROXY and n in px
+                                         and any(d in us for d in PROXY[s])}},
                               separators=(",", ":")))
     print(f"wrote {OUT} - {len(px)} series through {us[-1].date()}")
 

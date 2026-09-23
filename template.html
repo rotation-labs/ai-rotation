@@ -9,7 +9,7 @@
   color-scheme:dark;
   --ground:#0d0e10; --panel:#131519; --raised:#1a1d22; --hover:#1f2329;
   --line:#22262c; --line2:#2d3239;
-  --text:#e6e8eb; --muted:#8b919a; --faint:#555b64;
+  --text:#e6e8eb; --muted:#8b919a; --faint:#798092;
   --lead:#6cc28a; --imp:#7ea5e2; --weak:#e2b25c; --lag:#e2746b;
   --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"Geist Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -20,8 +20,8 @@
     color-scheme:light;
     --ground:#f6f7f9; --panel:#fff; --raised:#eef1f4; --hover:#e5e9ee;
     --line:#e1e5ea; --line2:#c8cfd7;
-    --text:#14171a; --muted:#59616b; --faint:#949ca6;
-    --lead:#2c8a54; --imp:#3568ad; --weak:#a8761c; --lag:#bd4438;
+    --text:#14171a; --muted:#59616b; --faint:#6c7075;
+    --lead:#297e4e; --imp:#3568ad; --weak:#8e691c; --lag:#bd4438;
     --shadow:rgba(16,20,26,.16);
   }
 }
@@ -105,6 +105,9 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .vis{accent-color:var(--muted);margin:0 3px 0 0;width:13px;height:13px;flex:none;cursor:pointer}
 .showall{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 9px;margin:0 0 10px;color:var(--muted);font-size:11.5px}
 .showall:hover{color:var(--text)}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.legend{font-size:11px;color:var(--muted);line-height:1.55;margin:0 0 12px;padding:7px 9px;border:1px solid var(--line);border-radius:7px}
+.legend b{color:var(--text);font-weight:500}
 .qrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qrow .ar{display:inline-block;color:var(--muted);font-size:12px;width:12px;text-align:center}
 .qrow .ten{color:var(--faint);font-size:11px;min-width:26px;text-align:right}
@@ -141,9 +144,9 @@ svg .dimmed{opacity:.1}
       <h1 id="title">Full stack</h1><span class="stale" id="stale" hidden></span>
     </div>
     <div class="tools">
-      <div class="tool find"><input id="q" type="search" placeholder="Find ticker or basket" autocomplete="off" aria-label="Find a ticker or basket"><div id="qres" hidden role="listbox"></div></div>
+      <div class="tool find"><input id="q" type="search" placeholder="Find ticker or basket" autocomplete="off" aria-label="Find a ticker or basket" role="combobox" aria-autocomplete="list" aria-controls="qres" aria-expanded="false"><div id="qres" hidden role="listbox" aria-label="Matches"></div><span id="qlive" class="sr" aria-live="polite"></span></div>
       <div class="tool" id="stackmode" hidden><span>Show</span><div class="seg" id="lay"><button type="button" data-v="0">Tiers</button><button type="button" data-v="1">All layers</button></div></div>
-      <div class="tool"><span>Bars</span><div class="seg" id="frame"><button type="button" data-v="W">Weekly</button><button type="button" data-v="D">Daily</button></div></div>
+      <div class="tool"><span>Horizon</span><div class="seg" id="frame"><button type="button" data-v="W" title="Weekly bars; trend measured against a 10-week baseline">10-week</button><button type="button" data-v="D" title="Daily bars; trend measured against a 21-session (about one month) baseline">1-month</button></div></div>
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
     </div>
@@ -163,12 +166,27 @@ svg .dimmed{opacity:.1}
     <div class="members" id="members"></div>
     <details>
       <summary>How to read this</summary>
-      <p><b>Axes.</b> Right of center means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above center means that relative strength is accelerating (RS-Momentum above 100). The two raw measures have very different spreads, so each axis is divided by its own dispersion across what is on screen and labelled in standard deviations: +1 means one σ from the crossover, and one σ is the same visual distance on both axes. The window is square and centered, so a rotation traces a circle rather than an ellipse. Groups tend to rotate clockwise: Improving → Leading → Weakening → Lagging.</p>
-      <p><b>Levels.</b> The AI trade is laid out in seven tiers, cut where it actually trades apart: Core Semis, AI Compute, Networking &amp; Optics, Power &amp; Buildout, Platforms &amp; Software, Physical AI and Bio AI. Full stack plots one dot per tier against QQQ, so what you see is rotation within large-cap tech rather than the tech-versus-market trade that dominates against SPY; switch to <em>All layers</em> to see every layer at once. Open a tier for its layers, a layer for its subsectors or stocks (Core Semis' are measured against SOXX, so you see rotation within semis rather than the semis beta), and a subsector for its stocks. Untick a row in the lists to hide it from the chart; the axes rescale to what is left, and the link keeps the selection. Change the benchmark with the <em>vs</em> control.</p>
-      <p><b>Stability.</b> The smoothing choices here (EMA 3 on relative strength, a 10-week or 21-day baseline, one-bar momentum) change the answer more than most readers would guess. Every node is also run under four defensible alternatives — four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing at all — and a badge such as 2/5 marks a call that only holds under the settings shown. Treat those as provisional.</p>
-      <p><b>Lists.</b> Each quadrant is sorted strongest first. The arrow is the direction of the last step, the small number is time spent in that quadrant, NEW marks a crossing in the last two bars, and the percentage is relative performance over the tail.</p>
-      <p><b>Method.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded — a portfolio rebalanced back to equal weight every bar, not a buy-and-hold basket. For volatile, dispersed baskets the two differ. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. <span id="multi"></span> Foreign listings are converted to USD and carried forward on local holidays; note that an Asian close lands 13-15 hours before the US close it is paired with, so on daily bars those names read one session behind the US tape, which matters most where a basket is mostly Asian: <span id="gloss"></span>.</p>
-      <p id="asof"></p>
+      <p><b>Axes.</b> Right of centre means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above centre means that relative strength is accelerating (RS-Momentum above 100). The two measures have very different spreads, so each axis is divided by its RMS distance from 100 across the dots and tails on screen. These are view-relative units, not a statistical σ: +1 is the same visual distance on both axes, but the numbers are not comparable between views. The window is square and centred, so a rotation traces a circle rather than an ellipse. Raw values are in each dot's tooltip.</p>
+      <p><b>Levels.</b> Seven tiers, cut where the AI trade actually moves apart: Core Semis, AI Compute, Networking &amp; Optics, Power &amp; Buildout, Platforms &amp; Software, Physical AI and Bio AI. Full stack and the tier views compare everything against QQQ, a common yardstick; switch Full stack to <em>All layers</em> to see every layer at once. Opening a layer switches to its industry peer (Accelerators against SOXX, software against IGV, biotech against XBI, and so on), so you see which names lead <em>within</em> their industry. The <em>vs</em> control overrides either, and the Benchmark check under the lists shows how the call changes across benchmarks.</p>
+      <p><b>Lists.</b> Each quadrant is sorted by distance from the centre. The arrow is the direction of the last step; the small number is how long the dot has been in that quadrant (<b>*</b> means it includes the week still in progress); NEW marks a crossing in the last two bars; the percentage is relative performance over the tail; breadth is the share of a basket's members that are themselves right of centre against the same benchmark. Untick a row to hide it; the axes rescale to what is left, and the link keeps the selection.</p>
+      <p><b>Stability.</b> The smoothing choices change the answer more than most readers would guess. Every dot is also run under four alternatives: four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing. A badge such as 2/5 marks a call that only a minority of settings share; a recent listing may lack history for some settings, which then don't count (3/4). Treat badged calls as provisional.</p>
+    </details>
+    <details>
+      <summary>Methodology</summary>
+      <p><b>What it measures.</b> Relative price performance. It says which groups are outperforming or losing momentum against a benchmark, not how much money is flowing into them; there are no flow, volume or positioning data here. This is an RRG-style chart that approximates the JdK Relative Rotation Graph (RRG and Relative Rotation Graph are registered marks of RRG Research); levels differ from StockCharts, but quadrants and rotation behave the same way.</p>
+      <p><b>Baskets.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded: a portfolio rebalanced to equal weight every bar, not buy-and-hold, and not a tradable index. A subsector equal-weights its stocks; a layer or tier equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed twice in one layer counts once. Equal weight shows breadth; a cap-weighted basket would mostly show its largest member.</p>
+      <p><b>Formulae.</b> RS = price ÷ benchmark. RS-Ratio = 100 × EMA(3) of RS ÷ its moving average over the horizon (10 weeks on the 10-week horizon, 21 sessions on the 1-month one). RS-Momentum = EMA(3) of the one-bar change in RS-Ratio. The two horizons answer different questions and can disagree.</p>
+      <p><b>Replay.</b> Replay shows today's baskets through past prices, not the baskets as they would have been defined at the time; the <em>trading on this date</em> count shows how many members existed then. Deliberate membership changes recorded in the configuration are applied historically from the date they were made.</p>
+    </details>
+    <details>
+      <summary>Data &amp; sources</summary>
+      <p>Daily closes from Yahoo Finance, rebuilt each weekday after the US close. Foreign listings are converted to USD and carried forward on local holidays. An Asian close lands 13–15 hours before the US close it is paired with, so on the 1-month horizon those names read about one session behind; the 10-week horizon is the better choice for comparisons across regions. When Yahoo has not yet published a day's official close, the last intraday bar stands in and is marked ≈ until the next build replaces it. A badge beside the title appears if a build has failed and data is two or more sessions old.</p>
+      <p id="asof"></p><p id="proxynote"></p>
+    </details>
+    <details>
+      <summary>Ticker glossary</summary>
+      <p><span id="multi"></span></p>
+      <p><span id="gloss"></span></p>
     </details>
     <p class="foot" id="foot"></p>
   </div>
@@ -207,7 +225,9 @@ for(const dm of DOMAINS){
   const dn=add({id:dm.g,label:dm.label,kind:'domain',bench:root.bench,parent:root,children:[]});
   for(const [fam,subs] of Object.entries(D.groups[dm.g])){
     const fl=RENAME[fam]||fam;
-    const f=add({id:slug(dm.g+'-'+fl),label:fl,kind:'family',domain:dm.label,bench:dm.bench,parent:dn,children:[]});
+    // Opening a layer measures its members against the layer's industry peer (Accelerators vs
+    // SOXX, software vs IGV); the tier views above compare layers against the common QQQ.
+    const f=add({id:slug(dm.g+'-'+fl),label:fl,kind:'family',domain:dm.label,bench:(D.peers||{})[fl]||dm.bench,parent:dn,children:[]});
     root.children.push(f);dn.children.push(f);
     // A layer with no natural sub-grouping (Hyperscalers, Bio AI's groups) lists its
     // stocks directly; forcing a one-subsector level in between would just add a click
@@ -218,7 +238,7 @@ for(const dm of DOMAINS){
       continue;
     }
     for(const [name,m] of Object.entries(subs)){
-      const s=add({id:slug(dm.g+'-'+name),label:name,kind:'sub',domain:dm.label,bench:dm.bench,parent:f,members:m,children:[]});
+      const s=add({id:slug(dm.g+'-'+name),label:name,kind:'sub',domain:dm.label,bench:f.bench,parent:f,members:m,children:[]});
       f.children.push(s);
       // Every subsector gets its stocks as children, including a one-member one: without a
       // child, opening it from the sidebar or search drew an empty chart.
@@ -288,6 +308,17 @@ const ALTS=n=>[{m:4},{e:5,n:Math.round(n*1.4)},{n:Math.round(n*2.6)},{e:1}];
 // Default-parameter RRG per node/benchmark/frame. The arrays don't depend on the replay
 // date, so the nav can look up any node's quadrant at any date in O(1) after first use.
 const RC={};
+// List order uses one scale per horizon, fitted once across every layer's full history against
+// QQQ. The on-screen scale depends on the tail length and on which dots are visible, and
+// ranking by it let those display settings reorder the lists.
+const RKC={};
+function rankScale(idx,n){
+  if(RKC[st.frame])return RKC[st.frame];
+  let sx=0,sy=0,k=0;
+  for(const f of root.children){const r=rrgOf(f,'QQQ',idx,n);
+    for(let i=0;i<r.rsr.length;i++)if(r.rsr[i]!=null&&r.rsm[i]!=null){sx+=(r.rsr[i]-100)**2;sy+=(r.rsm[i]-100)**2;k++;}}
+  return RKC[st.frame]={x:Math.sqrt(sx/k)||1,y:Math.sqrt(sy/k)||1};
+}
 function rrgOf(nd,bench,idx,n){
   const k=nd.id+'|'+bench+'|'+st.frame;
   return RC[k]||(RC[k]=rrg(series(nd),D.px[bench],idx,n));
@@ -325,7 +356,10 @@ function go(id){if(!NODES[id])return;if(id!==st.node)st.hide=new Set();st.node=i
 const unit=()=>st.frame==='W'?'w':'d';
 const fmtD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
 
-const BENCH=['SPY','QQQ','RSP','SMH','SOXX'];
+// Common benchmarks first, then industry peers, then the S&P sector funds.
+const BGRP=[['Broad market',['SPY','QQQ','RSP']],['Industry',['SOXX','SMH','IGV','XBI','BOTZ']],['S&P sectors',Object.keys(D.sectors||{})]]
+  .map(([g,l])=>[g,l.filter(b=>D.px[b])]).filter(([,l])=>l.length);
+const BENCH=BGRP.flatMap(([,l])=>l);
 
 // State lived only in localStorage, so a view could not be linked and the back button did
 // nothing after drilling three levels deep. Mirror it into the hash instead; localStorage
@@ -336,7 +370,10 @@ function readHash(){
   if(h.get('frame')==='W'||h.get('frame')==='D')o.frame=h.get('frame');
   if([2,4,8,12].includes(+h.get('tail')))o.tail=+h.get('tail');
   if(h.get('bench')==='auto'||BENCH.includes(h.get('bench')))o.bench=h.get('bench');
-  if(/^\d+$/.test(h.get('end')||''))o.end=+h.get('end');
+  // end is a date (an index would shift whenever the embedded history window changes);
+  // a bare number is a pre-date-format link, an index into the full history.
+  const e=h.get('end')||'';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(e))o.endDate=e;else if(/^\d+$/.test(e))o.endLegacy=+e;
   o.layers=h.get('layers')==='1';
   o.hide=new Set((h.get('hide')||'').split(',').filter(x=>/^[a-z0-9-]+$/.test(x)));
   return o;
@@ -344,7 +381,7 @@ function readHash(){
 function writeHash(push){
   const p=new URLSearchParams();
   p.set('node',st.node);p.set('frame',st.frame);p.set('tail',st.tail);p.set('bench',st.bench);
-  if(st.end!=null)p.set('end',st.end);
+  if(st.end!=null){const ix=st.frame==='W'?weekIdx:dayIdx;const d=D.dates[ix[Math.min(st.end,ix.length-1)]];if(d)p.set('end',d);}
   if(st.layers)p.set('layers','1');
   if(st.hide.size)p.set('hide',[...st.hide].join(','));
   const u='#'+p;
@@ -355,7 +392,7 @@ Object.assign(st,readHash());
 if(!NODES[st.node])st.node='stack';
 writeHash(false);
 addEventListener('popstate',()=>{
-  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,layers:false},readHash());
+  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,endDate:null,endLegacy:null,layers:false},readHash());
   if(!NODES[st.node])st.node='stack';
   stopPlay();render();
 });
@@ -407,7 +444,7 @@ function render(fast,withList){
   for(const b of $('tail').children)b.setAttribute('aria-pressed',+b.dataset.v===st.tail);
   $('stackmode').hidden=cur.kind!=='stack';
   for(const b of $('lay').children)b.setAttribute('aria-pressed',(b.dataset.v==='1')===st.layers);
-  $('bench').innerHTML=`<option value="auto">${cur.bench} (default)</option>`+BENCH.filter(b=>b!==cur.bench).map(b=>`<option value="${b}">${b}</option>`).join('');
+  $('bench').innerHTML=`<option value="auto">${cur.bench} (default)</option>`+BGRP.map(([g,l])=>`<optgroup label="${g}">${l.filter(b=>b!==cur.bench).map(b=>`<option value="${b}">${b}</option>`).join('')}</optgroup>`).join('');
   $('bench').value=st.bench==='auto'||st.bench===cur.bench?'auto':st.bench;
   const lin=lineage(cur);
   $('crumbs').innerHTML=lin.map((n,i)=>i===lin.length-1?`<span class="cur">${n.label}</span>`:`<button type="button" data-id="${n.id}">${n.label}</button>`).join('<span class="sep">/</span>');
@@ -418,6 +455,9 @@ function render(fast,withList){
   const idx=st.frame==='W'?weekIdx:dayIdx,n=st.frame==='W'?10:21;
   const bx=D.px[bench];
   const minEnd=n*2+st.tail+5;
+  if(st.endDate){let k=-1;for(let i=0;i<idx.length;i++){if(D.dates[idx[i]]<=st.endDate)k=i;else break;}
+    st.end=k>=0&&k<idx.length-1?k:null;st.endDate=null;}
+  if(st.endLegacy!=null){st.end=Math.min(st.endLegacy,idx.length-1);st.endLegacy=null;}
   $('replay').min=minEnd;$('replay').max=idx.length-1;
   const end=st.end==null||st.end>idx.length-1?idx.length-1:Math.max(st.end,minEnd);
   $('replay').value=end+FRAC;
@@ -427,7 +467,8 @@ function render(fast,withList){
   // Replaying backwards projects today's roster onto a past date: CRWV starts 2025-03-28,
   // WOLF restarts 2025-09-29. combine() handles the nulls, but the reader cannot see that
   // the basket was smaller then, so say so.
-  {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='stack'?[]:null;
+  {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='domain'?deep(cur)
+     :cur.kind==='stack'?[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))]:cur.kind==='sectors'?cur.children.map(c=>c.ticker):null;
    if(ts&&ts.length){const live=ts.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length;
      ROSTER=live<ts.length?{live,total:ts.length}:null;}else ROSTER=null;}
   $('prov').hidden=!PROV;
@@ -444,16 +485,20 @@ function render(fast,withList){
     const q=quad(x,y);let ten=1,prev=null;
     for(let i=end-1;i>=Math.max(0,end-30);i--){if(r.rsr[i]==null||r.rsm[i]==null)break;const qi=quad(r.rsr[i],r.rsm[i]);if(qi!==q){prev=qi;break;}ten++;}
     const a=at(r.rs,end-st.tail+FRAC),b=at(r.rs,end+FRAC);
-    const alts=ALTS(n);let agree=alts.length+1;
-    if(!fast){                       // skipped while animating; badges return when it stops
-      agree=1;
+    // Agreement counts only settings that can be evaluated: a recent listing may lack history
+    // for the long baseline, and an unavailable setting is not a disagreement. Skipped while
+    // animating; badges return when playback stops.
+    const alts=ALTS(n);let agree=null,evals=null,outs=null;
+    if(!fast){
+      agree=1;evals=1;outs=[q];
       for(const o of alts){
-        const rr=rrg(series(c),bx,idx,n,o);
-        if(rr.rsr[end]!=null&&rr.rsm[end]!=null&&quad(rr.rsr[end],rr.rsm[end])===q)agree++;
+        const rr=rrg(series(c),bx,idx,n,o),ok=rr.rsr[end]!=null&&rr.rsm[end]!=null;
+        const qo=ok?quad(rr.rsr[end],rr.rsm[end]):null;outs.push(qo);
+        if(ok){evals++;if(qo===q)agree++;}
       }
     }
     ROWS.push({node:c,label:c.label,pts,x,y,q,hdg,ten,prev,rel:a&&b?(b/a-1)*100:null,open:c.children.length>0,
-      rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null),stab:agree,stabN:alts.length+1});
+      rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null),stab:agree,stabN:evals,stabOuts:outs});
   }
   // The two axes are both 100-centred but not on the same scale: RS-Ratio is a deviation
   // from a 10-bar baseline, RS-Momentum the one-bar change of that already-smoothed ratio,
@@ -467,6 +512,7 @@ function render(fast,withList){
   const VIS=ROWS.filter(r=>!st.hide.has(r.node.id));      // the axes fit what is actually shown
   for(const r of VIS)for(const q of r.pts){dxs.push(q[0]-100);dys.push(q[1]-100);}
   SIG=SCALELOCK?SCALELOCK.sig:{x:rms(dxs),y:rms(dys)};
+  {const K=rankScale(idx,n);for(const r of ROWS)r.rk=Math.hypot((r.x-100)/K.x,(r.y-100)/K.y);}
   for(const r of ROWS){
     r.spts=r.pts.map(q=>[100+(q[0]-100)/SIG.x,100+(q[1]-100)/SIG.y]);
     const m=r.spts.length;[r.sx,r.sy]=r.spts[m-1];
@@ -517,13 +563,14 @@ function draw(rows,allHidden){
   el('line',{x1:M.l,x2:R,y1:cy,y2:cy,stroke:'var(--line2)','stroke-width':1.2});
   const ql=(t,x,y,a,c)=>{el('text',{x,y,'text-anchor':a,fill:`var(${c})`,'fill-opacity':.55,'font-size':11,'font-weight':600,'letter-spacing':'.14em','font-family':'Geist, system-ui, sans-serif'}).textContent=t;};
   ql('IMPROVING',M.l+14,M.t+22,'start','--imp');ql('LEADING',R-14,M.t+22,'end','--lead');ql('LAGGING',M.l+14,B-12,'start','--lag');ql('WEAKENING',R-14,B-12,'end','--weak');
-  el('text',{...mono,x:(M.l+R)/2,y:H-4,'text-anchor':'middle',fill:'var(--muted)'}).textContent='Relative strength (σ) →';
-  el('text',{...mono,x:12,y:(M.t+B)/2,'text-anchor':'middle',fill:'var(--muted)',transform:`rotate(-90 12 ${(M.t+B)/2})`}).textContent='Momentum (σ) →';
+  el('text',{...mono,x:(M.l+R)/2,y:H-4,'text-anchor':'middle',fill:'var(--muted)'}).textContent='Relative strength (scaled to view) →';
+  el('text',{...mono,x:12,y:(M.t+B)/2,'text-anchor':'middle',fill:'var(--muted)',transform:`rotate(-90 12 ${(M.t+B)/2})`}).textContent='Momentum (scaled to view) →';
   const labels=[];
   for(const r of rows){
-    const c=Q[r.q].c,g=el('g',{class:'s','data-id':r.node.id,tabindex:'0',role:r.open?'button':'img',
-      'aria-label':`${r.label}${coName(r.node)?', '+coName(r.node):''}. ${Q[r.q].n}, ${r.ten>=30?'30 or more':r.ten} ${(st.frame==='W'?'week':'day')+(r.ten===1?'':'s')}. Relative strength ${r.x.toFixed(1)}, momentum ${r.y.toFixed(1)}.${r.open?' Activate to open.':''}`,
-      style:r.open?'cursor:pointer':'cursor:default'});
+    // Points are pointer targets only. Focusable children inside a role="img" SVG were invisible
+    // to assistive tech and broke Tab order on mobile; the quadrant lists beside the chart are
+    // the keyboard and screen-reader surface, and focusing a row highlights its dot.
+    const c=Q[r.q].c,g=el('g',{class:'s','data-id':r.node.id,style:r.open?'cursor:pointer':'cursor:default'});
     const P=r.spts.map(p=>[sx(p[0]),sy(p[1])]),n=P.length;
     for(let i=1;i<n;i++){
       const p0=P[Math.max(0,i-2)],p1=P[i-1],p2=P[i],p3=P[Math.min(n-1,i+1)],f=i/(n-1);
@@ -542,9 +589,6 @@ function draw(rows,allHidden){
     g.addEventListener('mouseenter',e=>{st.hover=r.node.id;focus();tip(e,r);});
     g.addEventListener('mousemove',e=>tip(e,r));
     g.addEventListener('mouseleave',()=>{st.hover=null;$('tip').hidden=true;focus();});
-    g.addEventListener('focus',()=>{st.hover=r.node.id;focus();});
-    g.addEventListener('blur',()=>{st.hover=null;$('tip').hidden=true;focus();});
-    g.addEventListener('keydown',e=>{if(r.open&&(e.key==='Enter'||e.key===' ')){e.preventDefault();go(r.node.id);}});
     if(r.open)g.addEventListener('click',()=>go(r.node.id));
     // Touch devices get no hover, so leaf nodes would otherwise be unreadable.
     else g.addEventListener('click',e=>{st.hover=r.node.id;focus();tip(e,r);});
@@ -572,7 +616,7 @@ function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
   t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
-    <span class="m">${r.stab} of ${r.stabN} smoothing settings agree on ${Q[r.q].n}</span><br><span class="num">RS ${r.x.toFixed(2)} (${(r.sx-100>=0?'+':'')}${(r.sx-100).toFixed(1)}σ) · Mom ${r.y.toFixed(2)} (${(r.sy-100>=0?'+':'')}${(r.sy-100).toFixed(1)}σ) · ${pct(r.rel)} over tail</span>${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
+    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} over tail</span>${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
   if(x+t.offsetWidth>box.width-4)x=e.clientX-box.left-t.offsetWidth-16;
   t.style.left=Math.max(0,x)+'px';t.style.top=y+'px';
@@ -584,16 +628,16 @@ function list(rows){
     s.textContent=`Show all (${rows.filter(r=>st.hide.has(r.node.id)).length} hidden)`;
     s.onclick=()=>{st.hide=new Set();writeHash(false);render();};a.append(s);}
   for(const q of QORDER){
-    const rs=rows.filter(r=>r.q===q).sort((a,b)=>Math.hypot(b.sx-100,b.sy-100)-Math.hypot(a.sx-100,a.sy-100));
+    const rs=rows.filter(r=>r.q===q).sort((a,b)=>b.rk-a.rk);
     const sec=document.createElement('section');
     sec.innerHTML=`<div class="qh"><b style="color:${Q[q].c}">${Q[q].n}</b><span>${Q[q].h}</span><span class="n">${rs.filter(r=>!st.hide.has(r.node.id)).length}</span></div>`;
     if(!rs.length)sec.insertAdjacentHTML('beforeend','<div class="empty">None</div>');
     for(const r of rs){
       const b=document.createElement('button');b.type='button';b.className='qrow';b.dataset.id=r.node.id;
       b.innerHTML=`<span class="nm">${r.label}${adhoc.has(r.node.ticker)?`<span class="co">${coName(r.node)}</span>`:''}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
-        <span>${r.stab<=3?`<span class="frag" title="Only ${r.stab} of ${r.stabN} smoothing settings put this in ${Q[q].n}">${r.stab}/${r.stabN}</span>`:''}</span>
+        <span>${r.stab!=null&&r.stabN-r.stab>=2?`<span class="frag" title="Only ${r.stab} of ${r.stabN} evaluable smoothing settings put this in ${Q[q].n}${r.stabN<5?` (${5-r.stabN} lack history)`:''}">${r.stab}/${r.stabN}</span>`:''}</span>
         <span class="ar" style="transform:rotate(${-r.hdg}deg)" title="Heading ${r.hdg.toFixed(0)}°">➝</span>
-        <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}</span>
+        <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}${PROV?'<span title="includes the week still in progress">*</span>':''}</span>
         <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
         <span class="go">${r.open?'›':''}</span>`;
       const cn=coName(r.node),lb=r.node.parent===SECT?`${r.label} (${r.node.ticker})`:r.label;b.title=(cn?`${lb} — ${cn}`:lb)+(r.open?' · click to open':'');
@@ -625,11 +669,11 @@ const tk=t=>{const c=D.names&&D.names[t];return c?`<span title="${c}" style="tex
 function members(cur){
   const m=$('members');
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
-  if(cur.kind==='sectors'){m.innerHTML=`The eleven SPDR sector ETFs, each measured against ${st.bench==='auto'?'SPY':st.bench}: `+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ');return;}
+  if(cur.kind==='sectors'){m.innerHTML=`The eleven SPDR sector ETFs, each measured against ${st.bench==='auto'?'SPY':st.bench}: `+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ')+rost;return;}
   if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.map(tk).join(', ')}.`+rost;return;}
   if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.map(tk).join(', ')}.`+rost;
   else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.map(tk).join(' ')}`).join(' · ')+rost;
-  else m.innerHTML=`Each ${cur.kind==='stack'&&!st.layers?'tier':'layer'} equal-weights its distinct stocks. `+kids(cur).map(f=>`<b>${f.label}</b> ${(f.kind==='domain'?deep(f):uniq(f)).length}`).join(' · ');
+  else m.innerHTML=`Each ${cur.kind==='stack'&&!st.layers?'tier':'layer'} equal-weights its distinct stocks. `+kids(cur).map(f=>`<b>${f.label}</b> ${(f.kind==='domain'?deep(f):uniq(f)).length}`).join(' · ')+rost;
 }
 function focus(){
   const qOf=Object.fromEntries(ROWS.map(r=>[r.node.id,r.q]));
@@ -660,13 +704,15 @@ let qrows=[],qsel=-1;
 function qrender(){
   const box=$('qres');
   box.innerHTML=qrows.length
-    ? qrows.map((r,i)=>`<button type="button" role="option" data-id="${r.id}" class="${i===qsel?'sel':''}">${r.label}${r.co?`<span class="p">${r.co}</span>`:''}<span class="p">${r.path}</span></button>`).join('')
+    ? qrows.map((r,i)=>`<button type="button" role="option" id="qopt-${i}" aria-selected="${i===qsel}" tabindex="-1" data-id="${r.id}" class="${i===qsel?'sel':''}">${r.label}${r.co?`<span class="p">${r.co}</span>`:''}<span class="p">${r.path}</span></button>`).join('')
     : '<div class="none">No match</div>';
-  box.hidden=false;
+  box.hidden=false;$('q').setAttribute('aria-expanded','true');
+  if(qsel>=0)$('q').setAttribute('aria-activedescendant','qopt-'+qsel);else $('q').removeAttribute('aria-activedescendant');
+  $('qlive').textContent=qrows.length?`${qrows.length} match${qrows.length>1?'es':''}`:'No match';
 }
 function qsearch(v){
   v=v.trim().toLowerCase();
-  if(!v){$('qres').hidden=true;qrows=[];qsel=-1;return;}
+  if(!v){$('qres').hidden=true;$('q').setAttribute('aria-expanded','false');$('q').removeAttribute('aria-activedescendant');qrows=[];qsel=-1;return;}
   const rank=x=>x.label.toLowerCase()===v?0:x.label.toLowerCase().startsWith(v)?1:2;
   qrows=SEARCH.filter(r=>r.key.includes(v)).sort((a,b)=>rank(a)-rank(b)||a.label.length-b.label.length).slice(0,12);
   qsel=qrows.length?0:-1;qrender();
@@ -711,7 +757,7 @@ function lockScale(from,to){
 }
 function stopPlay(){if(PLAY){cancelAnimationFrame(PLAY);PLAY=null;}FRAC=0;SCALELOCK=null;$('play').textContent='▶ Play';}
 $('play').onclick=()=>{
-  if(PLAY){stopPlay();render();return;}
+  if(PLAY){stopPlay();writeHash(false);render();return;}   // st.end already holds the bar on screen
   const max=+$('replay').max,min=+$('replay').min;
   if(max<=min)return;
   PLAYPOS=Math.max(min,max-(st.frame==='W'?52:120));
