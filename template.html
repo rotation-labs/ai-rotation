@@ -173,6 +173,34 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 
 svg g.s{transition:opacity .15s}
 svg .dimmed{opacity:.1}
+.tset{display:contents}
+.pl-short{display:none}
+/* Phones: below 760px the desktop layout just stacked, pushing the chart under the fold behind
+   three rows of controls, a column of change cards and a four-line caption. Put the chart first. */
+@media (max-width:600px){
+  body{padding-inline:12px;padding-block:10px 24px}
+  .app{gap:10px}
+  header{gap:8px;padding-bottom:10px}
+  h1{font-size:19px}
+  .tools{width:100%;gap:8px}
+  .find{flex:1 1 100%}.find input{width:100%;padding:7px 10px;font-size:14px}
+  .tset{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;overflow-x:auto;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .tset::-webkit-scrollbar{display:none}
+  .tset .tool{flex:none}
+  #stackmode>span,.tset .tool:nth-child(2)>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  .seg button{padding:6px 10px}
+  .changes .hd{font-size:11px;margin-bottom:5px}
+  .changes .cards{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding-bottom:2px}
+  .changes .cards::-webkit-scrollbar{display:none}
+  .changes .card{flex:none;scroll-snap-align:start}
+  .pl-long{display:none}.pl-short{display:inline}
+  .plotinfo{margin-bottom:4px}
+  .replay{padding-left:0;gap:6px 8px;flex-wrap:wrap}.replay input{order:9;flex:1 1 100%}
+  #tip{max-width:calc(100% - 12px)}
+  .qrow{gap:6px;padding:8px 2px}
+  .cmpsides{grid-template-columns:1fr}.cmpsides .vs{padding:0}
+  .cmpfind input{width:130px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .prov{font-size:11px;color:var(--weak);border:1px dashed var(--weak);border-radius:999px;padding:1px 7px;white-space:nowrap}
 .upd{font-size:11px;color:var(--imp);border:1px solid var(--imp);background:none;border-radius:999px;padding:2px 9px;margin-left:10px;vertical-align:middle;cursor:pointer}
@@ -187,11 +215,13 @@ svg .dimmed{opacity:.1}
     </div>
     <div class="tools">
       <div class="tool find"><input id="q" type="search" placeholder="Find ticker or basket" autocomplete="off" aria-label="Find a ticker or basket" role="combobox" aria-autocomplete="list" aria-controls="qres" aria-expanded="false"><div id="qres" hidden role="listbox" aria-label="Matches"></div><span id="qlive" class="sr" aria-live="polite"></span></div>
+      <div class="tset">
       <div class="tool" id="stackmode" hidden><span>Show</span><div class="seg" id="lay"><button type="button" data-v="0">Tiers</button><button type="button" data-v="1">All layers</button></div></div>
       <div class="tool"><span>Bars</span><div class="seg" id="frame"><button type="button" data-v="W" title="Weekly bars; trend measured against a 10-week average">Weekly</button><button type="button" data-v="D" title="Daily bars; trend measured against a 21-session (about one month) average">Daily</button></div></div>
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
       <div class="tool"><button type="button" id="cmpbtn" class="tbtn" aria-pressed="false" title="Compare any two baskets or tickers">Compare</button></div>
+      </div>
     </div>
   </header>
 
@@ -440,6 +470,8 @@ const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
 const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q'};
 let KEYOPEN=false;
+const TOUCH=matchMedia('(pointer:coarse)').matches;
+let TIPFOR=null;   // on touch, the dot whose tooltip is showing; a second tap on it opens it
 // Full stack plots one dot per tier by default; the toggle expands it to every layer.
 const kids=cur=>cur.kind==='stack'?(st.layers?root.children:DOMAINS.map(d=>NODES[d.g])):cur.children;
 let PROV=false;
@@ -462,8 +494,9 @@ const fmtMD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short
 function plotInfo(idx,end,bench){
   const W=st.frame==='W',t0=Math.max(0,end-st.tail),d0=D.dates[idx[t0]],d1=D.dates[idx[end]];
   const from=d0.slice(0,4)===d1.slice(0,4)?fmtMD(d0):fmtD(d0);
-  $('plotinfo').innerHTML=`<b>${W?'Weekly':'Daily'} bars</b> · tails run <b>${from} → ${fmtD(d1)}</b> (${end-t0} ${W?'weeks':'sessions'}${PROV?(LIVE?`, last bar live as of ${LIVE.time}, quotes delayed`:', last week still in progress'):''})`
-    +` · trend measured against a ${W?'10-week':'21-session (about 1-month)'} average · vs <b>${bench}</b> · row % is relative return over that span`;
+  $('plotinfo').innerHTML=`<span class="pl-long"><b>${W?'Weekly':'Daily'} bars</b> · tails run <b>${from} → ${fmtD(d1)}</b> (${end-t0} ${W?'weeks':'sessions'}${PROV?(LIVE?`, last bar live as of ${LIVE.time}, quotes delayed`:', last week still in progress'):''})`
+    +` · trend measured against a ${W?'10-week':'21-session (about 1-month)'} average · vs <b>${bench}</b> · row % is relative return over that span</span>`
+    +`<span class="pl-short"><b>${W?'Weekly':'Daily'}</b> · ${from} → ${fmtMD(d1)} · vs <b>${bench}</b>${PROV?(LIVE?` · live ${LIVE.time}`:' · week in progress'):''}</span>`;
   return from;
 }
 
@@ -684,10 +717,18 @@ function render(fast,withList){
   focus();
 }
 
-const svg=$('svg'),NS='http://www.w3.org/2000/svg',W=820,H=620,M={l:52,r:16,t:12,b:38};
+const svg=$('svg'),NS='http://www.w3.org/2000/svg';
+let W=820,H=620,M={l:52,r:16,t:12,b:38};
 function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).append(e);return e;}
 function niceStep(span){const s=span/6,p=Math.pow(10,Math.floor(Math.log10(s))),f=s/p;return (f<1.5?1:f<3?2:f<7?5:10)*p;}
 function draw(rows,allHidden){
+  // An 820-wide drawing scaled onto a phone rendered labels at ~5px. Below 600px, lay the chart
+  // out at the width it is actually shown so type renders at its real size, a little taller than
+  // wide to give the dots room.
+  const cw=Math.round(svg.parentElement.clientWidth||820);
+  if(cw<600){W=cw;H=Math.round(Math.min(cw*1.12,560));M={l:34,r:8,t:10,b:32};}
+  else{W=820;H=620;M={l:52,r:16,t:12,b:38};}
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   svg.innerHTML='';
   // Lock a window symmetric about 100 with matching units per pixel on both axes, so a
   // rotation traces a circle rather than a flat ellipse and the frame stops rescaling to
@@ -740,18 +781,35 @@ function draw(rows,allHidden){
     g.addEventListener('mouseenter',e=>{st.hover=r.node.id;focus();tip(e,r);});
     g.addEventListener('mousemove',e=>tip(e,r));
     g.addEventListener('mouseleave',()=>{st.hover=null;$('tip').hidden=true;focus();});
-    if(r.open)g.addEventListener('click',()=>go(r.node.id));
+    // On touch there is no hover, so a tap that navigated at once meant a phone never saw the
+    // tooltip. First tap previews; tapping the same dot again opens it.
+    if(r.open)g.addEventListener('click',e=>{if(TOUCH&&TIPFOR!==r.node.id){st.hover=r.node.id;focus();tip(e,r);TIPFOR=r.node.id;return;}go(r.node.id);});
     // Touch devices get no hover, so leaf nodes would otherwise be unreadable.
     else g.addEventListener('click',e=>{st.hover=r.node.id;focus();tip(e,r);});
     labels.push({r,X,Y});
   }
-  labels.sort((a,b)=>a.Y-b.Y);const placed=[];
-  for(const L of labels){let ly=L.Y+4,lx=L.X+11;const w=L.r.label.length*6.7+8;
-    if(lx+w>R-4)lx=L.X-11-w;
-    for(let k=0;k<10;k++){const hit=placed.find(p=>Math.abs(p.y-ly)<12&&lx<p.x+p.w&&p.x<lx+w);if(!hit)break;ly=hit.y+13;}
-    placed.push({x:lx,y:ly,w});
+  // Try every side of a dot before displacing its label. Only ever pushing clashes downward
+  // was fine at 820px but, on a phone-width chart, sent labels far from their dots. A label that
+  // still has to move away gets a thin leader line back to its dot.
+  // Place the labels that matter first - the dot being hovered or tapped, recent quadrant
+  // changes, then distance from centre - and leave off any that cannot sit near their dot.
+  // Forcing every label in piled them over the axes once a view got dense (30 layers on a phone).
+  const pri=L=>(L.r.node.id===st.hover?1e6:0)+(L.r.prev&&L.r.ten<=2?1e3:0)+(L.r.rk||0);
+  labels.sort((a,b)=>pri(b)-pri(a));const placed=[],B2=H-M.b;let skipped=0;
+  const fits=(x,y,w)=>x>=M.l+2&&x+w<=R-2&&y-10>=M.t&&y+3<=B2-2;
+  const clash=(x,y,w,L)=>placed.some(p=>x<p.x+p.w+2&&p.x<x+w+2&&y-12<p.y+5&&p.y-12<y+5)
+    ||labels.some(o=>o!==L&&o.X>x-6&&o.X<x+w+6&&o.Y>y-16&&o.Y<y+9);
+  for(const L of labels){const w=L.r.label.length*6.7+8,X=L.X,Y=L.Y;
+    const cands=[[X+11,Y+4],[X-11-w,Y+4],[X-w/2,Y-12],[X-w/2,Y+20],[X+11,Y-9],[X-11-w,Y-9],
+      [X+11,Y+17],[X-11-w,Y+17],[X+11,Y-22],[X-11-w,Y-22],[X+11,Y+30],[X-11-w,Y+30]];
+    const pos=cands.find(([x,y])=>fits(x,y,w)&&!clash(x,y,w,L));
+    if(!pos){skipped++;continue;}
+    const [lx,ly]=pos;placed.push({x:lx,y:ly,w});
+    const nx=Math.max(lx,Math.min(X,lx+w)),ny=Math.max(ly-10,Math.min(Y,ly+3));
+    if(Math.hypot(nx-X,ny-Y)>14)el('line',{class:'lead','data-id':L.r.node.id,x1:X,y1:Y,x2:nx,y2:ny,stroke:'var(--line2)','stroke-width':1,style:'pointer-events:none'});
     el('text',{class:'lab','data-id':L.r.node.id,x:lx,y:ly,fill:'var(--text)','font-size':12,'font-weight':500,'font-family':'Geist, system-ui, sans-serif','paint-order':'stroke',stroke:'var(--panel)','stroke-width':4,'stroke-linejoin':'round',style:'pointer-events:none'}).textContent=L.r.label;
   }
+  if(skipped)el('text',{x:(M.l+R)/2,y:B-12,'text-anchor':'middle',fill:'var(--faint)','font-size':10.5,'font-family':'Geist, system-ui, sans-serif'}).textContent=`${skipped} unlabelled · ${TOUCH?'tap':'hover'} a dot`;
   if(!rows.length)el('text',{x:W/2,y:H/2,'text-anchor':'middle',fill:'var(--muted)','font-size':13}).textContent=allHidden?'Everything is hidden. Tick a row to show it':'Not enough history for this view';
 }
 const pct=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
@@ -767,10 +825,12 @@ function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
   t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
-    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} since ${VIEW?VIEW.from:'tail start'}</span>${r.br?`<br><span class="m">Breadth ${r.br.up}/${r.br.k} outperforming${r.disp!=null?` · dispersion ${r.disp.toFixed(1)} pts`:''}${r.top?` · leaders ${r.top.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')} · laggards ${r.bot.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')}`:''}</span>`:''}${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
+    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} since ${VIEW?VIEW.from:'tail start'}</span>${r.br?`<br><span class="m">Breadth ${r.br.up}/${r.br.k} outperforming${r.disp!=null?` · dispersion ${r.disp.toFixed(1)} pts`:''}${r.top?` · leaders ${r.top.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')} · laggards ${r.bot.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')}`:''}</span>`:''}${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?`<br><span class="m">${TOUCH?'Tap again to open':'Click to open'}</span>`:''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
   if(x+t.offsetWidth>box.width-4)x=e.clientX-box.left-t.offsetWidth-16;
-  t.style.left=Math.max(0,x)+'px';t.style.top=y+'px';
+  x=Math.max(4,Math.min(x,box.width-t.offsetWidth-4));
+  if(y+t.offsetHeight>box.height-4)y=Math.max(4,e.clientY-box.top-t.offsetHeight-12);   // flip above the finger
+  t.style.left=x+'px';t.style.top=y+'px';
 }
 
 function list(rows){
@@ -880,7 +940,7 @@ function members(cur){
 function focus(){
   const qOf=Object.fromEntries(ROWS.map(r=>[r.node.id,r.q]));
   const on=id=>st.hover?id===st.hover:st.hoverQ?qOf[id]===st.hoverQ:true;
-  svg.querySelectorAll('g.s,text.lab').forEach(e=>e.classList.toggle('dimmed',!on(e.dataset.id)));
+  svg.querySelectorAll('g.s,text.lab,line.lead').forEach(e=>e.classList.toggle('dimmed',!on(e.dataset.id)));
   if(st.hover){const g=svg.querySelector(`g.s[data-id="${st.hover}"]`),l=svg.querySelector(`text.lab[data-id="${st.hover}"]`);if(g)svg.append(g);if(l)svg.append(l);}
   document.querySelectorAll('.qrow').forEach(e=>{e.classList.toggle('focus',!!st.hover&&e.dataset.id===st.hover);e.classList.toggle('dim',!on(e.dataset.id));});
 }
@@ -958,7 +1018,9 @@ function compare(){
   const ratio=A.map((a,i)=>a!=null&&B[i]!=null?a/B[i]:null);
   const i0=ratio.findIndex(v=>v!=null);if(i0<0){stats.textContent='No overlapping history.';return;}
   const rel=ratio.map(v=>v==null?null:100*v/ratio[i0]);
-  const W=820,H=170,m={l:40,r:10,t:10,b:22},vals=rel.slice(i0).filter(v=>v!=null);
+  const cw=Math.round(svgc.parentElement.clientWidth-24)||820,W=cw<600?cw:820,H=cw<600?150:170;   // native size on phones
+  svgc.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const m={l:40,r:10,t:10,b:22},vals=rel.slice(i0).filter(v=>v!=null);
   let lo=Math.min(...vals,100),hi=Math.max(...vals,100);const pad=(hi-lo)*.08||1;lo-=pad;hi+=pad;
   const X=i=>m.l+(i-i0)/Math.max(1,N-1-i0)*(W-m.l-m.r),Y=v=>H-m.b-(v-lo)/(hi-lo)*(H-m.t-m.b);
   const mk=(tg,a)=>{const el=document.createElementNS(NS,tg);for(const k in a)el.setAttribute(k,a[k]);svgc.append(el);return el;};
@@ -967,7 +1029,8 @@ function compare(){
   mk('path',{d,fill:'none',stroke:'var(--imp)','stroke-width':1.6});
   mk('line',{x1:X(e),x2:X(e),y1:m.t,y2:H-m.b,stroke:'var(--weak)','stroke-width':1,'stroke-dasharray':'2 3'});
   const lab=(x,y,s,anchor='start')=>{const tx=mk('text',{x,y,fill:'var(--faint)','font-size':10.5,'font-family':'Geist Mono, ui-monospace, monospace','text-anchor':anchor});tx.textContent=s;};
-  lab(m.l-6,Y(hi-pad)+4,(hi-pad).toFixed(0),'end');lab(m.l-6,Y(lo+pad)+4,(lo+pad).toFixed(0),'end');lab(m.l-6,Y(100)+4,'100','end');
+  lab(m.l-6,Y(100)+4,'100','end');   // extremes only where they won't print over the baseline label
+  for(const v of [hi-pad,lo+pad])if(Math.abs(Y(v)-Y(100))>13)lab(m.l-6,Y(v)+4,v.toFixed(0),'end');
   lab(m.l,H-6,fmtD(D.dates[i0]));lab(W-m.r,H-6,fmtD(D.dates[N-1]),'end');
   // changes up to the replayed date, the rotation of A against B, and breadth on each side
   const chg=L=>e-L>=i0&&ratio[e]!=null&&ratio[e-L]!=null?pct((ratio[e]/ratio[e-L]-1)*100):'—';
@@ -998,6 +1061,9 @@ for(const inp of document.querySelectorAll('.cmpfind input')){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const b=box.querySelector('button');if(b)b.click();}else if(e.key==='Escape'){inp.value='';box.hidden=true;}});
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.cmpfind'))for(const b of document.querySelectorAll('.cmpres'))b.hidden=true;});
+
+// ---- Redraw on width changes ----
+{let lw=0,tm=null;addEventListener('resize',()=>{clearTimeout(tm);tm=setTimeout(()=>{const w=svg.parentElement.clientWidth;if(Math.abs(w-lw)>24){lw=w;render();}},120);});}
 
 // ---- New builds ----
 // Builds land every 30 minutes in market hours, but an open tab would otherwise sit on the data
@@ -1095,6 +1161,6 @@ $('play').onclick=()=>{
   if(biz>=2){const e=$('stale');e.textContent=`Data ${biz} sessions behind — a scheduled build may have failed`;e.hidden=false;}
 })();
 // Dismiss a tapped tooltip when tapping empty chart space.
-svg.addEventListener('click',e=>{if(!e.target.closest('g.s')){st.hover=null;$('tip').hidden=true;focus();}});
+svg.addEventListener('click',e=>{if(!e.target.closest('g.s')){st.hover=null;TIPFOR=null;$('tip').hidden=true;focus();}});
 render();
 </script>

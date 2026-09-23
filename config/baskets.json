@@ -527,7 +527,6 @@
         ],
         "Creative & Design": [
           "ADBE",
-          "U",
           "FIG"
         ],
         "AI Platforms": [
@@ -535,7 +534,8 @@
         ],
         "Adtech": [
           "APP",
-          "TTD"
+          "TTD",
+          "U"
         ]
       }
     },
