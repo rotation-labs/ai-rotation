@@ -134,6 +134,12 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .cmpres button:hover{background:var(--hover)}.cmpres .p{color:var(--faint);font-size:10.5px;margin-left:6px}
 #cmpsvg{width:100%;height:auto;display:block}
 .cmpstats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:6px}.cmpstats b{color:var(--text);font-weight:500}
+.plothd{display:flex;align-items:flex-start;justify-content:space-between;gap:4px 12px;margin:0 0 6px}
+.plothd .plotinfo{margin:0}
+.zoom{flex:none;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.zoom .seg button{min-width:26px}
+#zoomv{min-width:34px}
+#zoomoff{font-size:11px;color:var(--faint);white-space:nowrap}#zoomoff:empty{display:none}
 .plotinfo{font-size:11.5px;color:var(--muted);margin:0 0 6px;line-height:1.5}.plotinfo b{color:var(--text);font-weight:500}
 .changes{margin:0 0 8px}
 .changes .hd{font-size:11.5px;color:var(--muted);margin-bottom:6px}.changes .pv{color:var(--faint)}
@@ -239,7 +245,7 @@ svg .dimmed{opacity:.1}
       <div class="cmpstats" id="cmpstats" aria-live="polite"></div>
     </div>
     <div class="changes" id="changes" aria-live="polite"></div>
-    <div class="plotinfo" id="plotinfo"></div>
+    <div class="plothd"><div class="plotinfo" id="plotinfo"></div><div class="zoom" role="group" aria-label="Chart scale"><span>Scale</span><div class="seg"><button type="button" id="zoomout" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" id="zoomv" title="Fit every dot (0)">Fit</button><button type="button" id="zoomin" aria-label="Zoom in" title="Zoom in (+) to see small moves; dots beyond the edge are pinned to it">+</button></div><span id="zoomoff" class="num"></span></div></div>
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
     <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0" step="any"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="play">▶ Play</button><button type="button" id="latest">Latest</button></div>
@@ -253,7 +259,7 @@ svg .dimmed{opacity:.1}
       <summary>How to read this</summary>
       <p><b>Axes.</b> Right of centre means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above centre means that relative strength is accelerating (RS-Momentum above 100). The two measures have very different spreads, so each axis is divided by its RMS distance from 100 across the dots and tails on screen. These are view-relative units, not a statistical σ: +1 is the same visual distance on both axes, but the numbers are not comparable between views. The window is square and centred, so a rotation traces a circle rather than an ellipse. Raw values are in each dot's tooltip.</p>
       <p><b>Levels.</b> Seven tiers, cut where the AI trade actually moves apart: Core Semis, AI Compute, Networking &amp; Optics, Power &amp; Buildout, Platforms &amp; Software, Physical AI and Bio AI. Full stack and the tier views compare everything against QQQ, a common yardstick; switch Full stack to <em>All layers</em> to see every layer at once. Opening a layer switches to its industry peer (Accelerators against SOXX, software against IGV, biotech against XBI, and so on), so you see which names lead <em>within</em> their industry. The <em>vs</em> control overrides either, and the Benchmark check under the lists shows how the call changes across benchmarks.</p>
-      <p><b>Lists.</b> Each quadrant is sorted by distance from the centre. The arrow is the direction of the last step; the small number is how long the dot has been in that quadrant (<b>*</b> means it includes the week still in progress); NEW marks a crossing in the last two bars; the percentage is relative performance over the tail; breadth is the share of a basket's members that are themselves right of centre against the same benchmark. Untick a row to hide it; the axes rescale to what is left, and the link keeps the selection.</p>
+      <p><b>Lists.</b> Each quadrant is sorted by distance from the centre. The arrow is the direction of the last step; the small number is how long the dot has been in that quadrant (<b>*</b> means it includes the week still in progress); NEW marks a crossing in the last two bars; the percentage is relative performance over the tail; breadth is the share of a basket's members that are themselves right of centre against the same benchmark. Untick a row to hide it; the axes rescale to what is left, and the link keeps the selection. To see small moves when one name sets the scale, use <b>Scale +</b> above the chart (or <kbd>+</kbd> / <kbd>−</kbd>, <kbd>0</kbd> to fit, or pinch on a trackpad); zoomed in, the window follows the bulk of the dots, and any that fall beyond the edge are pinned to it with an arrow in their quadrant's colour.</p>
       <p><b>Stability.</b> The smoothing choices change the answer more than most readers would guess. Every dot is also run under four alternatives: four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing. A badge such as 2/5 marks a call that only a minority of settings share; a recent listing may lack history for some settings, which then don't count (3/4). Treat badged calls as provisional.</p>
     </details>
     <details>
@@ -468,7 +474,7 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q'};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1};
 let KEYOPEN=false;
 const TOUCH=matchMedia('(pointer:coarse)').matches;
 let TIPFOR=null;   // on touch, the dot whose tooltip is showing; a second tap on it opens it
@@ -508,6 +514,9 @@ const BENCH=BGRP.flatMap(([,l])=>l);
 // State lived only in localStorage, so a view could not be linked and the back button did
 // nothing after drilling three levels deep. Mirror it into the hash instead; localStorage
 // stays as the default for a bare URL.
+// Chart zoom, relative to the window that fits every dot. One far-out name set the scale for
+// everyone, so the moves of the rest were squeezed into a few pixels around the centre.
+const ZSTEPS=[1,1.5,2,3,4,6,8],ZMAX=8;
 function readHash(){
   const h=new URLSearchParams(location.hash.slice(1)),o={};
   if(NODES[h.get('node')])o.node=h.get('node');
@@ -524,6 +533,7 @@ function readHash(){
   o.ca=(h.get('ca')||'').split(',').filter(tokOk);o.cb=(h.get('cb')||'').split(',').filter(tokOk);
   o.cmp=!!(o.ca.length||o.cb.length);
   o.panel=h.get('panel')==='bench'?'b':'q';
+  {const z=+h.get('zoom');o.zoom=z>=1&&z<=ZMAX?z:1;}
   return o;
 }
 function writeHash(push){
@@ -536,6 +546,7 @@ function writeHash(push){
   if(st.hide.size)p.set('hide',[...st.hide].join(','));
   if(st.cmp){p.set('ca',st.ca.join(','));p.set('cb',st.cb.join(','));}
   if(st.panel==='b')p.set('panel','bench');
+  if(st.zoom>1)p.set('zoom',+st.zoom.toFixed(2));
   const u='#'+p;
   if(location.hash===u)return;
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
@@ -551,6 +562,12 @@ addEventListener('popstate',()=>{
 $('frame').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.frame=b.dataset.v;st.end=null;save();render();};
 $('tail').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.tail=+b.dataset.v;save();render();};
 $('bench').onchange=()=>{st.bench=$('bench').value;save();render();};
+const setZoom=z=>{z=Math.min(ZMAX,Math.max(1,z));if(Math.abs(z-st.zoom)<1e-3)return;st.zoom=z;writeHash(false);render(!!PLAY);};
+$('zoomin').onclick=()=>setZoom(ZSTEPS.find(z=>z>st.zoom+1e-3)||ZMAX);
+$('zoomout').onclick=()=>setZoom([...ZSTEPS].reverse().find(z=>z<st.zoom-1e-3)||1);
+$('zoomv').onclick=()=>setZoom(1);
+// Trackpad pinch arrives as a ctrl+wheel; a plain wheel still scrolls the page.
+$('svg').addEventListener('wheel',e=>{if(!e.ctrlKey)return;e.preventDefault();setZoom(st.zoom*Math.exp(-e.deltaY*0.01));},{passive:false});
 $('lay').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.layers=b.dataset.v==='1';st.hide=new Set();save();render();};
 $('replay').oninput=()=>{st.end=Math.round(+$('replay').value);stopPlay();writeHash(false);render();};
 for(const ev of ['pointerdown','focus','keydown'])$('replay').addEventListener(ev,()=>loadHistory(),{passive:true});
@@ -597,6 +614,9 @@ function render(fast,withList){
   const bench=st.bench==='auto'?cur.bench:st.bench;
   for(const b of $('frame').children)b.setAttribute('aria-pressed',b.dataset.v===st.frame);
   for(const b of $('tail').children)b.setAttribute('aria-pressed',+b.dataset.v===st.tail);
+  $('zoomv').textContent=st.zoom>1?(+st.zoom.toFixed(1))+'×':'Fit';
+  $('zoomv').setAttribute('aria-label',st.zoom>1?`Zoomed ${+st.zoom.toFixed(1)} times; reset to fit`:'Fit every dot');
+  $('zoomout').disabled=st.zoom<=1;$('zoomin').disabled=st.zoom>=ZMAX;
   $('stackmode').hidden=cur.kind!=='stack';
   for(const b of $('lay').children)b.setAttribute('aria-pressed',(b.dataset.v==='1')===st.layers);
   if($('bench').dataset.k!==cur.bench)$('bench').dataset.k=cur.bench,$('bench').innerHTML=`<option value="auto">${cur.bench} (default)</option>`+BGRP.map(([g,l])=>`<optgroup label="${g}">${l.filter(b=>b!==cur.bench).map(b=>`<option value="${b}">${b}</option>`).join('')}</optgroup>`).join('');
@@ -720,6 +740,13 @@ function render(fast,withList){
 const svg=$('svg'),NS='http://www.w3.org/2000/svg';
 let W=820,H=620,M={l:52,r:16,t:12,b:38};
 function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).append(e);return e;}
+// Centre of the bulk of the points: the middle of their 10th-90th percentile range on each
+// axis, so one far-out name does not drag a zoomed window away from everyone else.
+function bulk(pts){
+  if(!pts.length)return [100,100];
+  const mid=a=>{a.sort((u,v)=>u-v);const q=f=>a[Math.min(a.length-1,Math.floor(f*a.length))];return (q(.1)+q(.9))/2;};
+  return [mid(pts.map(p=>p[0])),mid(pts.map(p=>p[1]))];
+}
 function niceStep(span){const s=span/6,p=Math.pow(10,Math.floor(Math.log10(s))),f=s/p;return (f<1.5?1:f<3?2:f<7?5:10)*p;}
 function draw(rows,allHidden){
   // An 820-wide drawing scaled onto a phone rendered labels at ~5px. Below 600px, lay the chart
@@ -737,26 +764,44 @@ function draw(rows,allHidden){
   let mx=0,my=0;
   if(SCALELOCK){mx=SCALELOCK.mx;my=SCALELOCK.my;}
   else for(const r of rows)for(const p of r.spts){mx=Math.max(mx,Math.abs(p[0]-100));my=Math.max(my,Math.abs(p[1]-100));}
-  const hx=Math.max(mx,my*pw/ph,0.4)*1.1,hy=hx*ph/pw;
-  const x0=100-hx,x1=100+hx,y0=100-hy,y1=100+hy;
+  // Zoom narrows the window about the centre, so the quadrants stay where they are.
+  // Zooming about 100 was no help when the moves sit off-centre (a whole view in Lagging went
+  // straight off the edge), so a zoomed window follows the bulk of the current dots, staying
+  // inside the fitted one; older tail points may run off it. At Fit it is the window above.
+  const fx=Math.max(mx,my*pw/ph,0.4)*1.1,fy=fx*ph/pw,hx=fx/st.zoom,hy=hx*ph/pw;
+  let ccx=100,ccy=100;
+  if(st.zoom>1){
+    const c=SCALELOCK?SCALELOCK.c:bulk(rows.map(r=>r.spts[r.spts.length-1]));
+    ccx=Math.min(100+fx-hx,Math.max(100-fx+hx,c[0]));ccy=Math.min(100+fy-hy,Math.max(100-fy+hy,c[1]));
+  }
+  const x0=ccx-hx,x1=ccx+hx,y0=ccy-hy,y1=ccy+hy;
   const sx=v=>M.l+(v-x0)/(x1-x0)*(W-M.l-M.r),sy=v=>H-M.b-(v-y0)/(y1-y0)*(H-M.t-M.b);
-  const cx=sx(100),cy=sy(100),R=W-M.r,B=H-M.b;
+  const R=W-M.r,B=H-M.b,cx=Math.min(R,Math.max(M.l,sx(100))),cy=Math.min(B,Math.max(M.t,sy(100)));
   el('rect',{x:M.l,y:M.t,width:R-M.l,height:B-M.t,fill:'var(--panel)',rx:10});
   const wash=[[M.l,M.t,cx-M.l,cy-M.t,'--imp'],[cx,M.t,R-cx,cy-M.t,'--lead'],[M.l,cy,cx-M.l,B-cy,'--lag'],[cx,cy,R-cx,B-cy,'--weak']];
   for(const [x,y,w,h,c] of wash)if(w>0&&h>0)el('rect',{x,y,width:w,height:h,fill:`var(${c})`,'fill-opacity':.045});
   const mono={'font-family':'Geist Mono, ui-monospace, monospace','font-size':10.5,fill:'var(--faint)'};
-  const stx=niceStep(x1-x0),sty=niceStep(y1-y0),dp=s=>s<1?1:0;
+  const stx=niceStep(x1-x0),sty=niceStep(y1-y0),dp=s=>s<0.1?2:s<1?1:0;
   const devlab=(v,s)=>Math.abs(v-100)<1e-9?'0':(v>100?'+':'')+(v-100).toFixed(dp(s));
   for(let v=Math.ceil(x0/stx)*stx;v<=x1;v+=stx){const X=sx(v);if(Math.abs(v-100)>1e-9)el('line',{x1:X,x2:X,y1:M.t,y2:B,stroke:'var(--line)','stroke-dasharray':'2 4'});
     el('text',{...mono,x:X,y:B+16,'text-anchor':'middle'}).textContent=devlab(v,stx);}
   for(let v=Math.ceil(y0/sty)*sty;v<=y1;v+=sty){const Y=sy(v);if(Math.abs(v-100)>1e-9)el('line',{x1:M.l,x2:R,y1:Y,y2:Y,stroke:'var(--line)','stroke-dasharray':'2 4'});
     el('text',{...mono,x:M.l-8,y:Y+3.5,'text-anchor':'end'}).textContent=devlab(v,sty);}
-  el('line',{x1:cx,x2:cx,y1:M.t,y2:B,stroke:'var(--line2)','stroke-width':1.2});
-  el('line',{x1:M.l,x2:R,y1:cy,y2:cy,stroke:'var(--line2)','stroke-width':1.2});
+  if(cx>M.l&&cx<R)el('line',{x1:cx,x2:cx,y1:M.t,y2:B,stroke:'var(--line2)','stroke-width':1.2});
+  if(cy>M.t&&cy<B)el('line',{x1:M.l,x2:R,y1:cy,y2:cy,stroke:'var(--line2)','stroke-width':1.2});
   const ql=(t,x,y,a,c)=>{el('text',{x,y,'text-anchor':a,fill:`var(${c})`,'fill-opacity':.55,'font-size':11,'font-weight':600,'letter-spacing':'.14em','font-family':'Geist, system-ui, sans-serif'}).textContent=t;};
-  ql('IMPROVING',M.l+14,M.t+22,'start','--imp');ql('LEADING',R-14,M.t+22,'end','--lead');ql('LAGGING',M.l+14,B-12,'start','--lag');ql('WEAKENING',R-14,B-12,'end','--weak');
+  // Zoomed off-centre, a corner can belong to another quadrant; name only the ones in view.
+  const qv=(w,h)=>w>=110&&h>=40;
+  if(qv(cx-M.l,cy-M.t))ql('IMPROVING',M.l+14,M.t+22,'start','--imp');
+  if(qv(R-cx,cy-M.t))ql('LEADING',R-14,M.t+22,'end','--lead');
+  if(qv(cx-M.l,B-cy))ql('LAGGING',M.l+14,B-12,'start','--lag');
+  if(qv(R-cx,B-cy))ql('WEAKENING',R-14,B-12,'end','--weak');
   el('text',{...mono,x:(M.l+R)/2,y:H-4,'text-anchor':'middle',fill:'var(--muted)'}).textContent='Relative strength (scaled to view) →';
   el('text',{...mono,x:12,y:(M.t+B)/2,'text-anchor':'middle',fill:'var(--muted)',transform:`rotate(-90 12 ${(M.t+B)/2})`}).textContent='Momentum (scaled to view) →';
+  // Zoomed in, tails are clipped to the plot and a dot beyond the edge is pinned to it with an
+  // arrow pointing the way it went, in its quadrant's colour.
+  el('rect',{x:M.l,y:M.t,width:R-M.l,height:B-M.t},el('clipPath',{id:'plotclip'},el('defs',{})));
+  let pinned=0;
   const labels=[];
   for(const r of rows){
     // Points are pointer targets only. Focusable children inside a role="img" SVG were invisible
@@ -764,17 +809,25 @@ function draw(rows,allHidden){
     // the keyboard and screen-reader surface, and focusing a row highlights its dot.
     const c=Q[r.q].c,g=el('g',{class:'s','data-id':r.node.id,style:r.open?'cursor:pointer':'cursor:default'});
     const P=r.spts.map(p=>[sx(p[0]),sy(p[1])]),n=P.length;
+    const tg=st.zoom>1?el('g',{'clip-path':'url(#plotclip)'},g):g;
     for(let i=1;i<n;i++){
       const p0=P[Math.max(0,i-2)],p1=P[i-1],p2=P[i],p3=P[Math.min(n-1,i+1)],f=i/(n-1);
       const seg=Math.hypot(p2[0]-p1[0],p2[1]-p1[1]),cap=seg/3;
       const clamp=(vx,vy)=>{const L=Math.hypot(vx,vy);return L>cap&&L>0?[vx*cap/L,vy*cap/L]:[vx,vy];};
       const [u1,v1]=clamp((p2[0]-p0[0])/6,(p2[1]-p0[1])/6),[u2,v2]=clamp((p3[0]-p1[0])/6,(p3[1]-p1[1])/6);
       const c1=[p1[0]+u1,p1[1]+v1],c2=[p2[0]-u2,p2[1]-v2];
-      el('path',{d:`M${p1}C${c1} ${c2} ${p2}`,fill:'none',stroke:c,'stroke-width':(0.8+1.6*f).toFixed(2),'stroke-opacity':(0.12+0.68*f).toFixed(2),'stroke-linecap':'round'},g);
+      el('path',{d:`M${p1}C${c1} ${c2} ${p2}`,fill:'none',stroke:c,'stroke-width':(0.8+1.6*f).toFixed(2),'stroke-opacity':(0.12+0.68*f).toFixed(2),'stroke-linecap':'round'},tg);
     }
-    P.slice(0,-1).forEach((p,i)=>el('circle',{cx:p[0],cy:p[1],r:1.7,fill:c,'fill-opacity':(0.15+0.55*i/(n-1)).toFixed(2)},g));
-    const [X,Y]=P[n-1];
-    el('circle',PROV
+    P.slice(0,-1).forEach((p,i)=>el('circle',{cx:p[0],cy:p[1],r:1.7,fill:c,'fill-opacity':(0.15+0.55*i/(n-1)).toFixed(2)},tg));
+    let [X,Y]=P[n-1];
+    const ex=M.l+8,ex1=R-8,ey=M.t+8,ey1=B-8;
+    if(X<ex||X>ex1||Y<ey||Y>ey1){
+      pinned++;
+      const cX=Math.min(ex1,Math.max(ex,X)),cY=Math.min(ey1,Math.max(ey,Y)),a=Math.atan2(Y-cY,X-cX);
+      X=cX;Y=cY;
+      const tri=[[9,0],[-5,-6],[-5,6]].map(([u,v])=>[X+u*Math.cos(a)-v*Math.sin(a),Y+u*Math.sin(a)+v*Math.cos(a)]);
+      el('polygon',{points:tri.join(' '),fill:c,stroke:'var(--panel)','stroke-width':1.5,'stroke-linejoin':'round'},g);
+    }else el('circle',PROV
       ?{cx:X,cy:Y,r:6,fill:'var(--panel)',stroke:c,'stroke-width':2,'stroke-dasharray':'3 2.5'}
       :{cx:X,cy:Y,r:6,fill:c,stroke:'var(--panel)','stroke-width':2},g);
     el('circle',{cx:X,cy:Y,r:14,fill:'transparent'},g);
@@ -809,7 +862,9 @@ function draw(rows,allHidden){
     if(Math.hypot(nx-X,ny-Y)>14)el('line',{class:'lead','data-id':L.r.node.id,x1:X,y1:Y,x2:nx,y2:ny,stroke:'var(--line2)','stroke-width':1,style:'pointer-events:none'});
     el('text',{class:'lab','data-id':L.r.node.id,x:lx,y:ly,fill:'var(--text)','font-size':12,'font-weight':500,'font-family':'Geist, system-ui, sans-serif','paint-order':'stroke',stroke:'var(--panel)','stroke-width':4,'stroke-linejoin':'round',style:'pointer-events:none'}).textContent=L.r.label;
   }
-  if(skipped)el('text',{x:(M.l+R)/2,y:B-12,'text-anchor':'middle',fill:'var(--faint)','font-size':10.5,'font-family':'Geist, system-ui, sans-serif'}).textContent=`${skipped} unlabelled · ${TOUCH?'tap':'hover'} a dot`;
+  $('zoomoff').textContent=pinned?`${pinned} off chart`:'';
+  const foot=skipped?`${skipped} unlabelled · ${TOUCH?'tap':'hover'} a dot`:'';
+  if(foot)el('text',{x:(M.l+R)/2,y:B-12,'text-anchor':'middle',fill:'var(--faint)','font-size':10.5,'font-family':'Geist, system-ui, sans-serif'}).textContent=foot;
   if(!rows.length)el('text',{x:W/2,y:H/2,'text-anchor':'middle',fill:'var(--muted)','font-size':13}).textContent=allHidden?'Everything is hidden. Tick a row to show it':'Not enough history for this view';
 }
 const pct=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
@@ -990,7 +1045,11 @@ $('q').addEventListener('keydown',e=>{
 $('qres').addEventListener('click',e=>{const b=e.target.closest('button');if(b)qpick(b.dataset.id);});
 document.addEventListener('click',e=>{if(!e.target.closest('.find'))$('qres').hidden=true;});
 addEventListener('keydown',e=>{
-  if(e.key==='/'&&document.activeElement!==$('q')&&!/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)){e.preventDefault();$('q').focus();}
+  if(e.ctrlKey||e.metaKey||e.altKey||/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))return;
+  if(e.key==='/'){e.preventDefault();$('q').focus();}
+  else if(e.key==='+'||e.key==='=')$('zoomin').click();
+  else if(e.key==='-'||e.key==='_')$('zoomout').click();
+  else if(e.key==='0')$('zoomv').click();
 });
 
 // ---- Replay autoplay (C6): 150+ weeks of history sat behind a slider nobody drags ----
@@ -1119,7 +1178,7 @@ function lockScale(from,to){
   const sig={x:rms(dx),y:rms(dy)};
   let mx=0,my=0;
   for(let i=0;i<dx.length;i++){mx=Math.max(mx,Math.abs(dx[i])/sig.x);my=Math.max(my,Math.abs(dy[i])/sig.y);}
-  SCALELOCK={sig,mx,my};
+  SCALELOCK={sig,mx,my,c:bulk(dx.map((v,i)=>[100+v/sig.x,100+dy[i]/sig.y]))};
 }
 function stopPlay(){if(PLAY){cancelAnimationFrame(PLAY);PLAY=null;}FRAC=0;SCALELOCK=null;$('play').textContent='▶ Play';}
 $('play').onclick=()=>{
