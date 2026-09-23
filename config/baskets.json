@@ -221,9 +221,7 @@
         ],
         "Neoclouds": [
           "CRWV",
-          "NBIS",
-          "IREN",
-          "CHRN"
+          "NBIS"
         ],
         "Miners \u2192 HPC": [
           "IREN",
@@ -349,8 +347,5 @@
     "FOXCONN": "Hon Hai",
     "SIEMENSEN": "Siemens Energy",
     "MHI": "Mitsubishi Heavy"
-  },
-  "starts": {
-    "CHRN": "2026-05-05"
   }
 }
