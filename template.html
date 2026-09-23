@@ -131,7 +131,7 @@ svg .dimmed{opacity:.1}
       <p><b>Axes.</b> Right of center means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above center means that relative strength is accelerating (RS-Momentum above 100). Groups tend to rotate clockwise: Improving → Leading → Weakening → Lagging.</p>
       <p><b>Levels.</b> Full stack compares the 11 layers of the AI trade against SPY. Open a layer to see its subsectors (semis layers are measured against SMH, so you see rotation within semis rather than the semis beta), then open a subsector to see its stocks.</p>
       <p><b>Lists.</b> Each quadrant is sorted strongest first. The arrow is the direction of the last step, the small number is time spent in that quadrant, NEW marks a crossing in the last two bars, and the percentage is relative performance over the tail.</p>
-      <p><b>Method.</b> Baskets are equal-weight and rebalanced daily; each layer equal-weights its subsectors. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. A few names sit in two baskets (AMD, MRVL, AVGO, TSEM). Foreign listings are converted to USD and carried forward on local holidays: HYNIX SK Hynix · SAMSUNG Samsung Electronics · NANYA Nanya Technology · KIOXIA Kioxia · PHISON Phison · ALCHIP Alchip · GUC Global Unichip · MEDIATEK MediaTek · INNOLIGHT Zhongji Innolight · EOPTOLINK Eoptolink · LASERTEC Lasertec · TOKYOELEC Tokyo Electron · ASMI ASM International · SHINETSU Shin-Etsu Chemical · SUMCO SUMCO · BESI BE Semiconductor · HANMI Hanmi Semiconductor · DISCO Disco · IBIDEN Ibiden · UNIMICRON Unimicron · ADVANTEST Advantest · INFINEON Infineon · WIWYNN Wiwynn · QUANTA Quanta Computer · FOXCONN Hon Hai · SIEMENSEN Siemens Energy · MHI Mitsubishi Heavy.</p>
+      <p><b>Method.</b> Baskets are equal-weight and rebalanced daily. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. AVGO, MRVL and TSEM each sit in two different layers, so they appear as members of two separate baskets; AMD sits in two Compute subsectors but counts once toward the Compute layer. Foreign listings are converted to USD and carried forward on local holidays: HYNIX SK Hynix · SAMSUNG Samsung Electronics · NANYA Nanya Technology · KIOXIA Kioxia · PHISON Phison · ALCHIP Alchip · GUC Global Unichip · MEDIATEK MediaTek · INNOLIGHT Zhongji Innolight · EOPTOLINK Eoptolink · LASERTEC Lasertec · TOKYOELEC Tokyo Electron · ASMI ASM International · SHINETSU Shin-Etsu Chemical · SUMCO SUMCO · BESI BE Semiconductor · HANMI Hanmi Semiconductor · DISCO Disco · IBIDEN Ibiden · UNIMICRON Unimicron · ADVANTEST Advantest · INFINEON Infineon · WIWYNN Wiwynn · QUANTA Quanta Computer · FOXCONN Hon Hai · SIEMENSEN Siemens Energy · MHI Mitsubishi Heavy.</p>
       <p id="asof"></p>
     </details>
     <p class="foot" id="foot"></p>
@@ -165,6 +165,8 @@ for(const dm of DOMAINS){
   }
 }
 const lineage=n=>{const a=[];while(n){a.unshift(n);n=n.parent;}return a;};
+// Distinct tickers under a layer, in tree order; a name in two of its subsectors appears once.
+const uniq=f=>{const s=new Set();for(const c of f.children)for(const t of c.members)s.add(t);return [...s];};
 
 const N=D.dates.length;
 function combine(arrs){
@@ -182,6 +184,14 @@ function series(n){
   let r;
   if(n.kind==='stock')r=D.px[n.ticker];
   else if(n.kind==='sub')r=n.members.length===1?D.px[n.members[0]]:combine(n.members.map(t=>D.px[t]));
+  else if(n.kind==='family'){
+    // Equal-weight the layer's unique constituents, not its subsectors. Weighting
+    // subsectors equally made a ticker's influence depend on how the taxonomy happened
+    // to be carved: a name alone in its subsector outvoted a name sharing one with two
+    // others (IGV was 33% of Software), and a name booked in two subsectors of the same
+    // layer counted twice (AMD was 1.67x NVDA inside Compute).
+    r=combine(uniq(n).map(t=>D.px[t]));
+  }
   else r=combine(n.children.map(series));
   return SC[n.id]=r;
 }
@@ -386,7 +396,7 @@ function members(cur){
   const m=$('members');
   if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.join(', ')}.`;
   else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.join(' ')}`).join(' · ');
-  else m.innerHTML='Each layer equal-weights its subsectors. '+root.children.map(f=>`<b>${f.label}</b> ${f.children.length}`).join(' · ');
+  else m.innerHTML='Each layer equal-weights its constituent stocks. '+root.children.map(f=>`<b>${f.label}</b> ${uniq(f).length}`).join(' · ');
 }
 function focus(){
   const qOf=Object.fromEntries(ROWS.map(r=>[r.node.id,r.q]));
