@@ -63,20 +63,17 @@ select{background:var(--panel);border:1px solid var(--line);border-radius:7px;pa
 
 nav{grid-area:nav;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;padding-right:4px}
 .navsec{margin-bottom:14px}
-.navh{display:flex;align-items:center;width:100%;background:none;border:0;border-radius:6px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:5px 8px;margin-bottom:2px;text-align:left;cursor:pointer}
-.navh:hover{background:var(--panel);color:var(--text)}
-.navh[aria-current="true"]{background:var(--raised);color:var(--text)}
-.navh .d{margin-right:8px;letter-spacing:0}
-.navh .c{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:0;color:var(--faint)}
 .navlbl{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:0 8px 4px}
 .navkey{display:flex;flex-wrap:wrap;gap:5px 10px;padding:2px 8px 4px;font-size:11px;color:var(--faint)}
 .navkey span{display:inline-flex;align-items:center;gap:5px}
 .ni{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-radius:6px;padding:5px 8px;text-align:left;color:var(--muted)}
 .ni:hover{background:var(--panel);color:var(--text)}
 .ni[aria-current="true"]{background:var(--raised);color:var(--text)}
-.ni .d,.navkey .d,.navh .d{width:13px;height:13px;border-radius:3px;flex:none;background:var(--line2);color:var(--ground);font-family:var(--sans);font-size:10.5px;font-weight:700;line-height:13px;text-align:center}
+.ni .d,.navkey .d{width:13px;height:13px;border-radius:3px;flex:none;background:var(--line2);color:var(--ground);font-family:var(--sans);font-size:10.5px;font-weight:700;line-height:13px;text-align:center}
 .ni .c{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
 .sub{margin:2px 0 6px 15px;border-left:1px solid var(--line);padding-left:6px}
+.ni.tier{font-weight:600;color:var(--text)}
+.navref{margin-top:4px;padding-top:12px;border-top:1px solid var(--line)}
 .sub .ni{font-size:12.5px;padding:4px 8px}
 .stackbtn{font-weight:500;color:var(--text)}
 @media (max-width:760px){
@@ -367,20 +364,26 @@ let navOpen=!matchMedia('(max-width:760px)').matches;
 // layout can never be reopened. Force it open whenever we're on the desktop layout.
 DESK.addEventListener('change',()=>render());
 function nav(cur){
-  const path=new Set(lineage(cur).map(n=>n.id));
-  const item=n=>`<button type="button" class="ni" data-id="${n.id}" aria-current="${n.id===cur.id}"><span class="d" data-q="${n.id}"></span><span>${n.label}</span>${n.kind==='family'?`<span class="c">${n.children.length}</span>`:''}</button>`;
+  // The sidebar is the tree itself: Full stack > tier > layer > subsector, each level
+  // indented under its parent and expanded only along the path you are on - except that
+  // "All layers" on Full stack opens every tier, so the sidebar matches the chart.
+  const path=new Set(lineage(cur).map(n=>n.id)),open=cur.kind==='stack'&&st.layers;
+  const item=(n,cls='')=>`<button type="button" class="ni ${cls}" data-id="${n.id}" aria-current="${n.id===cur.id}"><span class="d" data-q="${n.id}"></span><span>${n.label}</span>${n.kind!=='sub'?`<span class="c">${n.children.length}</span>`:''}</button>`;
   let h=`<details ${DESK.matches||navOpen?'open':''}><summary>Browse baskets</summary>`;
-  h+=`<div class="navsec"><button type="button" class="ni stackbtn" data-id="stack" aria-current="${cur.id==='stack'}">Full stack<span class="c">${root.children.length}</span></button></div>`;
+  h+=`<div class="navsec"><button type="button" class="ni stackbtn" data-id="stack" aria-current="${cur.id==='stack'}">Full stack<span class="c">${DOMAINS.length}</span></button>`;
   for(const dm of DOMAINS){
     const dn=NODES[dm.g];
-    h+=`<div class="navsec"><button type="button" class="navh" data-id="${dn.id}" aria-current="${dn.id===cur.id}"><span class="d" data-q="${dn.id}"></span>${dm.label}<span class="c">${dn.children.length}</span></button>`;
+    h+=item(dn,'tier');
+    if(!open&&!path.has(dn.id))continue;
+    h+='<div class="sub">';
     for(const f of dn.children){
       h+=item(f);
-      if(path.has(f.id))h+=`<div class="sub">${f.children.map(item).join('')}</div>`;
+      if(path.has(f.id))h+=`<div class="sub">${f.children.map(s=>item(s)).join('')}</div>`;
     }
     h+='</div>';
   }
-  if(SECT.children.length)h+=`<div class="navsec"><div class="navlbl">Market</div><button type="button" class="ni stackbtn" data-id="sectors" aria-current="${cur.id==='sectors'}">S&amp;P 500 sectors<span class="c">${SECT.children.length}</span></button></div>`;
+  h+='</div>';
+  if(SECT.children.length)h+=`<div class="navsec navref"><div class="navlbl">Reference</div><button type="button" class="ni stackbtn" data-id="sectors" aria-current="${cur.id==='sectors'}">S&amp;P 500 sectors<span class="c">${SECT.children.length}</span></button></div>`;
   h+=`<div class="navkey" aria-hidden="true">${QORDER.map(q=>`<span><span class="d" style="background:${Q[q].c}">${Q[q].s}</span>${Q[q].n}</span>`).join('')}</div>`;
   $('nav').innerHTML=h+'</details>';
   $('nav').querySelector('details').ontoggle=e=>{navOpen=e.target.open;};
