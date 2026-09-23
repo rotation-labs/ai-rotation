@@ -119,6 +119,18 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .px{color:var(--weak);font-size:11px;margin-left:5px}
 .tbtn{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--muted)}
 .tbtn:hover{color:var(--text)}.tbtn[aria-pressed="true"]{background:var(--raised);color:var(--text);box-shadow:0 0 0 1px var(--line2)}
+.mvh{font:inherit;font-weight:600;margin:0}
+.mv{border:1px solid var(--line2);border-radius:10px;background:var(--panel);padding:10px 12px;margin:0 0 10px}
+.mv .cmph{flex-wrap:wrap}.mv .seg button{padding:3px 8px;font-size:11.5px}
+.mvcols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mvcol h3{margin:0 0 5px;font-size:11.5px;font-weight:500;color:var(--muted)}.mvcol h3 b{font-weight:600}
+.mvrow{display:grid;grid-template-columns:21px minmax(0,1fr) auto;gap:4px 8px;align-items:center;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:5px 2px;text-align:left;color:var(--text);font-size:12px;cursor:pointer}
+.mvrow:hover{background:var(--raised)}.mvrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mvrow .sub{display:block;font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mvrow .v{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+.mvmore{font-size:11px;color:var(--muted);padding:5px 2px;background:none;border:0;cursor:pointer}
+.mvtr{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.6}.mvtr b{color:var(--text);font-weight:500}
+@media (max-width:600px){.mvcols{grid-template-columns:1fr}}
 .cmp{border:1px solid var(--line2);border-radius:10px;background:var(--panel);padding:10px 12px;margin:0 0 10px}
 .cmph{display:flex;align-items:baseline;gap:10px;font-size:12px;color:var(--muted);margin-bottom:8px}.cmph b{color:var(--text);font-size:13px}
 .cmpx{margin-left:auto;background:none;border:0;color:var(--muted);font-size:14px;cursor:pointer}
@@ -226,6 +238,7 @@ svg .dimmed{opacity:.1}
       <div class="tool"><span>Bars</span><div class="seg" id="frame"><button type="button" data-v="W" title="Weekly bars; trend measured against a 10-week average">Weekly</button><button type="button" data-v="D" title="Daily bars; trend measured against a 21-session (about one month) average">Daily</button></div></div>
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
+      <div class="tool"><button type="button" id="mvbtn" class="tbtn" aria-pressed="false" title="Stocks that just changed quadrant">Movers</button></div>
       <div class="tool"><button type="button" id="cmpbtn" class="tbtn" aria-pressed="false" title="Compare any two baskets or tickers">Compare</button></div>
       </div>
     </div>
@@ -234,6 +247,13 @@ svg .dimmed{opacity:.1}
   <nav id="nav" aria-label="Baskets"></nav>
 
   <main class="chartwrap" aria-label="Rotation chart">
+    <section class="mv" id="mv" hidden aria-label="Movers">
+      <div class="cmph"><h2 class="mvh">Movers</h2><span id="mvsub"></span>
+        <span class="seg" id="mvb" role="group" aria-label="Measure against"><button type="button" data-v="q">vs QQQ</button><button type="button" data-v="p">vs industry peer</button></span>
+        <button type="button" id="mvx" class="cmpx" aria-label="Close movers">✕</button></div>
+      <div class="mvcols"><div class="mvcol" id="mvup"></div><div class="mvcol" id="mvdn"></div></div>
+      <div class="mvtr" id="mvtr"></div>
+    </section>
     <div class="cmp" id="cmp" hidden>
       <div class="cmph"><b>Compare</b><span>A relative to B, each equal-weighted; the line rises when A outperforms</span><button type="button" id="cmpx" class="cmpx" aria-label="Close compare">✕</button></div>
       <div class="cmpsides">
@@ -481,7 +501,7 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false};
 let KEYOPEN=false;
 const TOUCH=matchMedia('(pointer:coarse)').matches;
 let TIPFOR=null;   // on touch, the dot whose tooltip is showing; a second tap on it opens it
@@ -541,6 +561,7 @@ function readHash(){
   o.cmp=!!(o.ca.length||o.cb.length);
   o.panel=h.get('panel')==='bench'?'b':'q';
   {const z=+h.get('zoom');o.zoom=z>=1&&z<=ZMAX?z:1;}
+  o.mv=h.get('movers')==='1';o.mvb=h.get('mvb')==='peer'?'p':'q';
   return o;
 }
 function writeHash(push){
@@ -554,6 +575,7 @@ function writeHash(push){
   if(st.cmp){p.set('ca',st.ca.join(','));p.set('cb',st.cb.join(','));}
   if(st.panel==='b')p.set('panel','bench');
   if(st.zoom>1)p.set('zoom',+st.zoom.toFixed(2));
+  if(st.mv){p.set('movers','1');if(st.mvb==='p')p.set('mvb','peer');}
   const u='#'+p;
   if(location.hash===u)return;
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
@@ -562,7 +584,7 @@ Object.assign(st,readHash());
 if(!NODES[st.node])st.node='stack';
 writeHash(false);
 addEventListener('popstate',()=>{
-  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,endDate:null,endLegacy:null,layers:false,cmp:false,ca:[],cb:[]},readHash());
+  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,endDate:null,endLegacy:null,layers:false,cmp:false,ca:[],cb:[],mv:false,mvb:'q'},readHash());
   if(!NODES[st.node])st.node='stack';
   stopPlay();render();
 });
@@ -740,6 +762,8 @@ function render(fast,withList){
   VIEW={idx,n,end,bench,from:plotInfo(idx,end,bench)};
   $('cmp').hidden=!st.cmp;$('cmpbtn').setAttribute('aria-pressed',st.cmp);
   if(st.cmp&&(!fast||withList))compare();
+  $('mv').hidden=!st.mv;$('mvbtn').setAttribute('aria-pressed',st.mv);
+  if(st.mv&&(!fast||withList))movers();
   if(!fast||withList){list(ROWS);changes(VIS);}
   if(!fast)members(cur);
   focus();
@@ -1148,6 +1172,77 @@ setInterval(checkBuild,5*60*1000);
 document.addEventListener('visibilitychange',checkBuild);
 $('upd').onclick=()=>location.reload();
 
+// ---- Movers ----
+// Which stocks just changed quadrant, scoped to the view you are in. An event study on this
+// data found quadrant turns have not reliably predicted relative returns (the strength level
+// has mattered more), so this is framed as a watchlist, and it carries its own track record,
+// recomputed from the data, so any edge that emerges as history accumulates shows up here.
+const TKLAYER={};for(const f of root.children)for(const tk of uniq(f))if(!TKLAYER[tk])TKLAYER[tk]=f;
+const TKSUB={};for(const nd of Object.values(NODES))if(nd.kind==='sub')for(const tk of nd.members)if(!TKSUB[tk])TKSUB[tk]=nd;
+for(const f of root.children)if(f.members)for(const tk of f.members)if(!TKSUB[tk])TKSUB[tk]=f;
+const scopeTk=cur=>cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):
+  cur.kind==='domain'?deep(cur):cur.kind==='family'?uniq(cur):cur.kind==='sub'?cur.members:cur.kind==='sectors'?cur.children.map(c=>c.ticker):[];
+function lastTurn(r,end){        // the quadrant change within the last two bars, if any
+  for(const k of [0,1]){const i=end-k,x=r.rsr[i],y=r.rsm[i],x0=r.rsr[i-1],y0=r.rsm[i-1];
+    if([x,y,x0,y0].some(v=>v==null))return null;const q=quad(x,y),q0=quad(x0,y0);
+    if(q!==q0)return k===0||quad(r.rsr[end],r.rsm[end])===q?{q0,q,ago:k}:null;}
+  return null;
+}
+const TRC={};
+function trackRecord(){           // weekly, vs QQQ, 8-week forward relative return, full universe
+  if(TRC.r)return TRC.r;
+  const idx=weekIdx,n=10,h=8,last=idx.length-1-(partialWeek?1:0),byWeek=new Map();
+  // computed directly, not via rrgT: that cache is keyed to the current bar setting and this is always weekly
+  for(const tk of scopeTk(root)){if(!D.px[tk]||tk==='QQQ')continue;const r=rrg(D.px[tk],D.px.QQQ,idx,n);
+    for(let i=1;i+h<=last;i++){const x=r.rsr[i],y=r.rsm[i],x0=r.rsr[i-1],y0=r.rsm[i-1],a=r.rs[i],b=r.rs[i+h];
+      if([x,y,x0,y0,a,b].some(v=>v==null))continue;
+      const f=(b/a-1)*100,k=quad(x0,y0)+quad(x,y);let w=byWeek.get(i);if(!w)byWeek.set(i,w={all:[],t:{}});
+      w.all.push(f);if(k[0]!==k[1])(w.t[k]=w.t[k]||[]).push(f);}}
+  const mean=a=>a.reduce((s,v)=>s+v,0)/a.length,out={};
+  for(const k of ['GI','IL','LW','WG']){const ex=[];let ev=0;
+    for(const [i,w] of byWeek)if(w.t[k]){ex.push([i,mean(w.t[k])-mean(w.all)]);ev+=w.t[k].length;}
+    // average within 8-week blocks so overlapping forward windows aren't counted as independent; mean and t use the same blocks
+    const blk=new Map();for(const [i,v] of ex){const b=Math.floor(i/h);(blk.get(b)||blk.set(b,[]).get(b)).push(v);}
+    const bm=[...blk.values()].map(mean),m=bm.length?mean(bm):null,sd=bm.length>2?Math.sqrt(bm.reduce((s,v)=>s+(v-m)**2,0)/(bm.length-1)):null;
+    out[k]={ex:m,t:sd?m/(sd/Math.sqrt(bm.length)):null,ev};}
+  return TRC.r=out;
+}
+function movers(){
+  const cur=NODES[st.node],{idx,n,end}=VIEW,W=st.frame==='W';
+  for(const b of $('mvb').children)b.setAttribute('aria-pressed',b.dataset.v===st.mvb);
+  $('mvsub').textContent=`stocks in ${cur.kind==='stack'?'the whole universe':cur.label} that changed quadrant in the last two ${W?'weeks':'sessions'}`;
+  if(cur.kind==='ref'){$('mvsub').textContent='Movers covers stocks and sector ETFs. Pick a tier, layer or the S&P sectors.';
+    $('mvup').innerHTML=$('mvdn').innerHTML='';$('mvtr').textContent='';return;}
+  const up=[],dn=[];
+  for(const tk of scopeTk(cur)){
+    const b=st.mvb==='p'?((TKLAYER[tk]||{}).bench||'QQQ'):'QQQ';if(tk===b||!D.px[tk])continue;
+    const r=rrgT(tk,b,idx,n),tr=lastTurn(r,end);if(!tr)continue;
+    const a0=r.rs[end-st.tail],b0=r.rs[end];
+    const row={tk,...tr,x:r.rsr[end],dy:r.rsm[end]-r.rsm[end-1-tr.ago],rel:a0&&b0?(b0/a0-1)*100:null,b};
+    (UP(tr.q)?up:dn).push(row);}
+  const rank=(u,v)=>u.ago-v.ago||Math.abs(v.dy)-Math.abs(u.dy);up.sort(rank);dn.sort(rank);
+  const cap=st.mvall?1e9:12;
+  const col=(el,rows,title)=>{el.innerHTML=`<h3><b>${title}</b> · ${rows.length}</h3>`+(rows.length?rows.slice(0,cap).map(r=>{const s=TKSUB[r.tk],cn=coName({kind:'stock',ticker:r.tk});
+      return `<button type="button" class="mvrow" data-id="${s?s.id:''}" title="${r.tk}${cn?' — '+cn:''}: ${Q[r.q0].n} to ${Q[r.q].n}${r.ago?' one bar ago':' on the latest bar'}, measured against ${r.b}${s?'. Opens '+s.label:''}">${qmini(r.q0,r.q)}`
+        +`<span class="nm"><b>${r.tk}</b> <span style="color:${Q[r.q].c}">→ ${Q[r.q].n}</span><span class="sub">${cn&&adhoc.has(r.tk)?cn+' · ':''}${s?s.label:''}${st.mvb==='p'?' · vs '+r.b:''}</span></span>`
+        +`<span class="v num">RS ${r.x.toFixed(1)}<br>${pct(r.rel)}</span></button>`;}).join('')
+      +(rows.length>cap?`<button type="button" class="mvmore">Show all ${rows.length}</button>`:''):'<div class="empty">None</div>');};
+  col($('mvup'),up,'Turning up');col($('mvdn'),dn,'Rolling over');
+  // track record: needs the full weekly history; computed once per data load
+  if(needHistory()){$('mvtr').textContent='Loading the track record…';loadHistory();return;}
+  const T=trackRecord(),lab={GI:'Lagging → Improving',IL:'Improving → Leading',LW:'Leading → Weakening',WG:'Weakening → Lagging'};
+  const sig=Object.entries(T).filter(([,v])=>v.t!=null&&Math.abs(v.t)>=2);
+  $('mvtr').innerHTML=`<b>Track record</b> (weekly bars vs QQQ, whole universe, 8-week return after the turn minus the average stock that week): `
+    +Object.entries(T).map(([k,v])=>`${lab[k]} <b>${v.ex==null?'—':pct(v.ex)}</b>${v.t==null?'':` (t ${v.t>=0?'+':''}${v.t.toFixed(1)})`}`).join(' · ')
+    +`. <br>${sig.length?`Only ${sig.map(([k])=>lab[k]).join(' and ')} clears |t| ≥ 2, and with several turn types tested even that is weak evidence.`:'None of these turns has reliably predicted relative returns here: every t-statistic is below 2.'}`
+    +` Where a stock <em>is</em> (its relative-strength level, the x-axis) has mattered more than whether it is turning. The universe was chosen in hindsight from AI winners, which flatters any backtest. Treat this list as a watchlist, not a signal.`;
+}
+$('mvbtn').onclick=()=>{st.mv=!st.mv;st.mvall=false;writeHash(false);render();};
+$('mvx').onclick=()=>{st.mv=false;writeHash(false);render();};
+$('mvb').onclick=e=>{const b=e.target.closest('[data-v]');if(b&&b.dataset.v!==st.mvb){st.mvb=b.dataset.v;writeHash(false);render();}};
+$('mv').addEventListener('click',e=>{if(e.target.closest('.mvmore')){st.mvall=true;movers();return;}
+  const r=e.target.closest('.mvrow');if(r&&r.dataset.id&&NODES[r.dataset.id])go(r.dataset.id);});
+
 // ---- Full history on demand ----
 const needHistory=()=>!!D.full_len&&D.full_len>D.dates.length;
 let HIST=null;
@@ -1160,7 +1255,7 @@ function loadHistory(){
     const ix=st.frame==='W'?weekIdx:dayIdx,keep=st.end!=null?D.dates[ix[st.end]]:null;
     D.dates=h.dates;for(const k in h.px)D.px[k]=h.px[k];
     N=D.dates.length;weekIdx=buildWeekIdx();dayIdx=[...Array(N).keys()];
-    for(const c of [SC,RC,MASK,CMPC])for(const k in c)delete c[k];
+    for(const c of [SC,RC,MASK,CMPC,TRC])for(const k in c)delete c[k];
     if(keep&&st.endLegacy==null){st.endDate=keep;st.end=null;}
     render();return true;
   }).catch(()=>{HIST=null;render();return null;});   // offline or file://: stay on the recent window
