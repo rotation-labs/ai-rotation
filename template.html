@@ -63,7 +63,10 @@ select{background:var(--panel);border:1px solid var(--line);border-radius:7px;pa
 
 nav{grid-area:nav;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;padding-right:4px}
 .navsec{margin-bottom:14px}
-.navh{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:0 8px 6px}
+.navh{display:flex;align-items:center;width:100%;background:none;border:0;border-radius:6px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:5px 8px;margin-bottom:2px;text-align:left;cursor:pointer}
+.navh:hover{background:var(--panel);color:var(--text)}
+.navh[aria-current="true"]{background:var(--raised);color:var(--text)}
+.navh .c{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:0;color:var(--faint)}
 .navkey{display:flex;flex-wrap:wrap;gap:5px 10px;padding:2px 8px 4px;font-size:11px;color:var(--faint)}
 .navkey span{display:inline-flex;align-items:center;gap:5px}
 .ni{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-radius:6px;padding:5px 8px;text-align:left;color:var(--muted)}
@@ -156,7 +159,7 @@ svg .dimmed{opacity:.1}
     <details>
       <summary>How to read this</summary>
       <p><b>Axes.</b> Right of center means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above center means that relative strength is accelerating (RS-Momentum above 100). The two raw measures have very different spreads, so each axis is divided by its own dispersion across what is on screen and labelled in standard deviations: +1 means one σ from the crossover, and one σ is the same visual distance on both axes. The window is square and centered, so a rotation traces a circle rather than an ellipse. Groups tend to rotate clockwise: Improving → Leading → Weakening → Lagging.</p>
-      <p><b>Levels.</b> Full stack compares the 11 layers of the AI trade against QQQ, so what you see is rotation within large-cap tech rather than the tech-versus-market trade that dominates a comparison against SPY. Switch the benchmark with the <em>vs</em> control. Open a layer to see its subsectors (semis layers are measured against SMH, so you see rotation within semis rather than the semis beta), then open a subsector to see its stocks.</p>
+      <p><b>Levels.</b> Full stack compares the 11 layers of the AI trade against QQQ, so what you see is rotation within large-cap tech rather than the tech-versus-market trade that dominates a comparison against SPY. Switch the benchmark with the <em>vs</em> control. Select Semis or AI ecosystem in the sidebar to see just that side's layers: same values and quadrant calls as on Full stack, with the axes rescaled to spread out the fewer dots. Open a layer to see its subsectors (semis layers are measured against SMH, so you see rotation within semis rather than the semis beta), then open a subsector to see its stocks.</p>
       <p><b>Stability.</b> The smoothing choices here (EMA 3 on relative strength, a 10-week or 21-day baseline, one-bar momentum) change the answer more than most readers would guess. Every node is also run under four defensible alternatives — four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing at all — and a badge such as 2/5 marks a call that only holds under the settings shown. Treat those as provisional.</p>
       <p><b>Lists.</b> Each quadrant is sorted strongest first. The arrow is the direction of the last step, the small number is time spent in that quadrant, NEW marks a crossing in the last two bars, and the percentage is relative performance over the tail.</p>
       <p><b>Method.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded — a portfolio rebalanced back to equal weight every bar, not a buy-and-hold basket. For volatile, dispersed baskets the two differ. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. AVGO, MRVL, TSEM and INTC each sit in two different layers, so they appear as members of two separate baskets; AMD sits in two Compute subsectors but counts once toward the Compute layer. Foreign listings are converted to USD and carried forward on local holidays; note that an Asian close lands 13-15 hours before the US close it is paired with, so on daily bars those names read one session behind the US tape, which matters most where a basket is mostly Asian: HYNIX SK Hynix · SAMSUNG Samsung Electronics · NANYA Nanya Technology · KIOXIA Kioxia · PHISON Phison · ALCHIP Alchip · GUC Global Unichip · MEDIATEK MediaTek · INNOLIGHT Zhongji Innolight · EOPTOLINK Eoptolink · LASERTEC Lasertec · TOKYOELEC Tokyo Electron · ASMI ASM International · SHINETSU Shin-Etsu Chemical · SUMCO SUMCO · BESI BE Semiconductor · HANMI Hanmi Semiconductor · DISCO Disco · IBIDEN Ibiden · UNIMICRON Unimicron · ADVANTEST Advantest · INFINEON Infineon · WIWYNN Wiwynn · QUANTA Quanta Computer · FOXCONN Hon Hai · SIEMENSEN Siemens Energy · MHI Mitsubishi Heavy.</p>
@@ -181,10 +184,14 @@ function add(n){NODES[n.id]=n;return n;}
 const root=add({id:'stack',label:'Full stack',kind:'stack',bench:'QQQ',children:[]});
 const DOMAINS=[{g:'semis',label:'Semis',bench:'SMH'},{g:'ecosystem',label:'AI ecosystem',bench:'QQQ'}];
 for(const dm of DOMAINS){
+  // A domain view is the full-stack view filtered to one side, so it keeps the root's
+  // benchmark: a layer sits in the same place whether you reach it from Full stack or from
+  // its domain, and its nav badge means one thing. dm.bench still governs the subsectors.
+  const dn=add({id:dm.g,label:dm.label,kind:'domain',bench:root.bench,parent:root,children:[]});
   for(const [fam,subs] of Object.entries(D.groups[dm.g])){
     const fl=RENAME[fam]||fam;
-    const f=add({id:slug(dm.g+'-'+fl),label:fl,kind:'family',domain:dm.label,bench:dm.bench,parent:root,children:[]});
-    root.children.push(f);
+    const f=add({id:slug(dm.g+'-'+fl),label:fl,kind:'family',domain:dm.label,bench:dm.bench,parent:dn,children:[]});
+    root.children.push(f);dn.children.push(f);
     for(const [name,m] of Object.entries(subs)){
       if(dm.g==='ecosystem'&&name==='Semis')continue;
       const s=add({id:slug(dm.g+'-'+name),label:name,kind:'sub',domain:dm.label,bench:dm.bench,parent:f,members:m,children:[]});
@@ -335,8 +342,9 @@ function nav(cur){
   let h=`<details ${DESK.matches||navOpen?'open':''}><summary>Browse baskets</summary>`;
   h+=`<div class="navsec"><button type="button" class="ni stackbtn" data-id="stack" aria-current="${cur.id==='stack'}">Full stack<span class="c">${root.children.length}</span></button></div>`;
   for(const dm of DOMAINS){
-    h+=`<div class="navsec"><div class="navh">${dm.label}</div>`;
-    for(const f of root.children.filter(f=>f.domain===dm.label)){
+    const dn=NODES[dm.g];
+    h+=`<div class="navsec"><button type="button" class="navh" data-id="${dn.id}" aria-current="${dn.id===cur.id}">${dm.label}<span class="c">${dn.children.length}</span></button>`;
+    for(const f of dn.children){
       h+=item(f);
       if(path.has(f.id))h+=`<div class="sub">${f.children.map(item).join('')}</div>`;
     }
@@ -557,7 +565,7 @@ function members(cur){
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
   if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.join(', ')}.`+rost;
   else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.join(' ')}`).join(' · ')+rost;
-  else m.innerHTML='Each layer equal-weights its constituent stocks. '+root.children.map(f=>`<b>${f.label}</b> ${uniq(f).length}`).join(' · ');
+  else m.innerHTML='Each layer equal-weights its constituent stocks. '+cur.children.map(f=>`<b>${f.label}</b> ${uniq(f).length}`).join(' · ');
 }
 function focus(){
   const qOf=Object.fromEntries(ROWS.map(r=>[r.node.id,r.q]));
@@ -618,7 +626,7 @@ addEventListener('keydown',e=>{
 // dots glide, and freezes the axis scale for the whole run - otherwise the frame rescales
 // under the motion every tick and nothing looks like it is travelling anywhere.
 let PLAY=null,PLAYPOS=0,PLAYT=0,PLAYL=0;
-const PLAYRATE=2.2;                       // bars per second
+const PLAYRATE=1.5;                       // bars per second; a year of weekly bars in ~35s
 function lockScale(from,to){
   const cur=NODES[st.node],bench=st.bench==='auto'?cur.bench:st.bench;
   const idx=st.frame==='W'?weekIdx:dayIdx,n=st.frame==='W'?10:21,bx=D.px[bench];
