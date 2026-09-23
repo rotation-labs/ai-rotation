@@ -154,9 +154,12 @@ def main():
     foreign = CFG["foreign_listings"]
     changes = {k: v for k, v in CFG.get("membership_changes", {}).items() if not k.startswith("_")}
     historical = [e["ticker"] for e in changes.get("entries", [])]   # may no longer be in groups
-    names = sorted(set(CFG["benchmarks"]) | set(CFG.get("sectors", {}))
+    # Macro series (futures, a yield, VIX, the dollar, bitcoin) go by short display codes
+    # mapped to their Yahoo symbols, the same way foreign listings do.
+    macro = CFG.get("macro", {})
+    names = sorted(set(CFG["benchmarks"]) | set(CFG.get("sectors", {})) | set(macro)
                    | set(tickers(groups)) | set(historical))
-    sym = {n: foreign.get(n, n) for n in names}
+    sym = {n: macro[n]["symbol"] if n in macro else foreign.get(n, n) for n in names}
     fx_syms = sorted({FX[k][0] for k in FX if any(s.endswith(k) for s in sym.values())})
 
     raw = fill_unfinalised(download(list(sym.values()) + fx_syms))
@@ -227,6 +230,7 @@ def main():
                                # the page decodes these inline, and shows every other name on hover
                                "adhoc": sorted(k for k in foreign if k in px),
                                "sectors": {k: v for k, v in CFG.get("sectors", {}).items() if k in px},
+                               "macro": {k: v["label"] for k, v in macro.items() if k in px},
                                "benchmarks": [b for b in CFG["benchmarks"] if b in px],
                                "peers": CFG.get("peer_benchmarks", {}),
                                "membership": changes,

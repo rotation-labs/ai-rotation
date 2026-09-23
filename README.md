@@ -1,6 +1,6 @@
 # Rotation
 
-A relative rotation graph (RRG) of the AI trade in seven tiers - Core Semis, AI Compute, Networking & Optics, Power & Buildout, Platforms & Software, Physical AI, Bio AI - drilling into layers, subsectors and their stocks, plus a reference view of SPY's eleven sector ETFs. The site is a single static page that rebuilds itself every weekday after the US close.
+A relative rotation graph (RRG) of the AI trade in seven tiers - Core Semis, AI Compute, Networking & Optics, Power & Buildout, Platforms & Software, Physical AI, Bio AI - drilling into layers, subsectors and their stocks, plus two reference views: SPY's eleven sector ETFs, and a macro bucket (NQ, RTY, US 10Y yield, crude, VIX, gold, copper, the dollar and bitcoin against ES). The site is a single static page that rebuilds itself every weekday after the US close.
 
 ## How it works
 
@@ -38,6 +38,7 @@ then run the workflow once from the Actions tab.
 
 - **Edit baskets:** change `config/baskets.json` (tier → layer → subsector → tickers) and commit. Any push to `main` triggers a rebuild. Give every new ticker a display name in `names`; it is shown on hover.
   Non-US tickers get a short name in `foreign_listings` mapped to their Yahoo symbol (e.g. `"HYNIX": "000660.KS"`), and a display name in `names` (e.g. `"HYNIX": "SK Hynix"`) so the chart is readable without the glossary. Supported suffixes: `.KS .KQ .T .TW .TWO .SZ .SS .HK .AS .DE .PA .SW .L` (London is quoted in pence and converted accordingly).
+- **Macro bucket:** `macro` maps a short code to its Yahoo symbol and chart label (e.g. `"CL": {"symbol": "CL=F", "label": "Crude oil"}`); give each code a name in `names` too. The view is measured against `ES`, so ES itself is the yardstick rather than a dot. Futures are Yahoo's front-month continuous contracts, so a roll shows as a small jump, and `^TNX`/`^VIX` are levels, so the 10Y dot moving right means yields rising faster than the S&P.
 - **Peer benchmarks:** `peer_benchmarks` maps a layer name to the ETF its members are measured against when that layer is opened (Accelerators → SOXX, software → IGV, biotech → XBI). Tier views always use QQQ. Any ETF used must be in `benchmarks` or `sectors`.
 - **Start dates:** `starts` discards a ticker's history before a date, for symbols whose history predates the business they now name (CCXI traded as an empty SPAC until the Agility deal was announced).
 - **Membership changes:** to make replay show a basket as it was, add an entry to `membership_changes.entries`: `{"ticker", "basket": "Layer / Subsector" (or "Layer"), "from", "until"}`. Adding a name on a date is a `from` entry; removing one is an `until` entry kept after the name leaves `groups`; a move is one of each. Don't record renames or classification fixes.
