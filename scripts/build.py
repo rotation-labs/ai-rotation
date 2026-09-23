@@ -1,6 +1,11 @@
 """Inject build/data.json into template.html and write a complete site/index.html."""
 import json
+import re
 import shutil
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
 import struct
 from pathlib import Path
 
@@ -31,6 +36,9 @@ tpl = (ROOT / "template.html").read_text()
 data = (ROOT / "build" / "data.json").read_text()
 full = json.loads(data)
 asof = full["asof"]
+# Build stamp: an open page polls version.json and offers a reload when a newer build lands.
+full["built"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+data = json.dumps(full, separators=(",", ":"))
 
 # Every view at the latest date needs about 60 weeks of history (a 26-week baseline for the
 # stability check, smoothing warm-up, a 12-bar tail), but replay reaches back three years.
@@ -69,12 +77,24 @@ page = f"""<!doctype html>
 </body>
 </html>
 """
+# A syntax error in the page script blanks the whole site. Parse it with Node before writing
+# anything, so a bad edit fails the build and the previous good page stays live - the same
+# guarantee the data guards give. Skipped where Node is not installed.
+if shutil.which("node"):
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as f:
+        f.write("\n".join(re.findall(r"<script>(.*?)</script>", page, re.S)))
+    chk = subprocess.run(["node", "--check", f.name], capture_output=True, text=True)
+    Path(f.name).unlink()
+    if chk.returncode:
+        sys.exit("page script failed to parse - not publishing:\n" + chk.stderr)
+
 out = ROOT / "site" / "index.html"
 out.parent.mkdir(exist_ok=True)
 out.write_text(page)
 (ROOT / "site" / "favicon.ico").write_bytes(favicon())
 if history:
     (ROOT / "site" / "history.json").write_text(json.dumps(history, separators=(",", ":")))
+(ROOT / "site" / "version.json").write_text(json.dumps({"built": full["built"], "live": full.get("live")}))
 fonts = ROOT / "site" / "fonts"
 fonts.mkdir(exist_ok=True)
 for f in sorted((ROOT / "assets" / "fonts").glob("*.woff2")):

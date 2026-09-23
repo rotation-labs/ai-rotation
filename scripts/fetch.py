@@ -161,13 +161,15 @@ def main():
 
     raw = fill_unfinalised(download(list(sym.values()) + fx_syms))
 
-    # Yahoo serves a live, still-moving value for the session in progress. Stored as-is
-    # it becomes a "close" that never happened, so drop the current New York session
-    # until 16:15 local. This is anchored to New York rather than a fixed UTC hour: the
-    # close is 20:00 UTC in summer but 21:00 UTC in winter.
+    # The New York clock decides what today's row means. Before the open it is a stale or
+    # empty placeholder and is dropped. During the session the build now runs every 30
+    # minutes, so the row is kept as a *live* bar - still moving, and flagged so the page
+    # draws it as provisional rather than passing it off as a close. From 16:15 it is a
+    # close. Anchored to New York, not UTC: the close is 20:00 UTC in summer, 21:00 in winter.
     ny = pd.Timestamp.now(tz="America/New_York")
     today = pd.Timestamp(ny.date())
-    cutoff = today if ny.time() < pd.Timestamp("16:15").time() else today + pd.Timedelta(days=1)
+    in_session = pd.Timestamp("09:30").time() <= ny.time() < pd.Timestamp("16:15").time()
+    cutoff = today if ny.time() < pd.Timestamp("09:30").time() else today + pd.Timedelta(days=1)
     before = len(raw)
     raw = raw[raw.index < cutoff]
     if len(raw) < before:
@@ -228,6 +230,10 @@ def main():
                                "benchmarks": [b for b in CFG["benchmarks"] if b in px],
                                "peers": CFG.get("peer_benchmarks", {}),
                                "membership": changes,
+                               # set only while the US session is in progress and today has trades
+                               "live": ({"date": str(today.date()),
+                                         "time": ny.strftime("%I:%M%p").lstrip("0").lower() + " ET"}
+                                        if in_session and us[-1] == today else None),
                                # closes still standing in for an official close, by display name
                                "proxy": {n: sorted(str(d.date()) for d in PROXY[s] if d in us)
                                          for n, s in sym.items() if s in PROXY and n in px

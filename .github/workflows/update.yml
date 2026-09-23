@@ -4,6 +4,10 @@ on:
   schedule:
     # 21:30 UTC Mon-Fri = 5:30pm New York in summer, 4:30pm in winter (after the US close)
     - cron: "30 21 * * 1-5"
+    # Every 30 minutes through the US session, spanning both summer (13:30-20:00 UTC) and
+    # winter (14:30-21:00 UTC) hours. :07/:37 rather than :00/:30 because GitHub delays
+    # scheduled runs most at the top of the hour. Runs outside the session are harmless.
+    - cron: "7,37 13-21 * * 1-5"
   workflow_dispatch: {}      # "Run workflow" button for manual refreshes
   push:
     branches: [main]         # rebuild whenever you edit baskets or the template

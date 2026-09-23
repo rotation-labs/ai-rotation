@@ -107,6 +107,12 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .showall:hover{color:var(--text)}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 #list>.legend,#list>.sens,#list>.showall{grid-column:1/-1}
+.ptabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.ptabs button{background:none;border:0;border-bottom:2px solid transparent;padding:5px 10px 7px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:-1px}
+.ptabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--text)}
+.key{font-size:11.5px;color:var(--muted);margin:-4px 0 8px}.key summary{cursor:pointer;color:var(--faint);width:max-content}
+#list>.ptabs,#list>.key{grid-column:1/-1}
+.sens .note{font-size:11.5px;color:var(--muted);margin:0 0 8px}
 .legend{font-size:11px;color:var(--muted);line-height:1.55;margin:0 0 12px;padding:7px 9px;border:1px solid var(--line);border-radius:7px}
 .legend b{color:var(--text);font-weight:500}
 .qrow .br{font-size:11px;color:var(--muted);text-align:right}
@@ -129,9 +135,14 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 #cmpsvg{width:100%;height:auto;display:block}
 .cmpstats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:6px}.cmpstats b{color:var(--text);font-weight:500}
 .plotinfo{font-size:11.5px;color:var(--muted);margin:0 0 6px;line-height:1.5}.plotinfo b{color:var(--text);font-weight:500}
-.changes{font-size:12px;color:var(--muted);margin:0 0 8px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);line-height:1.6}
-.changes b{color:var(--text);font-weight:500}.changes .hd{color:var(--faint);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:8px}
-.changes .it{white-space:nowrap;margin-right:14px;display:inline-block}
+.changes{margin:0 0 8px}
+.changes .hd{font-size:11.5px;color:var(--muted);margin-bottom:6px}.changes .pv{color:var(--faint)}
+.changes .cards{display:flex;flex-wrap:wrap;gap:6px}
+.changes .card{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px 6px 8px;text-align:left;color:var(--text);font-size:12px;cursor:pointer}
+.changes .card:hover{border-color:var(--line2);background:var(--raised)}
+.changes .ct{display:flex;flex-direction:column;line-height:1.35}.changes .c1 b{font-weight:500}
+.changes .cs{font-size:10.5px;color:var(--muted)}.changes .more{font-size:11.5px;color:var(--muted);align-self:center;padding:0 4px}
+.chartwrap svg.qm,.qm{flex:none;width:21px!important;height:21px!important;max-width:none}
 .sens{margin-top:14px}.sens h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:500;margin:0 0 6px}
 .sens table{width:100%;border-collapse:collapse;font-size:12px}
 .sens th{font-weight:500;color:var(--faint);font-size:10.5px;text-align:center;padding:3px 2px}.sens th:first-child{text-align:left}
@@ -164,6 +175,7 @@ svg g.s{transition:opacity .15s}
 svg .dimmed{opacity:.1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .prov{font-size:11px;color:var(--weak);border:1px dashed var(--weak);border-radius:999px;padding:1px 7px;white-space:nowrap}
+.upd{font-size:11px;color:var(--imp);border:1px solid var(--imp);background:none;border-radius:999px;padding:2px 9px;margin-left:10px;vertical-align:middle;cursor:pointer}
 .stale{font-size:11px;color:var(--lag);border:1px solid var(--lag);border-radius:999px;padding:2px 8px;margin-left:10px;vertical-align:middle}
 </style>
 
@@ -171,7 +183,7 @@ svg .dimmed{opacity:.1}
   <header>
     <div>
       <div class="crumbs" id="crumbs"></div>
-      <h1 id="title">Full stack</h1><span class="stale" id="stale" hidden></span>
+      <h1 id="title">Full stack</h1><span class="stale" id="stale" hidden></span><button type="button" class="upd" id="upd" hidden>New data · reload</button>
     </div>
     <div class="tools">
       <div class="tool find"><input id="q" type="search" placeholder="Find ticker or basket" autocomplete="off" aria-label="Find a ticker or basket" role="combobox" aria-autocomplete="list" aria-controls="qres" aria-expanded="false"><div id="qres" hidden role="listbox" aria-label="Matches"></div><span id="qlive" class="sr" aria-live="polite"></span></div>
@@ -223,7 +235,7 @@ svg .dimmed{opacity:.1}
     </details>
     <details>
       <summary>Data &amp; sources</summary>
-      <p>Daily closes from Yahoo Finance, rebuilt each weekday after the US close. Foreign listings are converted to USD and carried forward on local holidays. An Asian close lands 13–15 hours before the US close it is paired with, so on daily bars those names read about one session behind; weekly bars are the better choice for comparisons across regions. When Yahoo has not yet published a day's official close, the last intraday bar stands in and is marked ≈ until the next build replaces it. A badge beside the title appears if a build has failed and data is two or more sessions old.</p>
+      <p>Prices from Yahoo Finance, rebuilt every 30 minutes during US trading hours and again after the close. During the session the latest bar is live: drawn hollow, labelled with the time of the build, never given a NEW badge, and replaced by the official close afterwards. Yahoo's quotes can be delayed by around 15 minutes and GitHub's scheduler can run late, so live data is typically 20–45 minutes behind the market. Foreign listings are converted to USD and carried forward on local holidays. An Asian close lands 13–15 hours before the US close it is paired with, so on daily bars those names read about one session behind; weekly bars are the better choice for comparisons across regions. When Yahoo has not yet published a day's official close, the last intraday bar stands in and is marked ≈ until the next build replaces it. A badge beside the title appears if a build has failed and data is two or more sessions old.</p>
       <p id="asof"></p><p id="proxynote"></p>
     </details>
     <details>
@@ -300,6 +312,8 @@ const deep=d=>d._d||(d._d=[...new Set(d.children.flatMap(uniq))]);
 const adhoc=new Set(D.adhoc||[]);
 
 let N=D.dates.length;
+// Set by the build while the US session is in progress: today's bar is live and still moving.
+const LIVE=D.live&&D.live.date===D.dates[D.dates.length-1]?D.live:null;
 const WIN0=D.win_start||D.dates[0];   // start of the embedded window; history.json holds the rest
 function combine(arrs){
   const out=new Array(N).fill(null);let v=null;
@@ -424,7 +438,8 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[]};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q'};
+let KEYOPEN=false;
 // Full stack plots one dot per tier by default; the toggle expands it to every layer.
 const kids=cur=>cur.kind==='stack'?(st.layers?root.children:DOMAINS.map(d=>NODES[d.g])):cur.children;
 let PROV=false;
@@ -447,7 +462,7 @@ const fmtMD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short
 function plotInfo(idx,end,bench){
   const W=st.frame==='W',t0=Math.max(0,end-st.tail),d0=D.dates[idx[t0]],d1=D.dates[idx[end]];
   const from=d0.slice(0,4)===d1.slice(0,4)?fmtMD(d0):fmtD(d0);
-  $('plotinfo').innerHTML=`<b>${W?'Weekly':'Daily'} bars</b> · tails run <b>${from} → ${fmtD(d1)}</b> (${end-t0} ${W?'weeks':'sessions'}${PROV?', last week still in progress':''})`
+  $('plotinfo').innerHTML=`<b>${W?'Weekly':'Daily'} bars</b> · tails run <b>${from} → ${fmtD(d1)}</b> (${end-t0} ${W?'weeks':'sessions'}${PROV?(LIVE?`, last bar live as of ${LIVE.time}, quotes delayed`:', last week still in progress'):''})`
     +` · trend measured against a ${W?'10-week':'21-session (about 1-month)'} average · vs <b>${bench}</b> · row % is relative return over that span`;
   return from;
 }
@@ -475,6 +490,7 @@ function readHash(){
   const tokOk=x=>NODES[x]||(x.startsWith('tk:')&&D.px[x.slice(3)]);
   o.ca=(h.get('ca')||'').split(',').filter(tokOk);o.cb=(h.get('cb')||'').split(',').filter(tokOk);
   o.cmp=!!(o.ca.length||o.cb.length);
+  o.panel=h.get('panel')==='bench'?'b':'q';
   return o;
 }
 function writeHash(push){
@@ -486,6 +502,7 @@ function writeHash(push){
   if(st.layers)p.set('layers','1');
   if(st.hide.size)p.set('hide',[...st.hide].join(','));
   if(st.cmp){p.set('ca',st.ca.join(','));p.set('cb',st.cb.join(','));}
+  if(st.panel==='b')p.set('panel','bench');
   const u='#'+p;
   if(location.hash===u)return;
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
@@ -556,7 +573,7 @@ function render(fast,withList){
   $('asof').textContent=`Prices through ${fmtD(D.asof)}.`;
   {const np=Object.values(D.proxy||{}).filter(v=>v.includes(D.asof)).length;
    $('proxynote').textContent=np?`${np} closes on ${fmtD(D.asof)} are intraday proxies pending Yahoo's official close; the next build replaces them.`:'';}
-  $('foot').textContent=`Prices through ${fmtD(D.asof)} close · data from Yahoo Finance, refreshed each weekday after the US close · for information only, not investment advice.`;
+  $('foot').textContent=`${LIVE?`Live prices as of ${LIVE.time}, ${fmtD(D.asof)} (delayed, provisional until the close)`:`Prices through ${fmtD(D.asof)} close`} · data from Yahoo Finance, refreshed every 30 minutes in US trading hours and after the close · for information only, not investment advice.`;
   const idx=st.frame==='W'?weekIdx:dayIdx,n=st.frame==='W'?10:21;
   const bx=D.px[bench];
   const minEnd=n*2+st.tail+5;
@@ -569,7 +586,7 @@ function render(fast,withList){
   $('replay').value=end+FRAC;
   $('replayv').textContent=fmtD(D.dates[idx[end]]);
   $('latest').hidden=end===idx.length-1;
-  PROV=st.frame==='W'&&partialWeek&&end===idx.length-1;
+  PROV=end===idx.length-1&&(!!LIVE||(st.frame==='W'&&partialWeek));
   // Replaying backwards projects today's roster onto a past date: CRWV starts 2025-03-28,
   // WOLF restarts 2025-09-29. combine() handles the nulls, but the reader cannot see that
   // the basket was smaller then, so say so.
@@ -579,7 +596,7 @@ function render(fast,withList){
    if(ENTRIES.length&&ts&&cur.kind!=='sectors'){const d=D.dates[idx[end]];as=[...windows(cur)].filter(([,ws])=>inW(ws,d)).map(([x])=>x);}
    if(as&&as.length){const live=as.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length,ts2=as;
      ROSTER=live<ts2.length?{live,total:ts2.length}:null;}else ROSTER=null;}
-  $('prov').hidden=!PROV;
+  $('prov').hidden=!PROV;$('prov').textContent=LIVE&&PROV?`live · ${LIVE.time}`:'week in progress';
   ROWS=[];
   for(const c of kids(cur)){
     if(c.kind==='stock'&&c.ticker===bench)continue;
@@ -610,7 +627,7 @@ function render(fast,withList){
     // their tail returns are and who drove it. Cached per stock, so it is cheap on replay.
     const mem=c.kind==='sub'?c.members:c.kind==='family'?uniq(c):c.kind==='domain'?deep(c):null;
     let br=null,disp=null,top=null,bot=null,prox=0;
-    const bd=D.dates[idx[end]];
+    const bd=D.dates[idx[end]],liveBar=LIVE&&end===idx.length-1;   // live bars are flagged as a whole, not per close
     if(mem&&(!fast||withList)){
       let up=0,k=0;const rets=[];
       for(const tk of mem){
@@ -618,13 +635,13 @@ function render(fast,withList){
         const rr=rrgT(tk,bench,idx,n),v=rr.rsr[end];
         if(v!=null){k++;if(v>100)up++;}
         const a0=rr.rs[end-st.tail],b0=rr.rs[end];if(a0&&b0)rets.push([tk,(b0/a0-1)*100]);
-        if(D.proxy&&D.proxy[tk]&&D.proxy[tk].includes(bd))prox++;
+        if(!liveBar&&D.proxy&&D.proxy[tk]&&D.proxy[tk].includes(bd))prox++;
       }
       if(k)br={up,k};
       if(rets.length>1){const mu=rets.reduce((s,x)=>s+x[1],0)/rets.length;
         disp=Math.sqrt(rets.reduce((s,x)=>s+(x[1]-mu)**2,0)/rets.length);
         rets.sort((u,v)=>v[1]-u[1]);top=rets.slice(0,2);bot=rets.slice(-2).reverse();}
-    }else if(c.kind==='stock'&&D.proxy&&D.proxy[c.ticker]&&D.proxy[c.ticker].includes(bd))prox=1;
+    }else if(!liveBar&&c.kind==='stock'&&D.proxy&&D.proxy[c.ticker]&&D.proxy[c.ticker].includes(bd))prox=1;
     ROWS.push({node:c,label:c.label,pts,x,y,q,hdg,ten,prev,rel:a&&b?(b/a-1)*100:null,open:c.children.length>0,
       rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null),stab:agree,stabN:evals,stabOuts:outs,
       br,disp,top,bot,prox,nmem:mem?mem.length:0});
@@ -756,10 +773,16 @@ function tip(e,r){
 
 function list(rows){
   const a=$('list');a.innerHTML='';
+  // Quadrant lists and the benchmark check share this panel as tabs; showing both at once made
+  // the first screen too dense.
+  a.insertAdjacentHTML('beforeend',`<div class="ptabs" role="tablist" aria-label="List view">${[['q','Quadrants'],['b','Benchmark check']].map(([k,l])=>`<button type="button" role="tab" data-p="${k}" aria-selected="${st.panel===k}">${l}</button>`).join('')}</div>`);
+  a.querySelector('.ptabs').onclick=e=>{const b=e.target.closest('[data-p]');if(b&&b.dataset.p!==st.panel){st.panel=b.dataset.p;writeHash(false);list(ROWS);}};
+  if(st.panel==='b'){sensitivity(rows.filter(r=>!st.hide.has(r.node.id)));return;}
   if(st.hide.size){const s=document.createElement('button');s.type='button';s.className='showall';
     s.textContent=`Show all (${rows.filter(r=>st.hide.has(r.node.id)).length} hidden)`;
     s.onclick=()=>{st.hide=new Set();writeHash(false);render();};a.append(s);}
-  a.insertAdjacentHTML('beforeend',`<div class="legend"><b>➝</b> last step · <b>3${unit()}</b> time in quadrant${PROV?' (<b>*</b> incl. this week)':''} · <b>NEW</b> crossed in last 2 bars · <b>2/5</b> settings agreeing · <b>%</b> breadth, then return since the tail start${ROWS.some(r=>r.prox)?' · <b>≈</b> intraday-proxy close':''}</div>`);
+  a.insertAdjacentHTML('beforeend',`<details class="key"${KEYOPEN?' open':''}><summary>Key</summary><div class="legend"><b>➝</b> last step · <b>3${unit()}</b> time in quadrant${PROV?' (<b>*</b> incl. this week)':''} · <b>NEW</b> crossed in last 2 bars · <b>2/5</b> settings agreeing · <b>%</b> breadth, then return since the tail start${ROWS.some(r=>r.prox)?' · <b>≈</b> intraday-proxy close':''}</div></details>`);
+  a.querySelector('.key').ontoggle=e=>{KEYOPEN=e.target.open;};
   for(const q of QORDER){
     const rs=rows.filter(r=>r.q===q).sort((a,b)=>b.rk-a.rk);
     const sec=document.createElement('section');
@@ -770,7 +793,7 @@ function list(rows){
       b.innerHTML=`<span class="nm">${r.label}${adhoc.has(r.node.ticker)?`<span class="co">${coName(r.node)}</span>`:''}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}${r.prox?`<span class="px" title="${r.node.kind==='stock'?'This close is an intraday proxy':`${r.prox} of ${r.nmem} members' closes are intraday proxies`}; Yahoo has not yet published the official close">≈</span>`:''}</span>
         <span>${r.stab!=null&&r.stabN-r.stab>=2?`<span class="frag" title="Only ${r.stab} of ${r.stabN} evaluable smoothing settings put this in ${Q[q].n}${r.stabN<5?` (${5-r.stabN} lack history)`:''}">${r.stab}/${r.stabN}</span>`:''}</span>
         <span class="ar" style="transform:rotate(${-r.hdg}deg)" title="Heading ${r.hdg.toFixed(0)}°">➝</span>
-        <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}${PROV?'<span title="includes the week still in progress">*</span>':''}</span>
+        <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}${PROV?`<span title="${LIVE?'includes the live, still-moving session':'includes the week still in progress'}">*</span>`:''}</span>
         <span class="br num" ${r.br?`title="${r.br.up} of ${r.br.k} members are outperforming ${VIEW.bench}'s trend"`:''}>${r.br?Math.round(100*r.br.up/r.br.k)+'%':''}</span>
         <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
         <span class="go">${r.open?'›':''}</span>`;
@@ -791,7 +814,6 @@ function list(rows){
     h.addEventListener('mouseleave',()=>{st.hoverQ=null;focus();});
     a.append(sec);
   }
-  sensitivity(rows.filter(r=>!st.hide.has(r.node.id)));
 }
 // The quadrant call depends on the yardstick: Accelerators were Leading 5/5 against QQQ but
 // Weakening 2/5 against SOXX on the same date. Show each visible dot's call against the common
@@ -804,20 +826,35 @@ function sensitivity(rows){
     const x=r.rsr[end],y=r.rsm[end];if(x==null||y==null)return '<span title="not enough history">·</span>';
     const q=quad(x,y);return `<span class="gl" style="color:${Q[q].c}" title="${Q[q].n} against ${b}">${Q[q].s}</span>`;};
   const rs=[...rows].sort((u,v)=>QORDER.indexOf(u.q)-QORDER.indexOf(v.q)||v.rk-u.rk);
-  let h=`<section class="sens"><h3>Benchmark check</h3><table><thead><tr><th scope="col">vs</th>${cols.map(b=>`<th scope="col" class="${b===bench?'cur':''}">${b}</th>`).join('')}<th scope="col" title="The layer's industry peer benchmark">Peer</th></tr></thead><tbody>`;
+  let h=`<section class="sens"><p class="note">Each dot's quadrant against the common benchmarks and against its own industry peer. When they disagree, the call depends on the yardstick.</p><table><thead><tr><th scope="col">vs</th>${cols.map(b=>`<th scope="col" class="${b===bench?'cur':''}">${b}</th>`).join('')}<th scope="col" title="The layer's industry peer benchmark">Peer</th></tr></thead><tbody>`;
   for(const r of rs){const pb=peerOf(r.node);
     h+=`<tr><td title="${r.label}">${r.label}</td>${cols.map(b=>`<td class="${b===bench?'cur':''}">${call(r.node,b)}</td>`).join('')}<td>${pb?`${call(r.node,pb)} <span style="font-size:10px;color:var(--faint)">${pb}</span>`:''}</td></tr>`;}
   $('list').insertAdjacentHTML('beforeend',h+'</tbody></table></section>');
 }
-// "What changed": the dots that crossed into a new quadrant in the last two bars, with how
-// robust each call is and how broad, so the morning question is answered without replaying.
-function changes(vis){
-  const ch=vis.filter(r=>r.prev&&r.ten<=2).sort((u,v)=>u.ten-v.ten||v.rk-u.rk);
-  const el=$('changes');
-  el.innerHTML=`<span class="hd">What changed</span>`+(ch.length?ch.slice(0,6).map(r=>`<span class="it"><b>${r.label}</b> ${Q[r.prev].n} ${Q[r.prev].s} → <span style="color:${Q[r.q].c}">${Q[r.q].s} ${Q[r.q].n}</span>${r.stab!=null?` · ${r.stab}/${r.stabN}`:''}${r.br?` · breadth ${Math.round(100*r.br.up/r.br.k)}%`:''}${r.ten===1?' · this bar':''}</span>`).join('')
-    +(ch.length>6?`<span class="it">+${ch.length-6} more</span>`:''):'No quadrant changes in the last two bars.')
-    +(PROV&&ch.length?' <span title="the latest bar is the week still in progress">(provisional: week in progress)</span>':'');
+// "What changed": one card per quadrant move in the last two bars. A mini 2x2 grid laid out like
+// the chart (Improving top-left, Leading top-right, Lagging bottom-left, Weakening bottom-right)
+// outlines where the dot was and fills where it is, so each move reads at a glance; the text only
+// names it. Strengthening moves (into Improving or Leading) come first.
+const QPOS={I:[0,0],L:[1,0],G:[0,1],W:[1,1]},UP=q=>q==='L'||q==='I';
+function qmini(from,to){
+  const r=(q,a)=>{const [x,y]=QPOS[q];return `<rect x="${1+x*10}" y="${1+y*10}" width="9" height="9" rx="2" ${a}/>`;};
+  return `<svg class="qm" viewBox="0 0 21 21" width="21" height="21" aria-hidden="true">${['I','L','G','W'].map(q=>r(q,'fill="var(--line)"')).join('')}`
+    +`${r(from,`fill="none" stroke="${Q[from].c}" stroke-width="1.5"`)}${r(to,`fill="${Q[to].c}"`)}</svg>`;
 }
+function changes(vis){
+  const W=st.frame==='W',span=W?'the last two weeks':'the last two sessions',el=$('changes');
+  const ch=vis.filter(r=>r.prev&&r.ten<=2).sort((u,v)=>UP(v.q)-UP(u.q)||u.ten-v.ten||v.rk-u.rk);
+  if(!ch.length){el.innerHTML=`<div class="hd">No quadrant changes in ${span}</div>`;return;}
+  el.innerHTML=`<div class="hd">Changed quadrant in ${span}${PROV?` <span class="pv">· latest bar ${LIVE?'is live':'is the week in progress'}, so provisional</span>`:''}</div><div class="cards">`
+    +ch.slice(0,8).map(r=>`<button type="button" class="card" data-id="${r.node.id}" title="${r.label}: ${Q[r.prev].n} to ${Q[r.q].n}${r.ten===1?', on the latest bar':''}">${qmini(r.prev,r.q)}`
+      +`<span class="ct"><span class="c1"><b>${r.label}</b> <span style="color:${Q[r.q].c}">→ ${Q[r.q].n}</span>${r.stab!=null&&r.stabN-r.stab>=2?` <span class="frag">${r.stab}/${r.stabN}</span>`:''}</span>`
+      +`<span class="cs">from ${Q[r.prev].n}${r.br?` · breadth ${Math.round(100*r.br.up/r.br.k)}%`:''}</span></span></button>`).join('')
+    +(ch.length>8?`<span class="more">+${ch.length-8} more</span>`:'')+'</div>';
+}
+// hovering a card highlights its dot; clicking opens it when it has children
+$('changes').addEventListener('mouseover',e=>{const c=e.target.closest('.card');if(c&&st.hover!==c.dataset.id){st.hover=c.dataset.id;focus();}});
+$('changes').addEventListener('mouseleave',()=>{st.hover=null;focus();});
+$('changes').addEventListener('click',e=>{const c=e.target.closest('.card');if(c&&NODES[c.dataset.id])go(c.dataset.id);});
 // Which names sit in more than one layer, computed rather than written down, because every
 // reorganisation silently invalidated the hand-written version.
 {const at={};for(const f of root.children)for(const t of uniq(f))(at[t]=at[t]||[]).push(f.label);
@@ -959,6 +996,20 @@ for(const inp of document.querySelectorAll('.cmpfind input')){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const b=box.querySelector('button');if(b)b.click();}else if(e.key==='Escape'){inp.value='';box.hidden=true;}});
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.cmpfind'))for(const b of document.querySelectorAll('.cmpres'))b.hidden=true;});
+
+// ---- New builds ----
+// Builds land every 30 minutes in market hours, but an open tab would otherwise sit on the data
+// it loaded. Check the tiny version file while the page is visible and offer a reload; the link
+// hash carries the view, so reloading loses nothing.
+function checkBuild(){
+  if(!D.built||document.visibilityState!=='visible'||!$('upd').hidden)return;
+  fetch('version.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(v=>{
+    if(v&&v.built&&v.built>D.built){$('upd').hidden=false;$('upd').textContent=v.live?`New data (${v.live.time}) · reload`:'New data · reload';}
+  }).catch(()=>{});
+}
+setInterval(checkBuild,5*60*1000);
+document.addEventListener('visibilitychange',checkBuild);
+$('upd').onclick=()=>location.reload();
 
 // ---- Full history on demand ----
 const needHistory=()=>!!D.full_len&&D.full_len>D.dates.length;
