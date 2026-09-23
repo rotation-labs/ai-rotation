@@ -1,6 +1,6 @@
 # AI Rotation Graph
 
-A relative rotation graph (RRG) of the AI trade: 11 stack layers vs SPY, drilling into semiconductor and AI-ecosystem subsectors and their stocks. The site is a single static page that rebuilds itself every weekday after the US close.
+A relative rotation graph (RRG) of the AI trade: stack layers vs QQQ, drilling into semiconductor and AI-ecosystem subsectors and their stocks. The site is a single static page that rebuilds itself every weekday after the US close.
 
 ## How it works
 

@@ -113,14 +113,18 @@
           "MXL"
         ]
       },
-      "Fab & Equipment": {
-        "Foundry": [
+      "Foundry": {
+        "Leading-edge": [
           "TSM",
-          "GFS",
-          "UMC",
-          "TSEM",
           "INTC"
         ],
+        "Mature / Specialty": [
+          "GFS",
+          "UMC",
+          "TSEM"
+        ]
+      },
+      "SemiCap": {
         "Litho & Mask": [
           "ASML",
           "LASERTEC"
