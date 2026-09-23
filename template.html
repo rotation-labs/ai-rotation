@@ -39,6 +39,14 @@ h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em;text-wrap:balan
 .seg button[aria-pressed="true"]{background:var(--raised);color:var(--text);box-shadow:0 0 0 1px var(--line2)}
 .tool{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
 select{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:12px}
+.find{position:relative}
+.find input{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:12px;color:var(--text);width:170px}
+.find input::placeholder{color:var(--faint)}
+#qres{position:absolute;top:calc(100% + 5px);left:0;z-index:20;background:var(--raised);border:1px solid var(--line2);border-radius:8px;padding:4px;min-width:250px;max-height:320px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#qres button{display:block;width:100%;background:none;border:0;border-radius:5px;padding:5px 8px;text-align:left;color:var(--text);font-size:12.5px}
+#qres button:hover,#qres button.sel{background:var(--hover)}
+#qres .p{color:var(--faint);font-size:11px;margin-left:6px}
+#qres .none{color:var(--muted);font-size:12px;padding:6px 8px}
 
 nav{grid-area:nav;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;padding-right:4px}
 .navsec{margin-bottom:14px}
@@ -110,6 +118,7 @@ svg .dimmed{opacity:.1}
       <h1 id="title">Full stack</h1><span class="stale" id="stale" hidden></span>
     </div>
     <div class="tools">
+      <div class="tool find"><input id="q" type="search" placeholder="Find ticker or basket" autocomplete="off" aria-label="Find a ticker or basket"><div id="qres" hidden role="listbox"></div></div>
       <div class="tool"><span>Bars</span><div class="seg" id="frame"><button type="button" data-v="W">Weekly</button><button type="button" data-v="D">Daily</button></div></div>
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
@@ -121,7 +130,7 @@ svg .dimmed{opacity:.1}
   <div class="chartwrap">
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
-    <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="latest">Latest</button></div>
+    <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="play">▶ Play</button><button type="button" id="latest">Latest</button></div>
   </div>
 
   <aside id="list" aria-label="Quadrants"></aside>
@@ -225,17 +234,46 @@ let SIG={x:1,y:1};
 let ROSTER=null;
 try{const s=JSON.parse(localStorage.getItem('rrg-v3')||'null');if(s)Object.assign(st,s,{end:null,hover:null,hoverQ:null});}catch(e){}
 if(!NODES[st.node])st.node='stack';
-const save=()=>{try{localStorage.setItem('rrg-v3',JSON.stringify({node:st.node,bench:st.bench,frame:st.frame,tail:st.tail}))}catch(e){}};
-function go(id){if(!NODES[id])return;st.node=id;st.hover=null;st.hoverQ=null;$('tip').hidden=true;save();render();}
+const save=push=>{try{localStorage.setItem('rrg-v3',JSON.stringify({node:st.node,bench:st.bench,frame:st.frame,tail:st.tail}))}catch(e){}writeHash(push);};
+function go(id){if(!NODES[id])return;st.node=id;st.hover=null;st.hoverQ=null;$('tip').hidden=true;stopPlay();save(true);render();}
 const unit=()=>st.frame==='W'?'w':'d';
 const fmtD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
 
 const BENCH=['SPY','QQQ','RSP','SMH','SOXX'];
+
+// State lived only in localStorage, so a view could not be linked and the back button did
+// nothing after drilling three levels deep. Mirror it into the hash instead; localStorage
+// stays as the default for a bare URL.
+function readHash(){
+  const h=new URLSearchParams(location.hash.slice(1)),o={};
+  if(NODES[h.get('node')])o.node=h.get('node');
+  if(h.get('frame')==='W'||h.get('frame')==='D')o.frame=h.get('frame');
+  if([2,4,8,12].includes(+h.get('tail')))o.tail=+h.get('tail');
+  if(h.get('bench')==='auto'||BENCH.includes(h.get('bench')))o.bench=h.get('bench');
+  if(/^\d+$/.test(h.get('end')||''))o.end=+h.get('end');
+  return o;
+}
+function writeHash(push){
+  const p=new URLSearchParams();
+  p.set('node',st.node);p.set('frame',st.frame);p.set('tail',st.tail);p.set('bench',st.bench);
+  if(st.end!=null)p.set('end',st.end);
+  const u='#'+p;
+  if(location.hash===u)return;
+  push?history.pushState(null,'',u):history.replaceState(null,'',u);
+}
+Object.assign(st,readHash());
+if(!NODES[st.node])st.node='stack';
+writeHash(false);
+addEventListener('popstate',()=>{
+  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null},readHash());
+  if(!NODES[st.node])st.node='stack';
+  stopPlay();render();
+});
 $('frame').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.frame=b.dataset.v;st.end=null;save();render();};
 $('tail').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.tail=+b.dataset.v;save();render();};
 $('bench').onchange=()=>{st.bench=$('bench').value;save();render();};
-$('replay').oninput=()=>{st.end=+$('replay').value;render();};
-$('latest').onclick=()=>{st.end=null;render();};
+$('replay').oninput=()=>{st.end=+$('replay').value;stopPlay();writeHash(false);render();};
+$('latest').onclick=()=>{st.end=null;stopPlay();writeHash(false);render();};
 $('crumbs').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
 $('nav').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
 
@@ -444,6 +482,68 @@ function focus(){
   if(st.hover){const g=svg.querySelector(`g.s[data-id="${st.hover}"]`),l=svg.querySelector(`text.lab[data-id="${st.hover}"]`);if(g)svg.append(g);if(l)svg.append(l);}
   document.querySelectorAll('.qrow').forEach(e=>{e.classList.toggle('focus',!!st.hover&&e.dataset.id===st.hover);e.classList.toggle('dim',!on(e.dataset.id));});
 }
+// ---- Find (C2): 61 nodes and 150+ tickers with no way to answer "where does AMAT sit?" ----
+const SEARCH=[];
+for(const nd of Object.values(NODES)){
+  if(nd.id==='stack')continue;
+  SEARCH.push({id:nd.id,label:nd.label,co:'',
+    path:lineage(nd).slice(0,-1).map(x=>x.label).join(' / '),key:nd.label.toLowerCase()});
+}
+// Every ticker gets an entry pointing at the subsector that holds it: stock leaves are not
+// navigable nodes, and a name in two subsectors should surface once per location.
+for(const nd of Object.values(NODES)){
+  if(nd.kind!=='sub')continue;
+  const base=lineage(nd).slice(0,-1).map(x=>x.label).join(' / ')+' / '+nd.label;
+  for(const tk of nd.members){
+    const co=(D.names&&D.names[tk])||'';
+    SEARCH.push({id:nd.id,label:tk,co,path:base,key:(tk+' '+co).toLowerCase()});
+  }
+}
+let qrows=[],qsel=-1;
+function qrender(){
+  const box=$('qres');
+  box.innerHTML=qrows.length
+    ? qrows.map((r,i)=>`<button type="button" role="option" data-id="${r.id}" class="${i===qsel?'sel':''}">${r.label}${r.co?`<span class="p">${r.co}</span>`:''}<span class="p">${r.path}</span></button>`).join('')
+    : '<div class="none">No match</div>';
+  box.hidden=false;
+}
+function qsearch(v){
+  v=v.trim().toLowerCase();
+  if(!v){$('qres').hidden=true;qrows=[];qsel=-1;return;}
+  const rank=x=>x.label.toLowerCase()===v?0:x.label.toLowerCase().startsWith(v)?1:2;
+  qrows=SEARCH.filter(r=>r.key.includes(v)).sort((a,b)=>rank(a)-rank(b)||a.label.length-b.label.length).slice(0,12);
+  qsel=qrows.length?0:-1;qrender();
+}
+function qpick(id){go(id);$('q').value='';$('qres').hidden=true;$('q').blur();}
+$('q').addEventListener('input',e=>qsearch(e.target.value));
+$('q').addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!qrows.length)return;
+    qsel=(qsel+(e.key==='ArrowDown'?1:-1)+qrows.length)%qrows.length;qrender();}
+  else if(e.key==='Enter'){if(qrows[qsel])qpick(qrows[qsel].id);}
+  else if(e.key==='Escape'){$('q').value='';$('qres').hidden=true;$('q').blur();}
+});
+$('qres').addEventListener('click',e=>{const b=e.target.closest('button');if(b)qpick(b.dataset.id);});
+document.addEventListener('click',e=>{if(!e.target.closest('.find'))$('qres').hidden=true;});
+addEventListener('keydown',e=>{
+  if(e.key==='/'&&document.activeElement!==$('q')&&!/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)){e.preventDefault();$('q').focus();}
+});
+
+// ---- Replay autoplay (C6): 150+ weeks of history sat behind a slider nobody drags ----
+let PLAY=null;
+function stopPlay(){if(PLAY){clearInterval(PLAY);PLAY=null;$('play').textContent='▶ Play';}}
+$('play').onclick=()=>{
+  if(PLAY){stopPlay();return;}
+  const max=+$('replay').max,min=+$('replay').min;
+  if(max<=min)return;
+  st.end=Math.max(min,max-26);
+  $('play').textContent='❚❚ Pause';
+  render();
+  PLAY=setInterval(()=>{
+    if(st.end==null||st.end>=max){stopPlay();st.end=null;writeHash(false);render();return;}
+    st.end++;render();
+  },200);
+};
+
 // A failed scheduled build leaves the previous site live, which is safe but silent.
 // Surface it rather than showing week-old prices under a "refreshed daily" footer.
 (function(){
