@@ -64,10 +64,12 @@ select{background:var(--panel);border:1px solid var(--line);border-radius:7px;pa
 nav{grid-area:nav;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;padding-right:4px}
 .navsec{margin-bottom:14px}
 .navh{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:0 8px 6px}
+.navkey{display:flex;flex-wrap:wrap;gap:5px 10px;padding:2px 8px 4px;font-size:11px;color:var(--faint)}
+.navkey span{display:inline-flex;align-items:center;gap:5px}
 .ni{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-radius:6px;padding:5px 8px;text-align:left;color:var(--muted)}
 .ni:hover{background:var(--panel);color:var(--text)}
 .ni[aria-current="true"]{background:var(--raised);color:var(--text)}
-.ni .d{width:12px;height:12px;border-radius:3px;flex:none;background:var(--line2);color:var(--ground);font-family:var(--mono);font-size:8.5px;font-weight:600;line-height:12px;text-align:center}
+.ni .d,.navkey .d{width:13px;height:13px;border-radius:3px;flex:none;background:var(--line2);color:var(--ground);font-family:var(--sans);font-size:10.5px;font-weight:700;line-height:13px;text-align:center}
 .ni .c{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
 .sub{margin:2px 0 6px 15px;border-left:1px solid var(--line);padding-left:6px}
 .sub .ni{font-size:12.5px;padding:4px 8px}
@@ -168,7 +170,8 @@ svg .dimmed{opacity:.1}
 <script>
 const D=JSON.parse(document.getElementById('data').textContent);
 const $=id=>document.getElementById(id);
-const Q={L:{n:'Leading',h:'strong and rising',c:'var(--lead)'},W:{n:'Weakening',h:'strong, fading',c:'var(--weak)'},G:{n:'Lagging',h:'weak and falling',c:'var(--lag)'},I:{n:'Improving',h:'weak, turning up',c:'var(--imp)'}};
+// s: an arrow pointing at the quadrant's corner of the chart, so the nav badge reads without a key
+const Q={L:{n:'Leading',h:'strong and rising',c:'var(--lead)',s:'↗'},W:{n:'Weakening',h:'strong, fading',c:'var(--weak)',s:'↘'},G:{n:'Lagging',h:'weak and falling',c:'var(--lag)',s:'↙'},I:{n:'Improving',h:'weak, turning up',c:'var(--imp)',s:'↖'}};
 const QORDER=['L','W','G','I'];
 
 const RENAME={'Compute & Cloud':'Cloud','Power':'Energy'};
@@ -245,6 +248,25 @@ function rrg(px,bx,idx,n,o){
 // report how many agree with the displayed quadrant, so a fragile call looks different
 // from a robust one.
 const ALTS=n=>[{m:4},{e:5,n:Math.round(n*1.4)},{n:Math.round(n*2.6)},{e:1}];
+// Default-parameter RRG per node/benchmark/frame. The arrays don't depend on the replay
+// date, so the nav can look up any node's quadrant at any date in O(1) after first use.
+const RC={};
+function rrgOf(nd,bench,idx,n){
+  const k=nd.id+'|'+bench+'|'+st.frame;
+  return RC[k]||(RC[k]=rrg(series(nd),D.px[bench],idx,n));
+}
+// Nav dots used to be painted only for nodes currently on the chart, so drilling into a
+// subsector blanked every sibling (and a layer's own dot was never painted while open).
+// Paint each node as it would appear in its parent's view: same benchmark, same date.
+function paintNav(idx,n,end){
+  for(const d of document.querySelectorAll('#nav .d[data-q]')){
+    const nd=NODES[d.dataset.q];if(!nd||!nd.parent)continue;
+    const bench=st.bench==='auto'?nd.parent.bench:st.bench;
+    const r=rrgOf(nd,bench,idx,n),x=r.rsr[end],y=r.rsm[end];
+    if(x==null||y==null){d.style.background='';d.textContent='';d.title='Not enough history';continue;}
+    const q=quad(x,y);d.style.background=Q[q].c;d.textContent=Q[q].s;d.title=`${Q[q].n} vs ${bench}`;
+  }
+}
 // Boundary convention: a node sitting exactly on 100 counts as the stronger side
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
@@ -320,6 +342,7 @@ function nav(cur){
     }
     h+='</div>';
   }
+  h+=`<div class="navkey" aria-hidden="true">${QORDER.map(q=>`<span><span class="d" style="background:${Q[q].c}">${Q[q].s}</span>${Q[q].n}</span>`).join('')}</div>`;
   $('nav').innerHTML=h+'</details>';
   $('nav').querySelector('details').ontoggle=e=>{navOpen=e.target.open;};
 }
@@ -398,8 +421,7 @@ function render(fast,withList){
     r.hdg=h<0?h+360:h;
   }
   if(!fast)nav(cur);
-  for(const r of ROWS){const d=document.querySelector(`#nav .d[data-q="${r.node.id}"]`);
-    if(d){d.style.background=Q[r.q].c;d.textContent=r.q;d.title=Q[r.q].n;}}
+  if(!fast||withList)paintNav(idx,n,end);
   // The SVG was one role="img" with a fixed label, so a screen reader got nothing but
   // "Relative rotation graph". Summarise the actual state instead.
   svg.setAttribute('aria-label',`Relative rotation graph. ${cur.label} versus ${bench}, ${st.frame==='W'?'weekly':'daily'} bars through ${fmtD(D.dates[idx[end]])}. `+
