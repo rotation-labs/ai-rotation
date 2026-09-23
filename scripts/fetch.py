@@ -16,9 +16,12 @@ PERIOD = "3y"
 MAX_MISSING_SHARE = 0.10
 STALE_SESSIONS = 5   # drop a listing whose last print is more than this many US sessions old
 
-# suffix -> (FX ticker, how to convert). "div": price / fx (fx quoted per USD); "mul": price * fx (USD per unit)
+# suffix -> (FX ticker, how to convert). "div": price / fx (fx quoted per USD); "mul": price * fx (USD per unit);
+# "pence": price / 100 * fx, for venues that quote in minor units
 FX = {".KS": ("KRW=X", "div"), ".T": ("JPY=X", "div"), ".TW": ("TWD=X", "div"), ".TWO": ("TWD=X", "div"),
-      ".SZ": ("CNY=X", "div"), ".SS": ("CNY=X", "div"), ".HK": ("HKD=X", "div"),
+      ".SZ": ("CNY=X", "div"), ".SS": ("CNY=X", "div"), ".HK": ("HKD=X", "div"), ".KQ": ("KRW=X", "div"), ".SW": ("CHF=X", "div"),
+      # London listings are quoted in pence (GBp), not pounds: ONT.L at 172.20 is GBP 1.72
+      ".L": ("GBPUSD=X", "pence"),
       ".AS": ("EURUSD=X", "mul"), ".DE": ("EURUSD=X", "mul"), ".PA": ("EURUSD=X", "mul")}
 
 
@@ -54,6 +57,18 @@ def download(symbols, tries=3):
     return frame
 
 
+EXCHANGE_TZ = {".T": "Asia/Tokyo", ".KS": "Asia/Seoul", ".KQ": "Asia/Seoul", ".TW": "Asia/Taipei",
+               ".TWO": "Asia/Taipei", ".HK": "Asia/Hong_Kong", ".SS": "Asia/Shanghai", ".SZ": "Asia/Shanghai",
+               ".AS": "Europe/Amsterdam", ".DE": "Europe/Berlin", ".PA": "Europe/Paris",
+               ".L": "Europe/London", ".SW": "Europe/Zurich"}
+
+
+def exchange_tz(symbol):
+    """Local time zone of a listing's exchange; suffix-less symbols trade in New York."""
+    suf = max((k for k in EXCHANGE_TZ if symbol.endswith(k)), key=len, default=None)
+    return EXCHANGE_TZ[suf] if suf else "America/New_York"
+
+
 def fill_unfinalised(frame, lookback=3):
     """Fill empty daily closes on recent US sessions from that session's intraday bars.
 
@@ -62,32 +77,42 @@ def fill_unfinalised(frame, lookback=3):
     already published, so a scheduled run shortly after the close would drop a whole
     session. The last intraday bar can miss the closing auction by a few basis points;
     every run refetches the full history, so the finalised close replaces it next time.
-    Only US listings are filled: a suffix-less symbol trades on New York hours, so its
-    intraday bars map to a session date unambiguously.
+    The gap is not US-only: Paris, Frankfurt and London closes were equally blank, so every
+    equity listing is filled, with its intraday bars dated in its own exchange's time zone.
+    Tokyo's morning is still the previous evening in New York, so a single New York clock
+    would put Asian bars on the wrong session. FX pairs trade round the clock and are skipped.
     """
     if frame.empty:
         return frame
     dates = frame.index[-lookback:]
     need = sorted({s for d in dates for s in frame.columns
-                   if pd.isna(frame.at[d, s]) and "." not in s and "=" not in s})
+                   if pd.isna(frame.at[d, s]) and "=" not in s})
     if not need:
         return frame
-    try:
-        h = yf.download(need, period="5d", interval="60m", progress=False, auto_adjust=True, threads=True)["Close"]
-    except Exception as e:
-        print(f"intraday fill skipped: {e}", file=sys.stderr)
-        return frame
-    if isinstance(h, pd.Series):
-        h = h.to_frame(need[0])
-    if h.empty:
-        return frame
-    local = h.index.tz_convert("America/New_York") if h.index.tz is not None else h.index
-    day = pd.to_datetime([str(i.date()) for i in local])
+    # One big intraday batch silently came back empty for ~17 of 200+ symbols that
+    # certainly traded, so fetch in chunks and retry whatever is still missing.
+    got, pending = {}, list(need)
+    for attempt in range(3):
+        for i in range(0, len(pending), 40):
+            chunk = pending[i:i + 40]
+            try:
+                h = yf.download(chunk, period="5d", interval="60m", progress=False, auto_adjust=True, threads=True)["Close"]
+            except Exception as e:
+                print(f"intraday chunk failed: {e}", file=sys.stderr)
+                continue
+            if isinstance(h, pd.Series):
+                h = h.to_frame(chunk[0])
+            for s in chunk:
+                if s in h and h[s].notna().any():
+                    col = h[s].dropna()
+                    local = col.index.tz_convert(exchange_tz(s)) if col.index.tz is not None else col.index
+                    got[s] = pd.Series(col.to_numpy(), index=pd.to_datetime([str(i.date()) for i in local]))
+        pending = [s for s in pending if s not in got]
+        if not pending:
+            break
+        time.sleep(3 * (attempt + 1))
     filled = 0
-    for s in need:
-        if s not in h:
-            continue
-        col = pd.Series(h[s].to_numpy(), index=day).dropna()
+    for s, col in got.items():
         for d in dates:
             if pd.isna(frame.at[d, s]):
                 hit = col[col.index == d]
@@ -96,13 +121,16 @@ def fill_unfinalised(frame, lookback=3):
                     filled += 1
     if filled:
         print(f"filled {filled} unfinalised daily close(s) from intraday bars", file=sys.stderr)
+    if pending:
+        print(f"warning: no intraday bars for {pending}; their last close carries forward", file=sys.stderr)
     return frame
 
 
 def main():
     groups = CFG["groups"]
     foreign = CFG["foreign_listings"]
-    names = sorted(set(CFG["benchmarks"]) | {t for g in groups.values() for f in g.values() for m in f.values() for t in m})
+    names = sorted(set(CFG["benchmarks"]) | set(CFG.get("sectors", {}))
+                   | {t for g in groups.values() for f in g.values() for m in f.values() for t in m})
     sym = {n: foreign.get(n, n) for n in names}
     fx_syms = sorted({FX[k][0] for k in FX if any(s.endswith(k) for s in sym.values())})
 
@@ -140,7 +168,7 @@ def main():
         if suf:
             fx_t, how = FX[suf]
             fx = raw[fx_t].ffill().reindex(p.index).ffill()
-            p = p / fx if how == "div" else p * fx
+            p = p / fx if how == "div" else p / 100 * fx if how == "pence" else p * fx
         first = p.index[0]
         q = p.reindex(p.index.union(us)).ffill().reindex(us)
         q[q.index < first] = float("nan")
@@ -166,7 +194,11 @@ def main():
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps({"asof": str(us[-1].date()), "dates": [str(x.date()) for x in us],
                                "px": px, "groups": groups,
-                               "names": {k: v for k, v in CFG.get("names", {}).items() if k in px}},
+                               "names": {k: v for k, v in CFG.get("names", {}).items() if k in px},
+                               # ad-hoc display codes (HYNIX, FANUC) rather than real tickers:
+                               # the page decodes these inline, and shows every other name on hover
+                               "adhoc": sorted(k for k in foreign if k in px),
+                               "sectors": {k: v for k, v in CFG.get("sectors", {}).items() if k in px}},
                               separators=(",", ":")))
     print(f"wrote {OUT} - {len(px)} series through {us[-1].date()}")
 

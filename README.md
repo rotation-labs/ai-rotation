@@ -1,6 +1,6 @@
 # AI Rotation Graph
 
-A relative rotation graph (RRG) of the AI trade: stack layers vs QQQ, drilling into semiconductor and AI-ecosystem subsectors and their stocks. The site is a single static page that rebuilds itself every weekday after the US close.
+A relative rotation graph (RRG) of the AI trade, laid out as a value chain in five tiers - Silicon, DC Hardware, Power & Buildout, Cloud & Software, Applied AI - drilling into layers, subsectors and their stocks, plus a reference view of SPY's eleven sector ETFs. The site is a single static page that rebuilds itself every weekday after the US close.
 
 ## How it works
 
@@ -32,8 +32,8 @@ then run the workflow once from the Actions tab.
 
 ## Everyday changes
 
-- **Edit baskets:** change `config/baskets.json` (families → baskets → tickers) and commit. Any push to `main` triggers a rebuild.
-  Non-US tickers get a short name in `foreign_listings` mapped to their Yahoo symbol (e.g. `"HYNIX": "000660.KS"`), and a display name in `names` (e.g. `"HYNIX": "SK Hynix"`) so the chart is readable without the glossary. Supported suffixes: `.KS .T .TW .TWO .SZ .SS .HK .AS .DE .PA`.
+- **Edit baskets:** change `config/baskets.json` (tier → layer → subsector → tickers) and commit. Any push to `main` triggers a rebuild. Give every new ticker a display name in `names`; it is shown on hover.
+  Non-US tickers get a short name in `foreign_listings` mapped to their Yahoo symbol (e.g. `"HYNIX": "000660.KS"`), and a display name in `names` (e.g. `"HYNIX": "SK Hynix"`) so the chart is readable without the glossary. Supported suffixes: `.KS .KQ .T .TW .TWO .SZ .SS .HK .AS .DE .PA .SW .L` (London is quoted in pence and converted accordingly).
 - **Fonts:** `assets/fonts/*.woff2` are vendored and copied into `site/` at build time, so the page makes no third-party request. See `assets/fonts/NOTICE.md`.
 - **Change the schedule:** edit the `cron` line in `.github/workflows/update.yml` (times are UTC).
 - **Refresh right now:** Actions → Update AI Rotation Graph → Run workflow.

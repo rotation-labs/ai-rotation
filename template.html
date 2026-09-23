@@ -66,13 +66,15 @@ nav{grid-area:nav;align-self:start;position:sticky;top:calc(env(safe-area-inset-
 .navh{display:flex;align-items:center;width:100%;background:none;border:0;border-radius:6px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:5px 8px;margin-bottom:2px;text-align:left;cursor:pointer}
 .navh:hover{background:var(--panel);color:var(--text)}
 .navh[aria-current="true"]{background:var(--raised);color:var(--text)}
+.navh .d{margin-right:8px;letter-spacing:0}
 .navh .c{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:0;color:var(--faint)}
+.navlbl{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:0 8px 4px}
 .navkey{display:flex;flex-wrap:wrap;gap:5px 10px;padding:2px 8px 4px;font-size:11px;color:var(--faint)}
 .navkey span{display:inline-flex;align-items:center;gap:5px}
 .ni{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-radius:6px;padding:5px 8px;text-align:left;color:var(--muted)}
 .ni:hover{background:var(--panel);color:var(--text)}
 .ni[aria-current="true"]{background:var(--raised);color:var(--text)}
-.ni .d,.navkey .d{width:13px;height:13px;border-radius:3px;flex:none;background:var(--line2);color:var(--ground);font-family:var(--sans);font-size:10.5px;font-weight:700;line-height:13px;text-align:center}
+.ni .d,.navkey .d,.navh .d{width:13px;height:13px;border-radius:3px;flex:none;background:var(--line2);color:var(--ground);font-family:var(--sans);font-size:10.5px;font-weight:700;line-height:13px;text-align:center}
 .ni .c{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
 .sub{margin:2px 0 6px 15px;border-left:1px solid var(--line);padding-left:6px}
 .sub .ni{font-size:12.5px;padding:4px 8px}
@@ -101,6 +103,11 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .qh .n{margin-left:auto;font-family:var(--mono)}
 .qrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto 52px 12px;align-items:center;gap:10px;width:100%;background:none;border:0;border-radius:6px;padding:6px 4px;text-align:left}
 .qrow:hover,.qrow.focus{background:var(--panel)}
+.qline{display:flex;align-items:center;gap:2px}.qline .qrow{flex:1;min-width:0}
+.qline.off .qrow{opacity:.38}
+.vis{accent-color:var(--muted);margin:0 3px 0 0;width:13px;height:13px;flex:none;cursor:pointer}
+.showall{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 9px;margin:0 0 10px;color:var(--muted);font-size:11.5px}
+.showall:hover{color:var(--text)}
 .qrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qrow .ar{display:inline-block;color:var(--muted);font-size:12px;width:12px;text-align:center}
 .qrow .ten{color:var(--faint);font-size:11px;min-width:26px;text-align:right}
@@ -138,6 +145,7 @@ svg .dimmed{opacity:.1}
     </div>
     <div class="tools">
       <div class="tool find"><input id="q" type="search" placeholder="Find ticker or basket" autocomplete="off" aria-label="Find a ticker or basket"><div id="qres" hidden role="listbox"></div></div>
+      <div class="tool" id="stackmode" hidden><span>Show</span><div class="seg" id="lay"><button type="button" data-v="0">Tiers</button><button type="button" data-v="1">All layers</button></div></div>
       <div class="tool"><span>Bars</span><div class="seg" id="frame"><button type="button" data-v="W">Weekly</button><button type="button" data-v="D">Daily</button></div></div>
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
@@ -159,7 +167,7 @@ svg .dimmed{opacity:.1}
     <details>
       <summary>How to read this</summary>
       <p><b>Axes.</b> Right of center means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above center means that relative strength is accelerating (RS-Momentum above 100). The two raw measures have very different spreads, so each axis is divided by its own dispersion across what is on screen and labelled in standard deviations: +1 means one σ from the crossover, and one σ is the same visual distance on both axes. The window is square and centered, so a rotation traces a circle rather than an ellipse. Groups tend to rotate clockwise: Improving → Leading → Weakening → Lagging.</p>
-      <p><b>Levels.</b> Full stack compares every layer of the AI trade against QQQ, so what you see is rotation within large-cap tech rather than the tech-versus-market trade that dominates a comparison against SPY. Switch the benchmark with the <em>vs</em> control. Select Semis or AI ecosystem in the sidebar to see just that side's layers: same values and quadrant calls as on Full stack, with the axes rescaled to spread out the fewer dots. Open a layer to see its subsectors (semis layers are measured against SOXX, so you see rotation within semis rather than the semis beta), then open a subsector to see its stocks.</p>
+      <p><b>Levels.</b> The AI trade is laid out as a value chain in five tiers: Silicon, DC Hardware, Power &amp; Buildout, Cloud &amp; Software and Applied AI. Full stack plots one dot per tier against QQQ, so what you see is rotation within large-cap tech rather than the tech-versus-market trade that dominates against SPY; switch to <em>All layers</em> to see every layer at once. Open a tier for its layers, a layer for its subsectors (Silicon's are measured against SOXX, so you see rotation within semis rather than the semis beta), and a subsector for its stocks. Untick a row in the lists to hide it from the chart; the axes rescale to what is left, and the link keeps the selection. Change the benchmark with the <em>vs</em> control.</p>
       <p><b>Stability.</b> The smoothing choices here (EMA 3 on relative strength, a 10-week or 21-day baseline, one-bar momentum) change the answer more than most readers would guess. Every node is also run under four defensible alternatives — four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing at all — and a badge such as 2/5 marks a call that only holds under the settings shown. Treat those as provisional.</p>
       <p><b>Lists.</b> Each quadrant is sorted strongest first. The arrow is the direction of the last step, the small number is time spent in that quadrant, NEW marks a crossing in the last two bars, and the percentage is relative performance over the tail.</p>
       <p><b>Method.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded — a portfolio rebalanced back to equal weight every bar, not a buy-and-hold basket. For volatile, dispersed baskets the two differ. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. AVGO, MRVL, TSEM and INTC each sit in two different layers, so they appear as members of two separate baskets; AMD sits in two Compute subsectors but counts once toward the Compute layer. Foreign listings are converted to USD and carried forward on local holidays; note that an Asian close lands 13-15 hours before the US close it is paired with, so on daily bars those names read one session behind the US tape, which matters most where a basket is mostly Asian: <span id="gloss"></span>.</p>
@@ -182,7 +190,16 @@ const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const NODES={};
 function add(n){NODES[n.id]=n;return n;}
 const root=add({id:'stack',label:'Full stack',kind:'stack',bench:'QQQ',children:[]});
-const DOMAINS=[{g:'semis',label:'Semis',bench:'SOXX'},{g:'ecosystem',label:'AI ecosystem',bench:'QQQ'}];
+// A market-wide reference view, outside the AI tree: SPY's eleven sector ETFs against SPY.
+// Dots are labelled by sector; the ETF ticker and fund name are on hover.
+const SECT=add({id:'sectors',label:'S&P 500 sectors',kind:'sectors',bench:'SPY',children:[]});
+for(const [tk,lab] of Object.entries(D.sectors||{}))
+  SECT.children.push({id:'sectors-'+tk.toLowerCase(),label:lab,kind:'stock',ticker:tk,parent:SECT,children:[]});
+// The AI trade as a value chain, bottom to top. dm.bench governs the subsectors inside
+// each tier; Silicon's are measured against SOXX to strip out the semis beta.
+const DOMAINS=[{g:'semis',label:'Silicon',bench:'SOXX'},{g:'hardware',label:'DC Hardware',bench:'QQQ'},
+  {g:'power',label:'Power & Buildout',bench:'QQQ'},{g:'cloudsw',label:'Cloud & Software',bench:'QQQ'},
+  {g:'applied',label:'Applied AI',bench:'QQQ'}];
 for(const dm of DOMAINS){
   // A domain view is the full-stack view filtered to one side, so it keeps the root's
   // benchmark: a layer sits in the same place whether you reach it from Full stack or from
@@ -208,6 +225,9 @@ const lineage=n=>{const a=[];while(n){a.unshift(n);n=n.parent;}return a;};
 const coName=n=>n&&n.kind==='stock'&&D.names?D.names[n.ticker]||'':'';
 // Distinct tickers under a layer, in tree order; a name in two of its subsectors appears once.
 const uniq=f=>{const s=new Set();for(const c of f.children)for(const t of c.members)s.add(t);return [...s];};
+// Distinct tickers under a tier, across all its layers.
+const deep=d=>{const s=new Set();for(const f of d.children)for(const t of uniq(f))s.add(t);return [...s];};
+const adhoc=new Set(D.adhoc||[]);
 
 const N=D.dates.length;
 function combine(arrs){
@@ -233,6 +253,7 @@ function series(n){
     // layer counted twice (AMD was 1.67x NVDA inside Compute).
     r=combine(uniq(n).map(t=>D.px[t]));
   }
+  else if(n.kind==='domain')r=combine(deep(n).map(t=>D.px[t]));   // same rule one level up
   else r=combine(n.children.map(series));
   return SC[n.id]=r;
 }
@@ -280,7 +301,9 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set()};
+// Full stack plots one dot per tier by default; the toggle expands it to every layer.
+const kids=cur=>cur.kind==='stack'?(st.layers?root.children:DOMAINS.map(d=>NODES[d.g])):cur.children;
 let PROV=false;
 let SIG={x:1,y:1};
 let FRAC=0;          // sub-bar position during playback, 0 at rest
@@ -291,7 +314,7 @@ let ROSTER=null;
 try{const s=JSON.parse(localStorage.getItem('rrg-v3')||'null');if(s)Object.assign(st,s,{end:null,hover:null,hoverQ:null});}catch(e){}
 if(!NODES[st.node])st.node='stack';
 const save=push=>{try{localStorage.setItem('rrg-v3',JSON.stringify({node:st.node,bench:st.bench,frame:st.frame,tail:st.tail}))}catch(e){}writeHash(push);};
-function go(id){if(!NODES[id])return;st.node=id;st.hover=null;st.hoverQ=null;$('tip').hidden=true;stopPlay();save(true);render();}
+function go(id){if(!NODES[id])return;if(id!==st.node)st.hide=new Set();st.node=id;st.hover=null;st.hoverQ=null;$('tip').hidden=true;stopPlay();save(true);render();}
 const unit=()=>st.frame==='W'?'w':'d';
 const fmtD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
 
@@ -307,12 +330,16 @@ function readHash(){
   if([2,4,8,12].includes(+h.get('tail')))o.tail=+h.get('tail');
   if(h.get('bench')==='auto'||BENCH.includes(h.get('bench')))o.bench=h.get('bench');
   if(/^\d+$/.test(h.get('end')||''))o.end=+h.get('end');
+  o.layers=h.get('layers')==='1';
+  o.hide=new Set((h.get('hide')||'').split(',').filter(x=>/^[a-z0-9-]+$/.test(x)));
   return o;
 }
 function writeHash(push){
   const p=new URLSearchParams();
   p.set('node',st.node);p.set('frame',st.frame);p.set('tail',st.tail);p.set('bench',st.bench);
   if(st.end!=null)p.set('end',st.end);
+  if(st.layers)p.set('layers','1');
+  if(st.hide.size)p.set('hide',[...st.hide].join(','));
   const u='#'+p;
   if(location.hash===u)return;
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
@@ -321,13 +348,14 @@ Object.assign(st,readHash());
 if(!NODES[st.node])st.node='stack';
 writeHash(false);
 addEventListener('popstate',()=>{
-  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null},readHash());
+  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,layers:false},readHash());
   if(!NODES[st.node])st.node='stack';
   stopPlay();render();
 });
 $('frame').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.frame=b.dataset.v;st.end=null;save();render();};
 $('tail').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.tail=+b.dataset.v;save();render();};
 $('bench').onchange=()=>{st.bench=$('bench').value;save();render();};
+$('lay').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.layers=b.dataset.v==='1';st.hide=new Set();save();render();};
 $('replay').oninput=()=>{st.end=Math.round(+$('replay').value);stopPlay();writeHash(false);render();};
 $('latest').onclick=()=>{st.end=null;stopPlay();writeHash(false);render();};
 $('crumbs').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
@@ -345,13 +373,14 @@ function nav(cur){
   h+=`<div class="navsec"><button type="button" class="ni stackbtn" data-id="stack" aria-current="${cur.id==='stack'}">Full stack<span class="c">${root.children.length}</span></button></div>`;
   for(const dm of DOMAINS){
     const dn=NODES[dm.g];
-    h+=`<div class="navsec"><button type="button" class="navh" data-id="${dn.id}" aria-current="${dn.id===cur.id}">${dm.label}<span class="c">${dn.children.length}</span></button>`;
+    h+=`<div class="navsec"><button type="button" class="navh" data-id="${dn.id}" aria-current="${dn.id===cur.id}"><span class="d" data-q="${dn.id}"></span>${dm.label}<span class="c">${dn.children.length}</span></button>`;
     for(const f of dn.children){
       h+=item(f);
       if(path.has(f.id))h+=`<div class="sub">${f.children.map(item).join('')}</div>`;
     }
     h+='</div>';
   }
+  if(SECT.children.length)h+=`<div class="navsec"><div class="navlbl">Market</div><button type="button" class="ni stackbtn" data-id="sectors" aria-current="${cur.id==='sectors'}">S&amp;P 500 sectors<span class="c">${SECT.children.length}</span></button></div>`;
   h+=`<div class="navkey" aria-hidden="true">${QORDER.map(q=>`<span><span class="d" style="background:${Q[q].c}">${Q[q].s}</span>${Q[q].n}</span>`).join('')}</div>`;
   $('nav').innerHTML=h+'</details>';
   $('nav').querySelector('details').ontoggle=e=>{navOpen=e.target.open;};
@@ -363,6 +392,8 @@ function render(fast,withList){
   const bench=st.bench==='auto'?cur.bench:st.bench;
   for(const b of $('frame').children)b.setAttribute('aria-pressed',b.dataset.v===st.frame);
   for(const b of $('tail').children)b.setAttribute('aria-pressed',+b.dataset.v===st.tail);
+  $('stackmode').hidden=cur.kind!=='stack';
+  for(const b of $('lay').children)b.setAttribute('aria-pressed',(b.dataset.v==='1')===st.layers);
   $('bench').innerHTML=`<option value="auto">${cur.bench} (default)</option>`+BENCH.filter(b=>b!==cur.bench).map(b=>`<option value="${b}">${b}</option>`).join('');
   $('bench').value=st.bench==='auto'||st.bench===cur.bench?'auto':st.bench;
   const lin=lineage(cur);
@@ -388,7 +419,7 @@ function render(fast,withList){
      ROSTER=live<ts.length?{live,total:ts.length}:null;}else ROSTER=null;}
   $('prov').hidden=!PROV;
   ROWS=[];
-  for(const c of cur.children){
+  for(const c of kids(cur)){
     if(c.kind==='stock'&&c.ticker===bench)continue;
     const r=rrg(series(c),bx,idx,n);
     const pts=[];
@@ -420,7 +451,8 @@ function render(fast,withList){
   // anchored at 100, so quadrant assignment is untouched.
   const rms=a=>a.length?Math.sqrt(a.reduce((s,v)=>s+v*v,0)/a.length)||1:1;
   const dxs=[],dys=[];
-  for(const r of ROWS)for(const q of r.pts){dxs.push(q[0]-100);dys.push(q[1]-100);}
+  const VIS=ROWS.filter(r=>!st.hide.has(r.node.id));      // the axes fit what is actually shown
+  for(const r of VIS)for(const q of r.pts){dxs.push(q[0]-100);dys.push(q[1]-100);}
   SIG=SCALELOCK?SCALELOCK.sig:{x:rms(dxs),y:rms(dys)};
   for(const r of ROWS){
     r.spts=r.pts.map(q=>[100+(q[0]-100)/SIG.x,100+(q[1]-100)/SIG.y]);
@@ -435,8 +467,8 @@ function render(fast,withList){
   // The SVG was one role="img" with a fixed label, so a screen reader got nothing but
   // "Relative rotation graph". Summarise the actual state instead.
   svg.setAttribute('aria-label',`Relative rotation graph. ${cur.label} versus ${bench}, ${st.frame==='W'?'weekly':'daily'} bars through ${fmtD(D.dates[idx[end]])}. `+
-    QORDER.map(q=>`${Q[q].n}: ${ROWS.filter(r=>r.q===q).map(r=>r.label).join(', ')||'none'}`).join('. '));
-  draw(ROWS);
+    QORDER.map(q=>`${Q[q].n}: ${VIS.filter(r=>r.q===q).map(r=>r.label).join(', ')||'none'}`).join('. '));
+  draw(VIS,ROWS.length>0&&!VIS.length);
   if(!fast||withList)list(ROWS);
   if(!fast)members(cur);
   focus();
@@ -445,7 +477,7 @@ function render(fast,withList){
 const svg=$('svg'),NS='http://www.w3.org/2000/svg',W=820,H=620,M={l:52,r:16,t:12,b:38};
 function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).append(e);return e;}
 function niceStep(span){const s=span/6,p=Math.pow(10,Math.floor(Math.log10(s))),f=s/p;return (f<1.5?1:f<3?2:f<7?5:10)*p;}
-function draw(rows){
+function draw(rows,allHidden){
   svg.innerHTML='';
   // Lock a window symmetric about 100 with matching units per pixel on both axes, so a
   // rotation traces a circle rather than a flat ellipse and the frame stops rescaling to
@@ -512,7 +544,7 @@ function draw(rows){
     placed.push({x:lx,y:ly,w});
     el('text',{class:'lab','data-id':L.r.node.id,x:lx,y:ly,fill:'var(--text)','font-size':12,'font-weight':500,'font-family':'Geist, system-ui, sans-serif','paint-order':'stroke',stroke:'var(--panel)','stroke-width':4,'stroke-linejoin':'round',style:'pointer-events:none'}).textContent=L.r.label;
   }
-  if(!rows.length)el('text',{x:W/2,y:H/2,'text-anchor':'middle',fill:'var(--muted)','font-size':13}).textContent='Not enough history for this view';
+  if(!rows.length)el('text',{x:W/2,y:H/2,'text-anchor':'middle',fill:'var(--muted)','font-size':13}).textContent=allHidden?'Everything is hidden. Tick a row to show it':'Not enough history for this view';
 }
 const pct=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
 // The RRG shows the derivative of relative strength; readers still want the level.
@@ -535,26 +567,33 @@ function tip(e,r){
 
 function list(rows){
   const a=$('list');a.innerHTML='';
+  if(st.hide.size){const s=document.createElement('button');s.type='button';s.className='showall';
+    s.textContent=`Show all (${rows.filter(r=>st.hide.has(r.node.id)).length} hidden)`;
+    s.onclick=()=>{st.hide=new Set();writeHash(false);render();};a.append(s);}
   for(const q of QORDER){
     const rs=rows.filter(r=>r.q===q).sort((a,b)=>Math.hypot(b.sx-100,b.sy-100)-Math.hypot(a.sx-100,a.sy-100));
     const sec=document.createElement('section');
-    sec.innerHTML=`<div class="qh"><b style="color:${Q[q].c}">${Q[q].n}</b><span>${Q[q].h}</span><span class="n">${rs.length}</span></div>`;
+    sec.innerHTML=`<div class="qh"><b style="color:${Q[q].c}">${Q[q].n}</b><span>${Q[q].h}</span><span class="n">${rs.filter(r=>!st.hide.has(r.node.id)).length}</span></div>`;
     if(!rs.length)sec.insertAdjacentHTML('beforeend','<div class="empty">None</div>');
     for(const r of rs){
       const b=document.createElement('button');b.type='button';b.className='qrow';b.dataset.id=r.node.id;
-      b.innerHTML=`<span class="nm">${r.label}${coName(r.node)?`<span class="co">${coName(r.node)}</span>`:''}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
+      b.innerHTML=`<span class="nm">${r.label}${adhoc.has(r.node.ticker)?`<span class="co">${coName(r.node)}</span>`:''}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
         <span>${r.stab<=3?`<span class="frag" title="Only ${r.stab} of ${r.stabN} smoothing settings put this in ${Q[q].n}">${r.stab}/${r.stabN}</span>`:''}</span>
         <span class="ar" style="transform:rotate(${-r.hdg}deg)" title="Heading ${r.hdg.toFixed(0)}°">➝</span>
         <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}</span>
         <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
         <span class="go">${r.open?'›':''}</span>`;
-      b.title=r.open?`Open ${r.label}`:r.label;
+      const cn=coName(r.node),lb=r.node.parent===SECT?`${r.label} (${r.node.ticker})`:r.label;b.title=(cn?`${lb} — ${cn}`:lb)+(r.open?' · click to open':'');
       b.addEventListener('mouseenter',()=>{st.hover=r.node.id;focus();});
       b.addEventListener('mouseleave',()=>{st.hover=null;focus();});
       b.addEventListener('focus',()=>{st.hover=r.node.id;focus();});
       b.addEventListener('blur',()=>{st.hover=null;focus();});
       if(r.open)b.addEventListener('click',()=>go(r.node.id));else b.style.cursor='default';
-      sec.append(b);
+      const hid=st.hide.has(r.node.id),line=document.createElement('div');line.className='qline'+(hid?' off':'');
+      const cb=document.createElement('input');cb.type='checkbox';cb.className='vis';cb.checked=!hid;
+      cb.title=(hid?'Show ':'Hide ')+r.label;cb.setAttribute('aria-label',cb.title);
+      cb.addEventListener('change',()=>{cb.checked?st.hide.delete(r.node.id):st.hide.add(r.node.id);writeHash(false);render();});
+      line.append(cb,b);sec.append(line);
     }
     const h=sec.querySelector('.qh');
     h.addEventListener('mouseenter',()=>{st.hoverQ=q;focus();});
@@ -564,12 +603,14 @@ function list(rows){
 }
 // Built from the data so a newly added foreign listing can never be missing from it.
 $('gloss').textContent=Object.entries(D.names||{}).filter(([k])=>D.px[k]).map(([k,v])=>`${k} ${v}`).join(' · ');
+const tk=t=>{const c=D.names&&D.names[t];return c?`<span title="${c}" style="text-decoration:underline dotted;text-underline-offset:3px">${t}</span>`:t;};
 function members(cur){
   const m=$('members');
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
-  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.join(', ')}.`+rost;
-  else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.join(' ')}`).join(' · ')+rost;
-  else m.innerHTML='Each layer equal-weights its constituent stocks. '+cur.children.map(f=>`<b>${f.label}</b> ${uniq(f).length}`).join(' · ');
+  if(cur.kind==='sectors'){m.innerHTML=`The eleven SPDR sector ETFs, each measured against ${st.bench==='auto'?'SPY':st.bench}: `+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ');return;}
+  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.map(tk).join(', ')}.`+rost;
+  else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.map(tk).join(' ')}`).join(' · ')+rost;
+  else m.innerHTML=`Each ${cur.kind==='stack'&&!st.layers?'tier':'layer'} equal-weights its distinct stocks. `+kids(cur).map(f=>`<b>${f.label}</b> ${(f.kind==='domain'?deep(f):uniq(f)).length}`).join(' · ');
 }
 function focus(){
   const qOf=Object.fromEntries(ROWS.map(r=>[r.node.id,r.q]));
@@ -587,6 +628,7 @@ for(const nd of Object.values(NODES)){
 }
 // Every ticker gets an entry pointing at the subsector that holds it: stock leaves are not
 // navigable nodes, and a name in two subsectors should surface once per location.
+for(const c of SECT.children)SEARCH.push({id:'sectors',label:c.ticker,co:c.label,path:'Market / S&P 500 sectors',key:(c.ticker+' '+c.label).toLowerCase()});
 for(const nd of Object.values(NODES)){
   if(nd.kind!=='sub')continue;
   const base=lineage(nd).slice(0,-1).map(x=>x.label).join(' / ')+' / '+nd.label;
@@ -635,8 +677,8 @@ function lockScale(from,to){
   const cur=NODES[st.node],bench=st.bench==='auto'?cur.bench:st.bench;
   const idx=st.frame==='W'?weekIdx:dayIdx,n=st.frame==='W'?10:21,bx=D.px[bench];
   const dx=[],dy=[];
-  for(const c of cur.children){
-    if(c.kind==='stock'&&c.ticker===bench)continue;
+  for(const c of kids(cur)){
+    if((c.kind==='stock'&&c.ticker===bench)||st.hide.has(c.id))continue;
     const r=rrg(series(c),bx,idx,n);
     for(let i=Math.max(0,from-st.tail);i<=to;i++)
       if(r.rsr[i]!=null&&r.rsm[i]!=null){dx.push(r.rsr[i]-100);dy.push(r.rsm[i]-100);}

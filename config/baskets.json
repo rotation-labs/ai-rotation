@@ -46,7 +46,22 @@
     "HYOSUNGHI": "298040.KS",
     "AVC": "3017.TW",
     "AURAS": "3324.TWO",
-    "DELTA": "2308.TW"
+    "DELTA": "2308.TW",
+    "FANUC": "6954.T",
+    "YASKAWA": "6506.T",
+    "KEYENCE": "6861.T",
+    "HARMONIC": "6324.T",
+    "NABTESCO": "6268.T",
+    "THK": "6481.T",
+    "UBTECH": "9880.HK",
+    "DOOSANROBO": "454910.KS",
+    "RAINBOWROBO": "277810.KQ",
+    "SANHUA": "002050.SZ",
+    "TUOPU": "601689.SS",
+    "LEADERDRIVE": "688017.SS",
+    "TENCENT": "0700.HK",
+    "TECAN": "TECN.SW",
+    "ONT": "ONT.L"
   },
   "groups": {
     "semis": {
@@ -97,7 +112,7 @@
           "STX"
         ]
       },
-      "Networking": {
+      "Networking Chips": {
         "Copper / Scale-up": [
           "ALAB",
           "CRDO"
@@ -227,27 +242,7 @@
         ]
       }
     },
-    "ecosystem": {
-      "Cloud": {
-        "Hyperscalers": [
-          "MSFT",
-          "GOOGL",
-          "AMZN",
-          "META",
-          "ORCL"
-        ],
-        "Neoclouds": [
-          "CRWV",
-          "NBIS"
-        ],
-        "Miners \u2192 HPC": [
-          "IREN",
-          "CIFR",
-          "WULF",
-          "APLD",
-          "CORZ"
-        ]
-      },
+    "hardware": {
       "Servers & Storage": {
         "OEM Servers": [
           "DELL",
@@ -284,7 +279,9 @@
           "GLW",
           "TEL"
         ]
-      },
+      }
+    },
+    "power": {
       "Power Generation": {
         "IPPs": [
           "VST",
@@ -354,6 +351,28 @@
           "DLR",
           "IRM"
         ]
+      }
+    },
+    "cloudsw": {
+      "Cloud": {
+        "Hyperscalers": [
+          "MSFT",
+          "GOOGL",
+          "AMZN",
+          "META",
+          "ORCL"
+        ],
+        "Neoclouds": [
+          "CRWV",
+          "NBIS"
+        ],
+        "Miners \u2192 HPC": [
+          "IREN",
+          "CIFR",
+          "WULF",
+          "APLD",
+          "CORZ"
+        ]
       },
       "Infrastructure Software": {
         "Edge & CDN": [
@@ -375,18 +394,31 @@
           "GTLB",
           "TEAM",
           "FROG"
-        ],
-        "Network Security & SASE": [
+        ]
+      },
+      "Cybersecurity": {
+        "Network & SASE": [
           "PANW",
           "FTNT",
           "ZS",
           "CHKP"
         ],
-        "Endpoint & Identity": [
+        "Endpoint & XDR": [
           "CRWD",
-          "S",
+          "S"
+        ],
+        "Identity": [
           "OKTA",
           "SAIL"
+        ],
+        "Data Security": [
+          "RBRK",
+          "VRNS"
+        ],
+        "Exposure Management": [
+          "TENB",
+          "RPD",
+          "QLYS"
         ]
       },
       "Application Software": {
@@ -406,59 +438,454 @@
           "FIG"
         ],
         "AI Platforms": [
-          "PLTR",
-          "AI",
-          "PATH",
-          "SOUN"
+          "PLTR"
         ],
         "Adtech": [
           "APP",
           "TTD"
         ]
       }
+    },
+    "applied": {
+      "Internet": {
+        "E-commerce": [
+          "SHOP",
+          "MELI",
+          "CPNG",
+          "SE",
+          "EBAY",
+          "ETSY"
+        ],
+        "Travel & Local": [
+          "BKNG",
+          "EXPE",
+          "ABNB",
+          "UBER",
+          "DASH",
+          "LYFT"
+        ],
+        "Streaming & Gaming": [
+          "NFLX",
+          "SPOT",
+          "RBLX",
+          "TTWO"
+        ],
+        "Social & Consumer Apps": [
+          "RDDT",
+          "PINS",
+          "SNAP",
+          "DUOL",
+          "MTCH"
+        ],
+        "China Internet": [
+          "BABA",
+          "PDD",
+          "JD",
+          "BIDU",
+          "TENCENT"
+        ]
+      },
+      "Edge AI & Autonomy": {
+        "Edge Compute": [
+          "AMBA",
+          "AMBQ"
+        ],
+        "Sensing": [
+          "VPG",
+          "OUST",
+          "HSAI",
+          "CGNX"
+        ],
+        "Autonomy": [
+          "MBLY",
+          "PONY",
+          "WRD"
+        ]
+      },
+      "Robotics": {
+        "Humanoids & Robot Makers": [
+          "CCXI",
+          "BOT",
+          "UBTECH",
+          "DOOSANROBO",
+          "RAINBOWROBO",
+          "SERV",
+          "RR"
+        ],
+        "Motion Components": [
+          "HARMONIC",
+          "NABTESCO",
+          "THK",
+          "SANHUA",
+          "TUOPU",
+          "LEADERDRIVE"
+        ],
+        "Industrial Automation": [
+          "ROK",
+          "FANUC",
+          "YASKAWA",
+          "KEYENCE"
+        ],
+        "Surgical": [
+          "ISRG",
+          "PRCT"
+        ],
+        "Warehouse & Logistics": [
+          "SYM",
+          "ZBRA"
+        ]
+      },
+      "Bio AI": {
+        "Bioprocessing & Lab Tools": [
+          "TMO",
+          "DHR",
+          "RVTY",
+          "BRKR",
+          "TECAN"
+        ],
+        "Biotech AI": [
+          "RXRX",
+          "ABCL",
+          "ABSI",
+          "GENB"
+        ],
+        "Genomics & Sequencing": [
+          "ILMN",
+          "TXG",
+          "TWST",
+          "ONT",
+          "PACB"
+        ],
+        "Discovery Platforms": [
+          "SDGR",
+          "CERT",
+          "OABI",
+          "DNA"
+        ],
+        "Precision Diagnostics": [
+          "TEM",
+          "NTRA",
+          "PSNL"
+        ]
+      }
     }
   },
   "names": {
-    "HYNIX": "SK Hynix",
-    "SAMSUNG": "Samsung Electronics",
-    "NANYA": "Nanya Technology",
-    "KIOXIA": "Kioxia",
-    "PHISON": "Phison",
-    "ALCHIP": "Alchip",
-    "GUC": "Global Unichip",
-    "MEDIATEK": "MediaTek",
-    "INNOLIGHT": "Zhongji Innolight",
-    "EOPTOLINK": "Eoptolink",
-    "LASERTEC": "Lasertec",
-    "TOKYOELEC": "Tokyo Electron",
-    "ASMI": "ASM International",
-    "SHINETSU": "Shin-Etsu Chemical",
-    "SUMCO": "SUMCO",
-    "BESI": "BE Semiconductor",
-    "HANMI": "Hanmi Semiconductor",
-    "DISCO": "Disco",
-    "IBIDEN": "Ibiden",
-    "UNIMICRON": "Unimicron",
-    "ADVANTEST": "Advantest",
-    "INFINEON": "Infineon",
-    "WIWYNN": "Wiwynn",
-    "QUANTA": "Quanta Computer",
-    "FOXCONN": "Hon Hai",
-    "SIEMENSEN": "Siemens Energy",
-    "MHI": "Mitsubishi Heavy",
-    "LENOVO": "Lenovo",
-    "INVENTEC": "Inventec",
-    "WISTRON": "Wistron",
-    "GIGABYTE": "Gigabyte",
+    "A": "Agilent",
+    "AAOI": "Applied Optoelectronics",
+    "ABCL": "AbCellera Biologics",
+    "ABNB": "Airbnb",
+    "ABSI": "Absci",
     "ACCTON": "Accton",
-    "SCHNEIDER": "Schneider Electric",
-    "HITACHI": "Hitachi",
-    "HDHYUNDAIELEC": "HD Hyundai Electric",
-    "LSELECTRIC": "LS Electric",
-    "HYOSUNGHI": "Hyosung Heavy Industries",
-    "AVC": "Asia Vital Components",
+    "ADBE": "Adobe",
+    "ADI": "Analog Devices",
+    "ADVANTEST": "Advantest",
+    "AEHR": "Aehr Test Systems",
+    "AEIS": "Advanced Energy Industries",
+    "AGX": "Argan",
+    "AKAM": "Akamai",
+    "ALAB": "Astera Labs",
+    "ALCHIP": "Alchip",
+    "AMAT": "Applied Materials",
+    "AMBA": "Ambarella",
+    "AMBQ": "Ambiq Micro",
+    "AMD": "Advanced Micro Devices",
+    "AMKR": "Amkor Technology",
+    "AMZN": "Amazon",
+    "ANET": "Arista Networks",
+    "AOSL": "Alpha and Omega Semiconductor",
+    "APH": "Amphenol",
+    "APLD": "Applied Digital",
+    "APP": "Applovin",
+    "ARM": "Arm Holdings",
+    "ASMI": "ASM International",
+    "ASML": "ASML",
+    "ASX": "ASE Technology",
     "AURAS": "Auras Technology",
+    "AVC": "Asia Vital Components",
+    "AVGO": "Broadcom",
+    "AXTI": "AXT",
+    "BABA": "Alibaba",
+    "BE": "Bloom Energy",
+    "BESI": "BE Semiconductor",
+    "BIDU": "Baidu",
+    "BKNG": "Booking Holdings",
+    "BOT": "Robostrategy",
+    "BRKR": "Bruker",
+    "BWXT": "BWX Technologies",
+    "CAMT": "Camtek",
+    "CAT": "Caterpillar",
+    "CCJ": "Cameco",
+    "CCXI": "Agility Robotics (Churchill Capital XI SPAC)",
+    "CDNS": "Cadence Design Systems",
+    "CEG": "Constellation Energy",
+    "CERT": "Certara",
+    "CEVA": "CEVA",
+    "CGNX": "Cognex",
+    "CHKP": "Check Point Software",
+    "CIEN": "Ciena",
+    "CIFR": "Cipher Digital",
+    "CLS": "Celestica",
+    "CMI": "Cummins",
+    "COHR": "Coherent",
+    "COHU": "Cohu",
+    "CORZ": "Core Scientific",
+    "CPNG": "Coupang",
+    "CRDO": "Credo",
+    "CRL": "Charles River Laboratories",
+    "CRM": "Salesforce",
+    "CRWD": "CrowdStrike",
+    "CRWV": "CoreWeave",
+    "CSCO": "Cisco Systems",
+    "DASH": "DoorDash",
+    "DDOG": "Datadog",
+    "DELL": "Dell Technologies",
     "DELTA": "Delta Electronics",
-    "P": "Everpure"
+    "DHR": "Danaher",
+    "DISCO": "Disco",
+    "DLR": "Digital Realty Trust",
+    "DNA": "Ginkgo Bioworks",
+    "DOOSANROBO": "Doosan Robotics",
+    "DT": "Dynatrace",
+    "DUOL": "Duolingo",
+    "DY": "Dycom Industries",
+    "EBAY": "eBay",
+    "EME": "EMCOR",
+    "ENTG": "Entegris",
+    "EOPTOLINK": "Eoptolink",
+    "EQIX": "Equinix",
+    "ESTC": "Elastic",
+    "ETN": "Eaton",
+    "ETSY": "Etsy",
+    "EXPE": "Expedia",
+    "FANUC": "Fanuc",
+    "FIG": "Figma",
+    "FIX": "Comfort Systems USA",
+    "FN": "Fabrinet",
+    "FORM": "FormFactor",
+    "FOXCONN": "Hon Hai",
+    "FROG": "JFrog",
+    "FSLY": "Fastly",
+    "FTNT": "Fortinet",
+    "GENB": "Generate Biomedicines",
+    "GEV": "GE Vernova",
+    "GFS": "GlobalFoundries",
+    "GIGABYTE": "Gigabyte",
+    "GLW": "Corning",
+    "GNRC": "Generac",
+    "GOOGL": "Alphabet",
+    "GTLB": "GitLab",
+    "GUC": "Global Unichip",
+    "HANMI": "Hanmi Semiconductor",
+    "HARMONIC": "Harmonic Drive Systems",
+    "HDHYUNDAIELEC": "HD Hyundai Electric",
+    "HITACHI": "Hitachi",
+    "HPE": "Hewlett Packard Enterprise",
+    "HSAI": "Hesai",
+    "HUBB": "Hubbell",
+    "HUBS": "HubSpot",
+    "HYNIX": "SK Hynix",
+    "HYOSUNGHI": "Hyosung Heavy Industries",
+    "IBIDEN": "Ibiden",
+    "ICHR": "Ichor",
+    "IESC": "IES Holdings",
+    "ILMN": "Illumina",
+    "INFINEON": "Infineon",
+    "INNOLIGHT": "Zhongji Innolight",
+    "INTC": "Intel",
+    "INTU": "Intuit",
+    "INVENTEC": "Inventec",
+    "IQV": "IQVIA",
+    "IREN": "IREN",
+    "IRM": "Iron Mountain",
+    "ISRG": "Intuitive Surgical",
+    "JD": "JD.com",
+    "KEYENCE": "Keyence",
+    "KEYS": "Keysight Technologies",
+    "KIOXIA": "Kioxia",
+    "KLAC": "KLA",
+    "KLIC": "Kulicke & Soffa",
+    "LASERTEC": "Lasertec",
+    "LEADERDRIVE": "Leader Harmonious Drive Systems",
+    "LENOVO": "Lenovo",
+    "LEU": "Centrus Energy",
+    "LITE": "Lumentum",
+    "LRCX": "Lam Research",
+    "LSCC": "Lattice Semiconductor",
+    "LSELECTRIC": "LS Electric",
+    "LYFT": "Lyft",
+    "MBLY": "Mobileye",
+    "MCHP": "Microchip Technology",
+    "MDB": "MongoDB",
+    "MEDIATEK": "MediaTek",
+    "MELI": "MercadoLibre",
+    "META": "Meta Platforms",
+    "MHI": "Mitsubishi Heavy",
+    "MKSI": "MKS",
+    "MOD": "Modine Manufacturing",
+    "MPWR": "Monolithic Power Systems",
+    "MRVL": "Marvell",
+    "MSFT": "Microsoft",
+    "MTCH": "Match Group",
+    "MTZ": "MasTec",
+    "MU": "Micron",
+    "MXL": "MaxLinear",
+    "MYRG": "MYR Group",
+    "NABTESCO": "Nabtesco",
+    "NANYA": "Nanya Technology",
+    "NBIS": "Nebius",
+    "NET": "Cloudflare",
+    "NFLX": "Netflix",
+    "NOK": "Nokia",
+    "NOW": "ServiceNow",
+    "NRG": "NRG Energy",
+    "NTAP": "NetApp",
+    "NTRA": "Natera",
+    "NVDA": "NVIDIA",
+    "NVMI": "Nova",
+    "NVT": "nVent Electric",
+    "NVTS": "Navitas Semiconductor",
+    "NXPI": "NXP Semiconductors",
+    "OABI": "OmniAb",
+    "OKLO": "Oklo",
+    "OKTA": "Okta",
+    "ON": "onsemi",
+    "ONT": "Oxford Nanopore",
+    "ONTO": "Onto Innovation",
+    "ORCL": "Oracle",
+    "OUST": "Ouster",
+    "P": "Everpure",
+    "PACB": "PacBio",
+    "PANW": "Palo Alto Networks",
+    "PAYC": "Paycom Software",
+    "PDD": "PDD",
+    "PHISON": "Phison",
+    "PINS": "Pinterest",
+    "PLTR": "Palantir",
+    "POET": "POET",
+    "PONY": "Pony AI",
+    "POWI": "Power Integrations",
+    "POWL": "Powell Industries",
+    "PRCT": "PROCEPT BioRobotics",
+    "PRIM": "Primoris Services",
+    "PSNL": "Personalis",
+    "PWR": "Quanta Services",
+    "QCOM": "Qualcomm",
+    "QLYS": "Qualys",
+    "QQQ": "Invesco QQQ Trust",
+    "QRVO": "Qorvo",
+    "QUANTA": "Quanta Computer",
+    "RAINBOWROBO": "Rainbow Robotics",
+    "RBLX": "Roblox",
+    "RBRK": "Rubrik",
+    "RDDT": "Reddit",
+    "RMBS": "Rambus",
+    "ROK": "Rockwell Automation",
+    "RPD": "Rapid7",
+    "RR": "Richtech Robotics",
+    "RSP": "Invesco S&P 500 Equal Weight ETF",
+    "RVTY": "Revvity",
+    "RXRX": "Recursion Pharmaceuticals",
+    "S": "SentinelOne",
+    "SAIL": "SailPoint",
+    "SAMSUNG": "Samsung Electronics",
+    "SANHUA": "Zhejiang Sanhua Intelligent Controls",
+    "SCHNEIDER": "Schneider Electric",
+    "SDGR": "Schrodinger",
+    "SE": "Sea Limited",
+    "SERV": "Serve Robotics",
+    "SHINETSU": "Shin-Etsu Chemical",
+    "SHOP": "Shopify",
+    "SIEMENSEN": "Siemens Energy",
+    "SIMO": "Silicon Motion",
+    "SITM": "SiTime",
+    "SLAB": "Silicon Laboratories",
+    "SMCI": "Super Micro Computer",
+    "SMH": "VanEck Semiconductor ETF",
+    "SMR": "NuScale Power",
+    "SMTC": "Semtech",
+    "SNAP": "Snap",
+    "SNDK": "Sandisk",
+    "SNOW": "Snowflake",
+    "SNPS": "Synopsys",
+    "SOXX": "iShares Semiconductor ETF",
+    "SPOT": "Spotify",
+    "SPY": "SPDR S&P 500 ETF",
+    "STM": "STMicroelectronics",
+    "STRL": "Sterling Infrastructure",
+    "STX": "Seagate",
+    "SUMCO": "SUMCO",
+    "SWKS": "Skyworks Solutions",
+    "SYM": "Symbotic",
+    "SYNA": "Synaptics",
+    "TDC": "Teradata",
+    "TEAM": "Atlassian",
+    "TECAN": "Tecan",
+    "TEL": "TE Connectivity",
+    "TEM": "Tempus AI",
+    "TENB": "Tenable",
+    "TENCENT": "Tencent",
+    "TER": "Teradyne",
+    "THK": "THK",
+    "TLN": "Talen Energy",
+    "TMO": "Thermo Fisher Scientific",
+    "TOKYOELEC": "Tokyo Electron",
+    "TSEM": "Tower Semiconductor",
+    "TSM": "TSMC",
+    "TT": "Trane",
+    "TTD": "The Trade Desk",
+    "TTMI": "TTM Technologies",
+    "TTWO": "Take-Two Interactive",
+    "TUOPU": "Ningbo Tuopu Group",
+    "TWST": "Twist Bioscience",
+    "TXG": "10x Genomics",
+    "TXN": "Texas Instruments",
+    "U": "Unity Software",
+    "UBER": "Uber",
+    "UBTECH": "UBTech Robotics",
+    "UCTT": "Ultra Clean",
+    "UMC": "United Microelectronics",
+    "UNIMICRON": "Unimicron",
+    "VEEV": "Veeva Systems",
+    "VIAV": "Viavi Solutions",
+    "VICR": "Vicor",
+    "VPG": "Vishay Precision Group",
+    "VRNS": "Varonis Systems",
+    "VRT": "Vertiv",
+    "VST": "Vistra",
+    "WDAY": "Workday",
+    "WDC": "Western Digital",
+    "WISTRON": "Wistron",
+    "WIWYNN": "Wiwynn",
+    "WOLF": "Wolfspeed",
+    "WRD": "WeRide",
+    "WULF": "TeraWulf",
+    "XLB": "Materials Select Sector SPDR",
+    "XLC": "Communication Services Select Sector SPDR",
+    "XLE": "Energy Select Sector SPDR",
+    "XLF": "Financials Select Sector SPDR",
+    "XLI": "Industrials Select Sector SPDR",
+    "XLK": "Technology Select Sector SPDR",
+    "XLP": "Consumer Staples Select Sector SPDR",
+    "XLRE": "Real Estate Select Sector SPDR",
+    "XLU": "Utilities Select Sector SPDR",
+    "XLV": "Health Care Select Sector SPDR",
+    "XLY": "Consumer Discretionary Select Sector SPDR",
+    "YASKAWA": "Yaskawa Electric",
+    "ZBRA": "Zebra",
+    "ZS": "Zscaler"
+  },
+  "sectors": {
+    "XLK": "Technology",
+    "XLC": "Communication Services",
+    "XLY": "Consumer Discretionary",
+    "XLF": "Financials",
+    "XLV": "Health Care",
+    "XLI": "Industrials",
+    "XLE": "Energy",
+    "XLB": "Materials",
+    "XLU": "Utilities",
+    "XLRE": "Real Estate",
+    "XLP": "Consumer Staples"
   }
 }
