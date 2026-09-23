@@ -1,4 +1,4 @@
-<title>AI Rotation Graph</title>
+<title>Rotation</title>
 <style>
 /* Self-hosted so the page makes no third-party request at all: the Google Fonts
    stylesheet was the only one, and it disclosed every visitor to a third party.
@@ -402,7 +402,7 @@ function render(fast,withList){
   const lin=lineage(cur);
   $('crumbs').innerHTML=lin.map((n,i)=>i===lin.length-1?`<span class="cur">${n.label}</span>`:`<button type="button" data-id="${n.id}">${n.label}</button>`).join('<span class="sep">/</span>');
   $('crumbs').hidden=lin.length<2;
-  $('title').textContent=cur.kind==='stack'?'AI Rotation':cur.label;
+  $('title').textContent=cur.kind==='stack'?'Rotation':cur.label;
   $('asof').textContent=`Prices through ${fmtD(D.asof)}.`;
   $('foot').textContent=`Prices through ${fmtD(D.asof)} close · data from Yahoo Finance, refreshed each weekday after the US close · for information only, not investment advice.`;
   const idx=st.frame==='W'?weekIdx:dayIdx,n=st.frame==='W'?10:21;

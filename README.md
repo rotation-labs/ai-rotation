@@ -1,4 +1,4 @@
-# AI Rotation Graph
+# Rotation
 
 A relative rotation graph (RRG) of the AI trade, laid out as a value chain in five tiers - Silicon, DC Hardware, Power & Buildout, Cloud & Software, Applied AI - drilling into layers, subsectors and their stocks, plus a reference view of SPY's eleven sector ETFs. The site is a single static page that rebuilds itself every weekday after the US close.
 
@@ -23,7 +23,7 @@ The site is deployed from this repository to GitHub Pages at
 **https://rotation-labs.github.io/ai-rotation/**
 
 Pages is configured with **Settings → Pages → Source: GitHub Actions**. The
-`Update AI Rotation Graph` workflow builds and deploys on three triggers: the
+`Update Rotation` workflow builds and deploys on three triggers: the
 weekday cron, any push to `main`, and the manual **Run workflow** button.
 
 To stand this up somewhere else: create a public repo, push these files
@@ -36,7 +36,7 @@ then run the workflow once from the Actions tab.
   Non-US tickers get a short name in `foreign_listings` mapped to their Yahoo symbol (e.g. `"HYNIX": "000660.KS"`), and a display name in `names` (e.g. `"HYNIX": "SK Hynix"`) so the chart is readable without the glossary. Supported suffixes: `.KS .KQ .T .TW .TWO .SZ .SS .HK .AS .DE .PA .SW .L` (London is quoted in pence and converted accordingly).
 - **Fonts:** `assets/fonts/*.woff2` are vendored and copied into `site/` at build time, so the page makes no third-party request. See `assets/fonts/NOTICE.md`.
 - **Change the schedule:** edit the `cron` line in `.github/workflows/update.yml` (times are UTC).
-- **Refresh right now:** Actions → Update AI Rotation Graph → Run workflow.
+- **Refresh right now:** Actions → Update Rotation → Run workflow.
 - **Custom domain:** Settings → Pages → Custom domain.
 
 ## Run it locally

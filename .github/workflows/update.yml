@@ -1,4 +1,4 @@
-name: Update AI Rotation Graph
+name: Update Rotation
 
 on:
   schedule:
