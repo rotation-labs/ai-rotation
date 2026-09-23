@@ -97,13 +97,15 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 svg g.s{transition:opacity .15s}
 svg .dimmed{opacity:.1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.prov{font-size:11px;color:var(--weak);border:1px dashed var(--weak);border-radius:999px;padding:1px 7px;white-space:nowrap}
+.stale{font-size:11px;color:var(--lag);border:1px solid var(--lag);border-radius:999px;padding:2px 8px;margin-left:10px;vertical-align:middle}
 </style>
 
 <div class="app">
   <header>
     <div>
       <div class="crumbs" id="crumbs"></div>
-      <h1 id="title">Full stack</h1>
+      <h1 id="title">Full stack</h1><span class="stale" id="stale" hidden></span>
     </div>
     <div class="tools">
       <div class="tool"><span>Bars</span><div class="seg" id="frame"><button type="button" data-v="W">Weekly</button><button type="button" data-v="D">Daily</button></div></div>
@@ -117,7 +119,7 @@ svg .dimmed{opacity:.1}
   <div class="chartwrap">
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
-    <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0"><span class="num" id="replayv"></span><button type="button" id="latest">Latest</button></div>
+    <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="latest">Latest</button></div>
   </div>
 
   <aside id="list" aria-label="Quadrants"></aside>
@@ -186,6 +188,9 @@ function series(n){
 const weekIdx=(()=>{const r=[];for(let i=0;i<N;i++){const d=new Date(D.dates[i]+'T12:00:00Z'),nx=i+1<N?new Date(D.dates[i+1]+'T12:00:00Z'):null;
   if(!nx||nx.getUTCDay()<d.getUTCDay()||(nx-d)>6*864e5)r.push(i);}return r;})();
 const dayIdx=[...Array(N).keys()];
+// The final weekly bar closes on the last available day whether or not the week
+// is over, so treat it as provisional unless it actually ends on a Friday.
+const partialWeek=new Date(D.dates[N-1]+'T12:00:00Z').getUTCDay()!==5;
 function ema(a,p){const k=2/(p+1);let e=null;return a.map(v=>v==null?(e=null,null):(e=e==null?v:e+k*(v-e)));}
 function sma(a,n){return a.map((v,i)=>{if(v==null||i<n-1)return null;let s=0;for(let j=i-n+1;j<=i;j++){if(a[j]==null)return null;s+=a[j];}return s/n;});}
 function rrg(px,bx,idx,n){
@@ -195,9 +200,12 @@ function rrg(px,bx,idx,n){
   const roc=rsr.map((v,i)=>i&&v!=null&&rsr[i-1]!=null?100*v/rsr[i-1]:null);
   return {rs,rsr,rsm:ema(roc,3)};
 }
+// Boundary convention: a node sitting exactly on 100 counts as the stronger side
+// (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
 const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null};
+let PROV=false;
 try{const s=JSON.parse(localStorage.getItem('rrg-v3')||'null');if(s)Object.assign(st,s,{end:null,hover:null,hoverQ:null});}catch(e){}
 if(!NODES[st.node])st.node='stack';
 const save=()=>{try{localStorage.setItem('rrg-v3',JSON.stringify({node:st.node,bench:st.bench,frame:st.frame,tail:st.tail}))}catch(e){}};
@@ -214,11 +222,15 @@ $('latest').onclick=()=>{st.end=null;render();};
 $('crumbs').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
 $('nav').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
 
+const DESK=matchMedia('(min-width:761px)');
 let navOpen=!matchMedia('(max-width:760px)').matches;
+// At >=761px the <summary> is display:none, so a details left closed by a narrow
+// layout can never be reopened. Force it open whenever we're on the desktop layout.
+DESK.addEventListener('change',()=>render());
 function nav(cur){
   const path=new Set(lineage(cur).map(n=>n.id));
   const item=n=>`<button type="button" class="ni" data-id="${n.id}" aria-current="${n.id===cur.id}"><span class="d" data-q="${n.id}"></span><span>${n.label}</span>${n.kind==='family'?`<span class="c">${n.children.length}</span>`:''}</button>`;
-  let h=`<details ${navOpen?'open':''}><summary>Browse baskets</summary>`;
+  let h=`<details ${DESK.matches||navOpen?'open':''}><summary>Browse baskets</summary>`;
   h+=`<div class="navsec"><button type="button" class="ni stackbtn" data-id="stack" aria-current="${cur.id==='stack'}">Full stack<span class="c">${root.children.length}</span></button></div>`;
   for(const dm of DOMAINS){
     h+=`<div class="navsec"><div class="navh">${dm.label}</div>`;
@@ -254,6 +266,8 @@ function render(){
   $('replay').value=end;
   $('replayv').textContent=fmtD(D.dates[idx[end]]);
   $('latest').hidden=end===idx.length-1;
+  PROV=st.frame==='W'&&partialWeek&&end===idx.length-1;
+  $('prov').hidden=!PROV;
   ROWS=[];
   for(const c of cur.children){
     if(c.kind==='stock'&&c.ticker===bench)continue;
@@ -308,12 +322,16 @@ function draw(rows){
     }
     P.slice(0,-1).forEach((p,i)=>el('circle',{cx:p[0],cy:p[1],r:1.7,fill:c,'fill-opacity':(0.15+0.55*i/(n-1)).toFixed(2)},g));
     const [X,Y]=P[n-1];
-    el('circle',{cx:X,cy:Y,r:6,fill:c,stroke:'var(--panel)','stroke-width':2},g);
+    el('circle',PROV
+      ?{cx:X,cy:Y,r:6,fill:'var(--panel)',stroke:c,'stroke-width':2,'stroke-dasharray':'3 2.5'}
+      :{cx:X,cy:Y,r:6,fill:c,stroke:'var(--panel)','stroke-width':2},g);
     el('circle',{cx:X,cy:Y,r:14,fill:'transparent'},g);
-    g.addEventListener('mouseenter',()=>{st.hover=r.node.id;focus();});
+    g.addEventListener('mouseenter',e=>{st.hover=r.node.id;focus();tip(e,r);});
     g.addEventListener('mousemove',e=>tip(e,r));
     g.addEventListener('mouseleave',()=>{st.hover=null;$('tip').hidden=true;focus();});
     if(r.open)g.addEventListener('click',()=>go(r.node.id));
+    // Touch devices get no hover, so leaf nodes would otherwise be unreadable.
+    else g.addEventListener('click',e=>{st.hover=r.node.id;focus();tip(e,r);});
     labels.push({r,X,Y});
   }
   labels.sort((a,b)=>a.Y-b.Y);const placed=[];
@@ -345,10 +363,10 @@ function list(rows){
     if(!rs.length)sec.insertAdjacentHTML('beforeend','<div class="empty">None</div>');
     for(const r of rs){
       const b=document.createElement('button');b.type='button';b.className='qrow';b.dataset.id=r.node.id;
-      b.innerHTML=`<span class="nm">${r.label}${r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
+      b.innerHTML=`<span class="nm">${r.label}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
         <span class="ar" style="transform:rotate(${-r.hdg}deg)" title="Heading ${r.hdg.toFixed(0)}°">➝</span>
         <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}</span>
-        <span class="rel num ${r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
+        <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
         <span class="go">${r.open?'›':''}</span>`;
       b.title=r.open?`Open ${r.label}`:r.label;
       b.addEventListener('mouseenter',()=>{st.hover=r.node.id;focus();});
@@ -377,5 +395,23 @@ function focus(){
   if(st.hover){const g=svg.querySelector(`g.s[data-id="${st.hover}"]`),l=svg.querySelector(`text.lab[data-id="${st.hover}"]`);if(g)svg.append(g);if(l)svg.append(l);}
   document.querySelectorAll('.qrow').forEach(e=>{e.classList.toggle('focus',!!st.hover&&e.dataset.id===st.hover);e.classList.toggle('dim',!on(e.dataset.id));});
 }
+// A failed scheduled build leaves the previous site live, which is safe but silent.
+// Surface it rather than showing week-old prices under a "refreshed daily" footer.
+(function(){
+  // The market calendar is New York, not UTC: east of the dateline a viewer's UTC date
+  // can already be tomorrow while the NYSE session they're waiting on hasn't closed.
+  const f=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hour12:false});
+  const pr=Object.fromEntries(f.formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+  const last=new Date(`${pr.year}-${pr.month}-${pr.day}T12:00:00Z`);
+  // Back up to the most recent session whose close should already be published.
+  if(+pr.hour<17)last.setUTCDate(last.getUTCDate()-1);
+  while(last.getUTCDay()===0||last.getUTCDay()===6)last.setUTCDate(last.getUTCDate()-1);
+  let d=new Date(D.asof+'T12:00:00Z'),biz=0;
+  while(d<last){d.setUTCDate(d.getUTCDate()+1);const w=d.getUTCDay();if(w>=1&&w<=5)biz++;}
+  // One missed session is routine (the vendor is often late); two means something broke.
+  if(biz>=2){const e=$('stale');e.textContent=`Data ${biz} sessions behind — a scheduled build may have failed`;e.hidden=false;}
+})();
+// Dismiss a tapped tooltip when tapping empty chart space.
+svg.addEventListener('click',e=>{if(!e.target.closest('g.s')){st.hover=null;$('tip').hidden=true;focus();}});
 render();
 </script>

@@ -211,9 +211,6 @@
     },
     "ecosystem": {
       "Compute & Cloud": {
-        "Semis": [
-          "SMH"
-        ],
         "Hyperscalers": [
           "MSFT",
           "GOOGL",
@@ -225,7 +222,7 @@
           "CRWV",
           "NBIS"
         ],
-        "Miners → HPC": [
+        "Miners \u2192 HPC": [
           "IREN",
           "CIFR",
           "WULF",
