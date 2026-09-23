@@ -33,7 +33,20 @@
     "QUANTA": "2382.TW",
     "FOXCONN": "2317.TW",
     "SIEMENSEN": "ENR.DE",
-    "MHI": "7011.T"
+    "MHI": "7011.T",
+    "LENOVO": "0992.HK",
+    "INVENTEC": "2356.TW",
+    "WISTRON": "3231.TW",
+    "GIGABYTE": "2376.TW",
+    "ACCTON": "2345.TW",
+    "SCHNEIDER": "SU.PA",
+    "HITACHI": "6501.T",
+    "HDHYUNDAIELEC": "267260.KS",
+    "LSELECTRIC": "010120.KS",
+    "HYOSUNGHI": "298040.KS",
+    "AVC": "3017.TW",
+    "AURAS": "3324.TWO",
+    "DELTA": "2308.TW"
   },
   "groups": {
     "semis": {
@@ -151,6 +164,10 @@
           "ENTG",
           "SHINETSU",
           "SUMCO"
+        ],
+        "EDA": [
+          "SNPS",
+          "CDNS"
         ]
       },
       "Packaging & Test": {
@@ -179,10 +196,6 @@
           "FORM",
           "VIAV",
           "KEYS"
-        ],
-        "EDA": [
-          "SNPS",
-          "CDNS"
         ]
       },
       "Power & Analog": {
@@ -233,23 +246,33 @@
           "WULF",
           "APLD",
           "CORZ"
+        ],
+        "Edge & CDN": [
+          "NET",
+          "AKAM",
+          "FSLY"
         ]
       },
       "Hardware": {
         "OEM Servers": [
           "DELL",
           "SMCI",
-          "HPE"
+          "HPE",
+          "LENOVO"
         ],
         "ODMs": [
           "WIWYNN",
           "QUANTA",
           "FOXCONN",
-          "CLS"
+          "CLS",
+          "INVENTEC",
+          "WISTRON",
+          "GIGABYTE"
         ],
         "DC Networking": [
           "ANET",
-          "CSCO"
+          "CSCO",
+          "ACCTON"
         ],
         "Optical Systems": [
           "CIEN",
@@ -275,50 +298,86 @@
           "BWXT",
           "LEU"
         ],
-        "Turbines & Onsite": [
+        "Gas Turbines": [
           "GEV",
           "SIEMENSEN",
-          "MHI",
-          "BE"
+          "MHI"
         ],
-        "Grid Equipment": [
+        "Onsite & Backup": [
+          "BE",
+          "CAT",
+          "CMI",
+          "GNRC"
+        ],
+        "Electrical Products": [
           "ETN",
           "HUBB",
-          "POWL"
+          "POWL",
+          "SCHNEIDER"
+        ],
+        "Transformers & HV": [
+          "HITACHI",
+          "HDHYUNDAIELEC",
+          "LSELECTRIC",
+          "HYOSUNGHI"
         ],
         "Thermal": [
           "VRT",
           "MOD",
           "NVT",
-          "TT"
+          "TT",
+          "AVC",
+          "AURAS",
+          "DELTA"
         ]
       },
       "Build & Host": {
-        "DC Construction": [
-          "PWR",
+        "Electrical & Mechanical": [
           "EME",
           "FIX",
+          "IESC"
+        ],
+        "Utility & Civil": [
+          "PWR",
+          "MTZ",
+          "MYRG",
+          "PRIM",
+          "DY",
           "STRL",
-          "MTZ"
+          "AGX"
         ],
         "DC REITs": [
           "EQIX",
-          "DLR"
+          "DLR",
+          "IRM"
         ]
       },
       "Software": {
         "Data Infra": [
           "SNOW",
+          "MDB",
+          "ESTC"
+        ],
+        "Observability": [
           "DDOG",
-          "MDB"
+          "DT"
         ],
-        "AI Apps": [
-          "PLTR",
+        "Security": [
+          "CRWD",
+          "PANW",
+          "ZS",
+          "FTNT"
+        ],
+        "Enterprise Apps": [
           "NOW",
-          "CRM"
+          "CRM",
+          "WDAY",
+          "ADBE",
+          "INTU"
         ],
-        "Software ETF": [
-          "IGV"
+        "AI Platforms": [
+          "PLTR",
+          "APP"
         ]
       }
     }
@@ -350,6 +409,19 @@
     "QUANTA": "Quanta Computer",
     "FOXCONN": "Hon Hai",
     "SIEMENSEN": "Siemens Energy",
-    "MHI": "Mitsubishi Heavy"
+    "MHI": "Mitsubishi Heavy",
+    "LENOVO": "Lenovo",
+    "INVENTEC": "Inventec",
+    "WISTRON": "Wistron",
+    "GIGABYTE": "Gigabyte",
+    "ACCTON": "Accton",
+    "SCHNEIDER": "Schneider Electric",
+    "HITACHI": "Hitachi",
+    "HDHYUNDAIELEC": "HD Hyundai Electric",
+    "LSELECTRIC": "LS Electric",
+    "HYOSUNGHI": "Hyosung Heavy Industries",
+    "AVC": "Asia Vital Components",
+    "AURAS": "Auras Technology",
+    "DELTA": "Delta Electronics"
   }
 }
