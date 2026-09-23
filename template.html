@@ -107,6 +107,11 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .showall:hover{color:var(--text)}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 #list>.legend,#list>.sens,#list>.showall{grid-column:1/-1}
+.sens .note.warn{color:var(--text);border-left:2px solid var(--weak);padding-left:8px}
+.strn td:nth-child(2){text-align:left;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.strn th:nth-child(2){text-align:left}.strn td:first-child{color:var(--faint);text-align:right;padding-right:6px}
+.strn td:nth-child(3),.strn th:nth-child(3){text-align:right}
+.strn{margin-top:0}.strn tr.op{cursor:pointer}.strn tbody tr:hover td{background:var(--panel)}
 .ptabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:10px}
 .ptabs button{background:none;border:0;border-bottom:2px solid transparent;padding:5px 10px 7px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:-1px}
 .ptabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--text)}
@@ -279,7 +284,8 @@ svg .dimmed{opacity:.1}
       <summary>How to read this</summary>
       <p><b>Axes.</b> Right of centre means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above centre means that relative strength is accelerating (RS-Momentum above 100). The two measures have very different spreads, so each axis is divided by its RMS distance from 100 across the dots and tails on screen. These are view-relative units, not a statistical σ: +1 is the same visual distance on both axes, but the numbers are not comparable between views. The window is square and centred, so a rotation traces a circle rather than an ellipse. Raw values are in each dot's tooltip.</p>
       <p><b>Levels.</b> Seven tiers, cut where the AI trade actually moves apart: Core Semis, AI Compute, Networking &amp; Optics, Power &amp; Buildout, Platforms &amp; Software, Physical AI and Bio AI. Full stack and the tier views compare everything against QQQ, a common yardstick; switch Full stack to <em>All layers</em> to see every layer at once. Opening a layer switches to its industry peer (Accelerators against SOXX, software against IGV, biotech against XBI, and so on), so you see which names lead <em>within</em> their industry. The <em>vs</em> control overrides either, and the Benchmark check under the lists shows how the call changes across benchmarks.</p>
-      <p><b>Lists.</b> Each quadrant is sorted by distance from the centre. The arrow is the direction of the last step; the small number is how long the dot has been in that quadrant (<b>*</b> means it includes the week still in progress); NEW marks a crossing in the last two bars; the percentage is relative performance over the tail; breadth is the share of a basket's members that are themselves right of centre against the same benchmark. Untick a row to hide it; the axes rescale to what is left, and the link keeps the selection. To see small moves when one name sets the scale, use <b>Scale +</b> above the chart (or <kbd>+</kbd> / <kbd>−</kbd>, <kbd>0</kbd> to fit, or pinch on a trackpad); zoomed in, the window follows the bulk of the dots, and any that fall beyond the edge are pinned to it with an arrow in their quadrant's colour.</p>
+      <p><b>Lists.</b> Each quadrant is sorted by strength: relative return from about six months ago to one month ago, the measure the backtest below supported (dots too new for it follow, by distance from the centre). The <em>Strength</em> tab ranks every dot on it at once. The arrow is the direction of the last step; the small number is how long the dot has been in that quadrant (<b>*</b> means it includes the week still in progress); NEW marks a crossing in the last two bars; the percentage is relative performance over the tail; breadth is the share of a basket's members that are themselves right of centre against the same benchmark. Untick a row to hide it; the axes rescale to what is left, and the link keeps the selection. To see small moves when one name sets the scale, use <b>Scale +</b> above the chart (or <kbd>+</kbd> / <kbd>−</kbd>, <kbd>0</kbd> to fit, or pinch on a trackpad); zoomed in, the window follows the bulk of the dots, and any that fall beyond the edge are pinned to it with an arrow in their quadrant's colour.</p>
+      <p><b>What the backtest found.</b> <code>scripts/backtest.py</code> tests these readings against what happened next, on the AI stocks over ten years and about 40 sector and industry ETFs since 2000, across many settings. Three results shape the page. Strength over roughly six months, skipping the latest month, was the most useful: the strongest fifth beat the weakest by a few percent a quarter, consistently but not conclusively, and mostly <em>between</em> tiers rather than among the stocks in one. It held while the benchmark was above its 40-week average, shown beside the benchmark above the chart, and not below it. Quadrant crossings predicted nothing, and a fresh upturn in momentum, the move into Improving or Leading, tended to give ground back over the next one to four weeks. So read the chart as a picture of where things stand, not as a timing signal. The universe was chosen in 2026 from names that did well, which flatters every result.</p>
       <p><b>Stability.</b> The smoothing choices change the answer more than most readers would guess. Every dot is also run under four alternatives: four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing. A badge such as 2/5 marks a call that only a minority of settings share; a recent listing may lack history for some settings, which then don't count (3/4). Treat badged calls as provisional.</p>
     </details>
     <details>
@@ -461,6 +467,17 @@ function rrg(px,bx,idx,n,o){
 // report how many agree with the displayed quadrant, so a fragile call looks different
 // from a robust one.
 const ALTS=n=>[{m:4},{e:5,n:Math.round(n*1.4)},{n:Math.round(n*2.6)},{e:1}];
+// scripts/backtest.py found the 10-bar RS-Ratio a weak guide to what outperforms next. Relative
+// return from about six months ago to one month ago did better across the AI stocks and ten
+// years of sector ETFs, so lists rank by it. The skipped month matters: fresh upturns in
+// momentum tended to give ground back over the following one to four weeks.
+const STR={W:[26,4],D:[130,20]};
+function strength(rs,end){const [L,S]=STR[st.frame],a=rs[end-L],b=rs[end-S];return a&&b?(b/a-1)*100:null;}
+// The same backtest found strength persisting while the benchmark sat above its 40-week average
+// and not while it sat below. Measured on 200 daily closes so both frames read the same.
+function trendUp(bench,day){const p=D.px[bench];if(!p||day<199)return null;let s=0;
+  for(let i=day-199;i<=day;i++){if(p[i]==null)return null;s+=p[i];}return p[day]>s/200;}
+const UP=q=>q==='L'||q==='I';
 // Default-parameter RRG per node/benchmark/frame. The arrays don't depend on the replay
 // date, so the nav can look up any node's quadrant at any date in O(1) after first use.
 const RC={};
@@ -527,9 +544,11 @@ const fmtMD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short
 function plotInfo(idx,end,bench){
   const W=st.frame==='W',t0=Math.max(0,end-st.tail),d0=D.dates[idx[t0]],d1=D.dates[idx[end]];
   const from=d0.slice(0,4)===d1.slice(0,4)?fmtMD(d0):fmtD(d0);
+  const up=trendUp(bench,idx[end]);
+  const reg=up==null?'':short=>` <span class="reg ${up?'pos':'neg'}" title="${up?`Relative strength has tended to persist while the benchmark is above its 40-week average`:`Relative strength has not tended to persist while the benchmark is below its 40-week average, so rankings are less reliable now`}">(${up?'above':'below'} ${short?'40w avg':'its 40-week average'})</span>`;
   $('plotinfo').innerHTML=`<span class="pl-long"><b>${W?'Weekly':'Daily'} bars</b> · tails run <b>${from} → ${fmtD(d1)}</b> (${end-t0} ${W?'weeks':'sessions'}${PROV?(LIVE?`, last bar live as of ${LIVE.time}, quotes delayed`:', last week still in progress'):''})`
-    +` · trend measured against a ${W?'10-week':'21-session (about 1-month)'} average · vs <b>${bench}</b> · row % is relative return over that span</span>`
-    +`<span class="pl-short"><b>${W?'Weekly':'Daily'}</b> · ${from} → ${fmtMD(d1)} · vs <b>${bench}</b>${PROV?(LIVE?` · live ${LIVE.time}`:' · week in progress'):''}</span>`;
+    +` · trend measured against a ${W?'10-week':'21-session (about 1-month)'} average · vs <b>${bench}</b>${reg&&reg(0)} · row % is relative return over that span</span>`
+    +`<span class="pl-short"><b>${W?'Weekly':'Daily'}</b> · ${from} → ${fmtMD(d1)} · vs <b>${bench}</b>${reg&&reg(1)}${PROV?(LIVE?` · live ${LIVE.time}`:' · week in progress'):''}</span>`;
   return from;
 }
 
@@ -559,7 +578,7 @@ function readHash(){
   const tokOk=x=>NODES[x]||(x.startsWith('tk:')&&D.px[x.slice(3)]);
   o.ca=(h.get('ca')||'').split(',').filter(tokOk);o.cb=(h.get('cb')||'').split(',').filter(tokOk);
   o.cmp=!!(o.ca.length||o.cb.length);
-  o.panel=h.get('panel')==='bench'?'b':'q';
+  o.panel=h.get('panel')==='bench'?'b':h.get('panel')==='strength'?'s':'q';
   {const z=+h.get('zoom');o.zoom=z>=1&&z<=ZMAX?z:1;}
   o.mv=h.get('movers')==='1';o.mvb=h.get('mvb')==='peer'?'p':'q';
   return o;
@@ -573,7 +592,7 @@ function writeHash(push){
   if(st.layers)p.set('layers','1');
   if(st.hide.size)p.set('hide',[...st.hide].join(','));
   if(st.cmp){p.set('ca',st.ca.join(','));p.set('cb',st.cb.join(','));}
-  if(st.panel==='b')p.set('panel','bench');
+  if(st.panel==='b')p.set('panel','bench');else if(st.panel==='s')p.set('panel','strength');
   if(st.zoom>1)p.set('zoom',+st.zoom.toFixed(2));
   if(st.mv){p.set('movers','1');if(st.mvb==='p')p.set('mvb','peer');}
   const u='#'+p;
@@ -728,6 +747,7 @@ function render(fast,withList){
         rets.sort((u,v)=>v[1]-u[1]);top=rets.slice(0,2);bot=rets.slice(-2).reverse();}
     }else if(!liveBar&&c.kind==='stock'&&D.proxy&&D.proxy[c.ticker]&&D.proxy[c.ticker].includes(bd))prox=1;
     ROWS.push({node:c,label:c.label,pts,x,y,q,hdg,ten,prev,rel:a&&b?(b/a-1)*100:null,open:c.children.length>0,
+      str:strength(r.rs,end),fade:!!(prev&&ten<=2&&UP(q)&&!UP(prev)),
       rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null),stab:agree,stabN:evals,stabOuts:outs,
       br,disp,top,bot,prox,nmem:mem?mem.length:0});
   }
@@ -744,6 +764,9 @@ function render(fast,withList){
   for(const r of VIS)for(const q of r.pts){dxs.push(q[0]-100);dys.push(q[1]-100);}
   SIG=SCALELOCK?SCALELOCK.sig:{x:rms(dxs),y:rms(dys)};
   {const K=rankScale(idx,n);for(const r of ROWS)r.rk=Math.hypot((r.x-100)/K.x,(r.y-100)/K.y);}
+  // Percentile of each dot's longer-term strength among the dots on screen.
+  {const sv=VIS.map(r=>r.str).filter(v=>v!=null);
+   for(const r of ROWS)r.spc=r.str==null||sv.length<3?null:Math.round(100*sv.filter(v=>v<r.str).length/(sv.length-1));}
   for(const r of ROWS){
     r.spts=r.pts.map(q=>[100+(q[0]-100)/SIG.x,100+(q[1]-100)/SIG.y]);
     const m=r.spts.length;[r.sx,r.sy]=r.spts[m-1];
@@ -876,10 +899,11 @@ function draw(rows,allHidden){
   // Try every side of a dot before displacing its label. Only ever pushing clashes downward
   // was fine at 820px but, on a phone-width chart, sent labels far from their dots. A label that
   // still has to move away gets a thin leader line back to its dot.
-  // Place the labels that matter first - the dot being hovered or tapped, recent quadrant
-  // changes, then distance from centre - and leave off any that cannot sit near their dot.
+  // Place the labels that matter first - the dot being hovered or tapped, then distance from
+  // centre - and leave off any that cannot sit near their dot. Recent crossings used to come
+  // second, but the backtest found crossings carry no information about what comes next.
   // Forcing every label in piled them over the axes once a view got dense (30 layers on a phone).
-  const pri=L=>(L.r.node.id===st.hover?1e6:0)+(L.r.prev&&L.r.ten<=2?1e3:0)+(L.r.rk||0);
+  const pri=L=>(L.r.node.id===st.hover?1e6:0)+(L.r.rk||0);
   labels.sort((a,b)=>pri(b)-pri(a));const placed=[],B2=H-M.b;let skipped=0;
   const fits=(x,y,w)=>x>=M.l+2&&x+w<=R-2&&y-10>=M.t&&y+3<=B2-2;
   const clash=(x,y,w,L)=>placed.some(p=>x<p.x+p.w+2&&p.x<x+w+2&&y-12<p.y+5&&p.y-12<y+5)
@@ -900,6 +924,7 @@ function draw(rows,allHidden){
   if(!rows.length)el('text',{x:W/2,y:H/2,'text-anchor':'middle',fill:'var(--muted)','font-size':13}).textContent=allHidden?'Everything is hidden. Tick a row to show it':'Not enough history for this view';
 }
 const pct=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
+const ord=n=>n+(n%100>=11&&n%100<=13?'th':['th','st','nd','rd'][n%10]||'th');
 // The RRG shows the derivative of relative strength; readers still want the level.
 function spark(a){
   if(!a||a.length<4)return '';
@@ -912,7 +937,7 @@ function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
   t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
-    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} since ${VIEW?VIEW.from:'tail start'}</span>${r.br?`<br><span class="m">Breadth ${r.br.up}/${r.br.k} outperforming${r.disp!=null?` · dispersion ${r.disp.toFixed(1)} pts`:''}${r.top?` · leaders ${r.top.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')} · laggards ${r.bot.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')}`:''}</span>`:''}${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?`<br><span class="m">${TOUCH?'Tap again to open':'Click to open'}</span>`:''}`;
+    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} since ${VIEW?VIEW.from:'tail start'}</span>${r.str!=null?`<br><span class="m">Strength ${pct(r.str)} (6 months to 1 month ago)${r.spc!=null?` · ${ord(r.spc)} percentile here`:''}</span>`:''}${r.fade?`<br><span class="m">Momentum just turned up. In backtests, turns like this gave back ground over the next one to four weeks on average.</span>`:''}${r.br?`<br><span class="m">Breadth ${r.br.up}/${r.br.k} outperforming${r.disp!=null?` · dispersion ${r.disp.toFixed(1)} pts`:''}${r.top?` · leaders ${r.top.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')} · laggards ${r.bot.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')}`:''}</span>`:''}${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?`<br><span class="m">${TOUCH?'Tap again to open':'Click to open'}</span>`:''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
   if(x+t.offsetWidth>box.width-4)x=e.clientX-box.left-t.offsetWidth-16;
   x=Math.max(4,Math.min(x,box.width-t.offsetWidth-4));
@@ -924,16 +949,17 @@ function list(rows){
   const a=$('list');a.innerHTML='';
   // Quadrant lists and the benchmark check share this panel as tabs; showing both at once made
   // the first screen too dense.
-  a.insertAdjacentHTML('beforeend',`<div class="ptabs" role="tablist" aria-label="List view">${[['q','Quadrants'],['b','Benchmark check']].map(([k,l])=>`<button type="button" role="tab" data-p="${k}" aria-selected="${st.panel===k}">${l}</button>`).join('')}</div>`);
+  a.insertAdjacentHTML('beforeend',`<div class="ptabs" role="tablist" aria-label="List view">${[['q','Quadrants'],['s','Strength'],['b','Benchmark check']].map(([k,l])=>`<button type="button" role="tab" data-p="${k}" aria-selected="${st.panel===k}">${l}</button>`).join('')}</div>`);
   a.querySelector('.ptabs').onclick=e=>{const b=e.target.closest('[data-p]');if(b&&b.dataset.p!==st.panel){st.panel=b.dataset.p;writeHash(false);list(ROWS);}};
   if(st.panel==='b'){sensitivity(rows.filter(r=>!st.hide.has(r.node.id)));return;}
+  if(st.panel==='s'){strengthList(rows.filter(r=>!st.hide.has(r.node.id)));return;}
   if(st.hide.size){const s=document.createElement('button');s.type='button';s.className='showall';
     s.textContent=`Show all (${rows.filter(r=>st.hide.has(r.node.id)).length} hidden)`;
     s.onclick=()=>{st.hide=new Set();writeHash(false);render();};a.append(s);}
-  a.insertAdjacentHTML('beforeend',`<details class="key"${KEYOPEN?' open':''}><summary>Key</summary><div class="legend"><b>➝</b> last step · <b>3${unit()}</b> time in quadrant${PROV?' (<b>*</b> incl. this week)':''} · <b>NEW</b> crossed in last 2 bars · <b>2/5</b> settings agreeing · <b>%</b> breadth, then return since the tail start${ROWS.some(r=>r.prox)?' · <b>≈</b> intraday-proxy close':''}</div></details>`);
+  a.insertAdjacentHTML('beforeend',`<details class="key"${KEYOPEN?' open':''}><summary>Key</summary><div class="legend"><b>➝</b> last step · <b>3${unit()}</b> time in quadrant${PROV?' (<b>*</b> incl. this week)':''} · <b>NEW</b> crossed in last 2 bars · sorted by strength (6 months to 1 month ago) · <b>2/5</b> settings agreeing · <b>%</b> breadth, then return since the tail start${ROWS.some(r=>r.prox)?' · <b>≈</b> intraday-proxy close':''}</div></details>`);
   a.querySelector('.key').ontoggle=e=>{KEYOPEN=e.target.open;};
   for(const q of QORDER){
-    const rs=rows.filter(r=>r.q===q).sort((a,b)=>b.rk-a.rk);
+    const rs=rows.filter(r=>r.q===q).sort(byStr);
     const sec=document.createElement('section');
     sec.innerHTML=`<div class="qh"><b style="color:${Q[q].c}">${Q[q].n}</b><span>${Q[q].h}</span><span class="n">${rs.filter(r=>!st.hide.has(r.node.id)).length}</span></div>`;
     if(!rs.length)sec.insertAdjacentHTML('beforeend','<div class="empty">None</div>');
@@ -964,6 +990,28 @@ function list(rows){
     a.append(sec);
   }
 }
+// Longer-term strength first, then distance from centre for dots without enough history.
+const byStr=(a,b)=>(b.str!=null)-(a.str!=null)||(b.str??0)-(a.str??0)||b.rk-a.rk;
+// One ranking of every visible dot by the measure the backtest supported, with the two
+// conditions under which it did not hold stated where the ranking is read.
+function strengthList(rows){
+  if(!rows.length||!VIEW)return;
+  const stocks=rows.every(r=>r.node.kind==='stock'),up=trendUp(VIEW.bench,VIEW.idx[VIEW.end]);
+  const warn=[stocks&&NODES[st.node].kind!=='ref'?'These are stocks within one basket. In the backtest this ranking separated tiers and layers, not the stocks inside them, so read it as description rather than a pick list.':'',
+    up===false?`${VIEW.bench} is below its 40-week average. Strength rankings have not held up in downtrends.`:'',
+    st.node==='sectors'?'On the eleven S&P sectors alone, the backtest found this ranking barely beat chance since 1999.':'',
+    st.node==='macro'?'The backtest did not cover futures, yields or currencies, so there is no evidence either way here.':''].filter(Boolean);
+  let h=`<section class="sens strn"><p class="note">Relative return against ${VIEW.bench} from about six months ago to one month ago. Skipping the latest month drops recent bursts, which tended to reverse. In ten years of backtests, the top of this list beat the bottom by a few percent a quarter; that was suggestive, not conclusive.</p>`
+    +warn.map(w=>`<p class="note warn">${w}</p>`).join('')
+    +`<table><thead><tr><th scope="col">#</th><th scope="col">Name</th><th scope="col" title="Relative return, 6 months to 1 month ago">Strength</th><th scope="col" title="Percentile among the dots shown">Pctl</th><th scope="col" title="Current quadrant">Q</th></tr></thead><tbody>`;
+  [...rows].sort(byStr).forEach((r,i)=>{
+    h+=`<tr data-id="${r.node.id}" class="${r.open?'op':''}"><td class="num">${r.str==null?'':i+1}</td><td title="${r.label}">${r.label}</td><td class="num ${r.str==null?'':r.str>=0?'pos':'neg'}">${pct(r.str)}</td><td class="num">${r.spc??''}</td><td><span class="gl" style="color:${Q[r.q].c}" title="${Q[r.q].n}">${Q[r.q].s}</span></td></tr>`;});
+  $('list').insertAdjacentHTML('beforeend',h+'</tbody></table></section>');
+  const t=$('list').querySelector('.strn tbody');
+  t.addEventListener('mouseover',e=>{const tr=e.target.closest('tr');if(tr&&st.hover!==tr.dataset.id){st.hover=tr.dataset.id;focus();}});
+  t.addEventListener('mouseleave',()=>{st.hover=null;focus();});
+  t.addEventListener('click',e=>{const tr=e.target.closest('tr.op');if(tr)go(tr.dataset.id);});
+}
 // The quadrant call depends on the yardstick: Accelerators were Leading 5/5 against QQQ but
 // Weakening 2/5 against SOXX on the same date. Show each visible dot's call against the common
 // benchmarks and its own industry peer, so that dependence is visible where the call is read.
@@ -985,8 +1033,9 @@ function sensitivity(rows){
 // "What changed": one card per quadrant move in the last two bars. A mini 2x2 grid laid out like
 // the chart (Improving top-left, Leading top-right, Lagging bottom-left, Weakening bottom-right)
 // outlines where the dot was and fills where it is, so each move reads at a glance; the text only
-// names it. Strengthening moves (into Improving or Leading) come first.
-const QPOS={I:[0,0],L:[1,0],G:[0,1],W:[1,1]},UP=q=>q==='L'||q==='I';
+// names it. Cards are ordered by longer-term strength, not by direction: the backtest found that
+// moves into Improving or Leading were, if anything, followed by giving ground back.
+const QPOS={I:[0,0],L:[1,0],G:[0,1],W:[1,1]};
 function qmini(from,to){
   const r=(q,a)=>{const [x,y]=QPOS[q];return `<rect x="${1+x*10}" y="${1+y*10}" width="9" height="9" rx="2" ${a}/>`;};
   return `<svg class="qm" viewBox="0 0 21 21" width="21" height="21" aria-hidden="true">${['I','L','G','W'].map(q=>r(q,'fill="var(--line)"')).join('')}`
@@ -994,12 +1043,12 @@ function qmini(from,to){
 }
 function changes(vis){
   const W=st.frame==='W',span=W?'the last two weeks':'the last two sessions',el=$('changes');
-  const ch=vis.filter(r=>r.prev&&r.ten<=2).sort((u,v)=>UP(v.q)-UP(u.q)||u.ten-v.ten||v.rk-u.rk);
+  const ch=vis.filter(r=>r.prev&&r.ten<=2).sort(byStr);
   if(!ch.length){el.innerHTML=`<div class="hd">No quadrant changes in ${span}</div>`;return;}
-  el.innerHTML=`<div class="hd">Changed quadrant in ${span}${PROV?` <span class="pv">· latest bar ${LIVE?'is live':'is the week in progress'}, so provisional</span>`:''}</div><div class="cards">`
+  el.innerHTML=`<div class="hd">Changed quadrant in ${span} <span class="pv">· crossings haven't predicted returns, and upturns tend to fade</span>${PROV?` <span class="pv">· latest bar ${LIVE?'is live':'is the week in progress'}, so provisional</span>`:''}</div><div class="cards">`
     +ch.slice(0,8).map(r=>`<button type="button" class="card" data-id="${r.node.id}" title="${r.label}: ${Q[r.prev].n} to ${Q[r.q].n}${r.ten===1?', on the latest bar':''}">${qmini(r.prev,r.q)}`
       +`<span class="ct"><span class="c1"><b>${r.label}</b> <span style="color:${Q[r.q].c}">→ ${Q[r.q].n}</span>${r.stab!=null&&r.stabN-r.stab>=2?` <span class="frag">${r.stab}/${r.stabN}</span>`:''}</span>`
-      +`<span class="cs">from ${Q[r.prev].n}${r.br?` · breadth ${Math.round(100*r.br.up/r.br.k)}%`:''}</span></span></button>`).join('')
+      +`<span class="cs">from ${Q[r.prev].n}${r.br?` · breadth ${Math.round(100*r.br.up/r.br.k)}%`:''}${r.fade?' · often fades':''}</span></span></button>`).join('')
     +(ch.length>8?`<span class="more">+${ch.length-8} more</span>`:'')+'</div>';
 }
 // hovering a card highlights its dot; clicking opens it when it has children

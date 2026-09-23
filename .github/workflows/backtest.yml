@@ -1,0 +1,44 @@
+name: Backtest
+
+# Re-runs scripts/backtest.py on demand, or when the backtest itself changes. It never
+# deploys: the report lands in the run summary and as a downloadable artifact.
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - scripts/backtest.py
+      - .github/workflows/backtest.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backtest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Fetch ten years of prices
+        run: python scripts/fetch.py
+        env:
+          FETCH_PERIOD: 10y
+      - name: Run backtest
+        run: python scripts/backtest.py
+      - name: Publish summary
+        if: always()
+        run: test -f build/backtest/report.md && cat build/backtest/report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backtest
+          path: build/backtest/
+          if-no-files-found: warn
