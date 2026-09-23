@@ -77,9 +77,17 @@ def main():
         sys.exit("SPY data missing - aborting so the previous site stays up")
     us = raw["SPY"].dropna().index
 
+    # A ticker can outlive the business it names. CHRN is ChronoScale, Applied Digital's
+    # former cloud unit, reverse-merged into EKSO Bionics on 2026-05-05; Yahoo carries the
+    # symbol's history straight through, so before that date it is an exoskeleton maker's
+    # price. config "starts" discards anything before the listing that is actually meant.
+    starts = {k: pd.Timestamp(v) for k, v in CFG.get("starts", {}).items()}
+
     px, missing, stale = {}, [], []
     for n, s in sym.items():
         p = raw[s].dropna() if s in raw else pd.Series(dtype=float)
+        if n in starts:
+            p = p[p.index >= starts[n]]
         if len(p) < 60:
             missing.append(n)
             continue

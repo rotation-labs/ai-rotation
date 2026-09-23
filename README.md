@@ -34,6 +34,7 @@ then run the workflow once from the Actions tab.
 
 - **Edit baskets:** change `config/baskets.json` (families → baskets → tickers) and commit. Any push to `main` triggers a rebuild.
   Non-US tickers get a short name in `foreign_listings` mapped to their Yahoo symbol (e.g. `"HYNIX": "000660.KS"`), and a display name in `names` (e.g. `"HYNIX": "SK Hynix"`) so the chart is readable without the glossary. Supported suffixes: `.KS .T .TW .TWO .SZ .SS .HK .AS .DE .PA`.
+- **Renamed or reverse-merged listings:** if a symbol's history predates the business it now names, give it a start date in `starts` (e.g. `"CHRN": "2026-05-05"`) and earlier prices are discarded.
 - **Fonts:** `assets/fonts/*.woff2` are vendored and copied into `site/` at build time, so the page makes no third-party request. See `assets/fonts/NOTICE.md`.
 - **Change the schedule:** edit the `cron` line in `.github/workflows/update.yml` (times are UTC).
 - **Refresh right now:** Actions → Update AI Rotation Graph → Run workflow.
