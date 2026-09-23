@@ -128,6 +128,7 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .cmpres button:hover{background:var(--hover)}.cmpres .p{color:var(--faint);font-size:10.5px;margin-left:6px}
 #cmpsvg{width:100%;height:auto;display:block}
 .cmpstats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:6px}.cmpstats b{color:var(--text);font-weight:500}
+.plotinfo{font-size:11.5px;color:var(--muted);margin:0 0 6px;line-height:1.5}.plotinfo b{color:var(--text);font-weight:500}
 .changes{font-size:12px;color:var(--muted);margin:0 0 8px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);line-height:1.6}
 .changes b{color:var(--text);font-weight:500}.changes .hd{color:var(--faint);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:8px}
 .changes .it{white-space:nowrap;margin-right:14px;display:inline-block}
@@ -175,7 +176,7 @@ svg .dimmed{opacity:.1}
     <div class="tools">
       <div class="tool find"><input id="q" type="search" placeholder="Find ticker or basket" autocomplete="off" aria-label="Find a ticker or basket" role="combobox" aria-autocomplete="list" aria-controls="qres" aria-expanded="false"><div id="qres" hidden role="listbox" aria-label="Matches"></div><span id="qlive" class="sr" aria-live="polite"></span></div>
       <div class="tool" id="stackmode" hidden><span>Show</span><div class="seg" id="lay"><button type="button" data-v="0">Tiers</button><button type="button" data-v="1">All layers</button></div></div>
-      <div class="tool"><span>Horizon</span><div class="seg" id="frame"><button type="button" data-v="W" title="Weekly bars; trend measured against a 10-week baseline">10-week</button><button type="button" data-v="D" title="Daily bars; trend measured against a 21-session (about one month) baseline">1-month</button></div></div>
+      <div class="tool"><span>Bars</span><div class="seg" id="frame"><button type="button" data-v="W" title="Weekly bars; trend measured against a 10-week average">Weekly</button><button type="button" data-v="D" title="Daily bars; trend measured against a 21-session (about one month) average">Daily</button></div></div>
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
       <div class="tool"><button type="button" id="cmpbtn" class="tbtn" aria-pressed="false" title="Compare any two baskets or tickers">Compare</button></div>
@@ -196,6 +197,7 @@ svg .dimmed{opacity:.1}
       <div class="cmpstats" id="cmpstats" aria-live="polite"></div>
     </div>
     <div class="changes" id="changes" aria-live="polite"></div>
+    <div class="plotinfo" id="plotinfo"></div>
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
     <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0" step="any"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="play">▶ Play</button><button type="button" id="latest">Latest</button></div>
@@ -216,12 +218,12 @@ svg .dimmed{opacity:.1}
       <summary>Methodology</summary>
       <p><b>What it measures.</b> Relative price performance. It says which groups are outperforming or losing momentum against a benchmark, not how much money is flowing into them; there are no flow, volume or positioning data here. This is an RRG-style chart that approximates the JdK Relative Rotation Graph (RRG and Relative Rotation Graph are registered marks of RRG Research); levels differ from StockCharts, but quadrants and rotation behave the same way.</p>
       <p><b>Baskets.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded: a portfolio rebalanced to equal weight every bar, not buy-and-hold, and not a tradable index. A subsector equal-weights its stocks; a layer or tier equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed twice in one layer counts once. Equal weight shows breadth; a cap-weighted basket would mostly show its largest member.</p>
-      <p><b>Formulae.</b> RS = price ÷ benchmark. RS-Ratio = 100 × EMA(3) of RS ÷ its moving average over the horizon (10 weeks on the 10-week horizon, 21 sessions on the 1-month one). RS-Momentum = EMA(3) of the one-bar change in RS-Ratio. The two horizons answer different questions and can disagree.</p>
+      <p><b>Formulae.</b> RS = price ÷ benchmark. RS-Ratio = 100 × EMA(3) of RS ÷ its moving average (10 weeks on weekly bars, 21 sessions, about a month, on daily bars). RS-Momentum = EMA(3) of the one-bar change in RS-Ratio. Weekly and daily therefore differ in horizon as well as bar size, answer different questions, and can disagree; the line above the chart always states which is shown.</p>
       <p><b>Replay.</b> Replay shows today's baskets through past prices, not the baskets as they would have been defined at the time; the <em>trading on this date</em> count shows how many members existed then. Deliberate membership changes recorded in the configuration are applied historically from the date they were made (<span id="mbn"></span>).</p>
     </details>
     <details>
       <summary>Data &amp; sources</summary>
-      <p>Daily closes from Yahoo Finance, rebuilt each weekday after the US close. Foreign listings are converted to USD and carried forward on local holidays. An Asian close lands 13–15 hours before the US close it is paired with, so on the 1-month horizon those names read about one session behind; the 10-week horizon is the better choice for comparisons across regions. When Yahoo has not yet published a day's official close, the last intraday bar stands in and is marked ≈ until the next build replaces it. A badge beside the title appears if a build has failed and data is two or more sessions old.</p>
+      <p>Daily closes from Yahoo Finance, rebuilt each weekday after the US close. Foreign listings are converted to USD and carried forward on local holidays. An Asian close lands 13–15 hours before the US close it is paired with, so on daily bars those names read about one session behind; weekly bars are the better choice for comparisons across regions. When Yahoo has not yet published a day's official close, the last intraday bar stands in and is marked ≈ until the next build replaces it. A badge beside the title appears if a build has failed and data is two or more sessions old.</p>
       <p id="asof"></p><p id="proxynote"></p>
     </details>
     <details>
@@ -439,6 +441,16 @@ const save=push=>{try{localStorage.setItem('rrg-v3',JSON.stringify({node:st.node
 function go(id){if(!NODES[id])return;if(id!==st.node)st.hide=new Set();st.node=id;st.hover=null;st.hoverQ=null;$('tip').hidden=true;stopPlay();save(true);render();}
 const unit=()=>st.frame==='W'?'w':'d';
 const fmtD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
+const fmtMD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+// Say exactly what is on screen: bar size, the dates the tails span, the trend window and the
+// benchmark. Beta users asked for "9/15-9/22 or whatever" rather than inferring it.
+function plotInfo(idx,end,bench){
+  const W=st.frame==='W',t0=Math.max(0,end-st.tail),d0=D.dates[idx[t0]],d1=D.dates[idx[end]];
+  const from=d0.slice(0,4)===d1.slice(0,4)?fmtMD(d0):fmtD(d0);
+  $('plotinfo').innerHTML=`<b>${W?'Weekly':'Daily'} bars</b> · tails run <b>${from} → ${fmtD(d1)}</b> (${end-t0} ${W?'weeks':'sessions'}${PROV?', last week still in progress':''})`
+    +` · trend measured against a ${W?'10-week':'21-session (about 1-month)'} average · vs <b>${bench}</b> · row % is relative return over that span`;
+  return from;
+}
 
 // Common benchmarks first, then industry peers, then the S&P sector funds.
 const BGRP=[['Broad market',['SPY','QQQ','RSP']],['Industry',['SOXX','SMH','IGV','XBI','BOTZ']],['S&P sectors',Object.keys(D.sectors||{})]]
@@ -645,7 +657,7 @@ function render(fast,withList){
   svg.setAttribute('aria-label',`Relative rotation graph. ${cur.label} versus ${bench}, ${st.frame==='W'?'weekly':'daily'} bars through ${fmtD(D.dates[idx[end]])}. `+
     QORDER.map(q=>`${Q[q].n}: ${VIS.filter(r=>r.q===q).map(r=>r.label).join(', ')||'none'}`).join('. '));
   draw(VIS,ROWS.length>0&&!VIS.length);
-  VIEW={idx,n,end,bench};
+  VIEW={idx,n,end,bench,from:plotInfo(idx,end,bench)};
   $('cmp').hidden=!st.cmp;$('cmpbtn').setAttribute('aria-pressed',st.cmp);
   if(st.cmp&&(!fast||withList))compare();
   if(!fast||withList){list(ROWS);changes(VIS);}
@@ -736,7 +748,7 @@ function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
   t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
-    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} over tail</span>${r.br?`<br><span class="m">Breadth ${r.br.up}/${r.br.k} outperforming${r.disp!=null?` · dispersion ${r.disp.toFixed(1)} pts`:''}${r.top?` · leaders ${r.top.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')} · laggards ${r.bot.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')}`:''}</span>`:''}${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
+    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} since ${VIEW?VIEW.from:'tail start'}</span>${r.br?`<br><span class="m">Breadth ${r.br.up}/${r.br.k} outperforming${r.disp!=null?` · dispersion ${r.disp.toFixed(1)} pts`:''}${r.top?` · leaders ${r.top.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')} · laggards ${r.bot.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')}`:''}</span>`:''}${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
   if(x+t.offsetWidth>box.width-4)x=e.clientX-box.left-t.offsetWidth-16;
   t.style.left=Math.max(0,x)+'px';t.style.top=y+'px';
@@ -747,7 +759,7 @@ function list(rows){
   if(st.hide.size){const s=document.createElement('button');s.type='button';s.className='showall';
     s.textContent=`Show all (${rows.filter(r=>st.hide.has(r.node.id)).length} hidden)`;
     s.onclick=()=>{st.hide=new Set();writeHash(false);render();};a.append(s);}
-  a.insertAdjacentHTML('beforeend',`<div class="legend"><b>➝</b> last step · <b>3${unit()}</b> time in quadrant${PROV?' (<b>*</b> incl. this week)':''} · <b>NEW</b> crossed in last 2 bars · <b>2/5</b> settings agreeing · <b>%</b> breadth, then tail return${ROWS.some(r=>r.prox)?' · <b>≈</b> intraday-proxy close':''}</div>`);
+  a.insertAdjacentHTML('beforeend',`<div class="legend"><b>➝</b> last step · <b>3${unit()}</b> time in quadrant${PROV?' (<b>*</b> incl. this week)':''} · <b>NEW</b> crossed in last 2 bars · <b>2/5</b> settings agreeing · <b>%</b> breadth, then return since the tail start${ROWS.some(r=>r.prox)?' · <b>≈</b> intraday-proxy close':''}</div>`);
   for(const q of QORDER){
     const rs=rows.filter(r=>r.q===q).sort((a,b)=>b.rk-a.rk);
     const sec=document.createElement('section');
