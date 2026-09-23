@@ -290,11 +290,18 @@ const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const NODES={};
 function add(n){NODES[n.id]=n;return n;}
 const root=add({id:'stack',label:'Full stack',kind:'stack',bench:'QQQ',children:[]});
-// A market-wide reference view, outside the AI tree: SPY's eleven sector ETFs against SPY.
-// Dots are labelled by sector; the ETF ticker and fund name are on hover.
-const SECT=add({id:'sectors',label:'S&P 500 sectors',kind:'sectors',bench:'SPY',children:[]});
-for(const [tk,lab] of Object.entries(D.sectors||{}))
-  SECT.children.push({id:'sectors-'+tk.toLowerCase(),label:lab,kind:'stock',ticker:tk,parent:SECT,children:[]});
+// Market-wide reference views, outside the AI tree. Dots are labelled by name; the ticker and
+// full name are on hover. Sectors: SPY's eleven sector ETFs against SPY. Macro: index futures,
+// the 10-year yield, crude, VIX, gold, copper, the dollar and bitcoin against ES, so the S&P is
+// the yardstick and each dot reads as risk-on or risk-off relative to it. A yield and VIX are
+// levels rather than prices, so their "return" is the change in that level.
+const REFS=[
+  add({id:'sectors',label:'S&P 500 sectors',kind:'ref',bench:'SPY',src:D.sectors,path:'Market / S&P 500 sectors',children:[],
+    blurb:b=>`The eleven SPDR sector ETFs, each measured against ${b}`}),
+  add({id:'macro',label:'Macro',kind:'ref',bench:D.px.ES?'ES':'SPY',src:D.macro,path:'Market / Macro',children:[],
+    blurb:b=>`Front-month futures (rolls show as small jumps), the 10-year yield and VIX (levels, so up means yields or volatility rising), the dollar index and bitcoin, each measured against ${b}`})];
+for(const R of REFS)for(const [tk,lab] of Object.entries(R.src||{}))
+  R.children.push({id:R.id+'-'+tk.toLowerCase(),label:lab,kind:'stock',ticker:tk,parent:R,children:[]});
 // Seven tiers, bottom to top, cut where the market actually trades apart: over two years of
 // weekly returns net of QQQ, this grouping separates the baskets better than the five-tier one
 // did (within-tier minus between-tier correlation +0.29 vs +0.23). dm.bench governs the
@@ -585,7 +592,8 @@ function nav(cur){
     h+='</div>';
   }
   h+='</div>';
-  if(SECT.children.length)h+=`<div class="navsec navref"><div class="navlbl">Reference</div><button type="button" class="ni stackbtn" data-id="sectors" aria-current="${cur.id==='sectors'}">S&amp;P 500 sectors<span class="c">${SECT.children.length}</span></button></div>`;
+  const refs=REFS.filter(R=>R.children.length);
+  if(refs.length)h+=`<div class="navsec navref"><div class="navlbl">Reference</div>${refs.map(R=>`<button type="button" class="ni stackbtn" data-id="${R.id}" aria-current="${cur.id===R.id}">${R.label.replace('&','&amp;')}<span class="c">${R.children.length}</span></button>`).join('')}</div>`;
   h+=`<div class="navkey" aria-hidden="true">${QORDER.map(q=>`<span><span class="d" style="background:${Q[q].c}">${Q[q].s}</span>${Q[q].n}</span>`).join('')}</div>`;
   $('nav').innerHTML=h+'</details>';
   $('nav').querySelector('details').ontoggle=e=>{navOpen=e.target.open;};
@@ -626,9 +634,9 @@ function render(fast,withList){
   // WOLF restarts 2025-09-29. combine() handles the nulls, but the reader cannot see that
   // the basket was smaller then, so say so.
   {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='domain'?deep(cur)
-     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='sectors'?cur.children.map(c=>c.ticker):null;
+     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='ref'?cur.children.map(c=>c.ticker):null;
    let as=ts;
-   if(ENTRIES.length&&ts&&cur.kind!=='sectors'){const d=D.dates[idx[end]];as=[...windows(cur)].filter(([,ws])=>inW(ws,d)).map(([x])=>x);}
+   if(ENTRIES.length&&ts&&cur.kind!=='ref'){const d=D.dates[idx[end]];as=[...windows(cur)].filter(([,ws])=>inW(ws,d)).map(([x])=>x);}
    if(as&&as.length){const live=as.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length,ts2=as;
      ROSTER=live<ts2.length?{live,total:ts2.length}:null;}else ROSTER=null;}
   $('prov').hidden=!PROV;$('prov').textContent=LIVE&&PROV?`live · ${LIVE.time}`:'week in progress';
@@ -859,7 +867,7 @@ function list(rows){
         <span class="br num" ${r.br?`title="${r.br.up} of ${r.br.k} members are outperforming ${VIEW.bench}'s trend"`:''}>${r.br?Math.round(100*r.br.up/r.br.k)+'%':''}</span>
         <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
         <span class="go">${r.open?'›':''}</span>`;
-      const cn=coName(r.node),lb=r.node.parent===SECT?`${r.label} (${r.node.ticker})`:r.label;b.title=(cn?`${lb} — ${cn}`:lb)+(r.open?' · click to open':'');
+      const cn=coName(r.node),lb=r.node.parent.kind==='ref'?`${r.label} (${r.node.ticker})`:r.label;b.title=(cn?`${lb} — ${cn}`:lb)+(r.open?' · click to open':'');
       b.addEventListener('mouseenter',()=>{st.hover=r.node.id;focus();});
       b.addEventListener('mouseleave',()=>{st.hover=null;focus();});
       b.addEventListener('focus',()=>{st.hover=r.node.id;focus();});
@@ -882,8 +890,10 @@ function list(rows){
 // benchmarks and its own industry peer, so that dependence is visible where the call is read.
 function sensitivity(rows){
   if(!rows.length||!VIEW)return;
-  const {idx,n,end,bench}=VIEW,cols=['SPY','QQQ','RSP','SOXX'].filter(b=>D.px[b]);
-  const peerOf=nd=>nd.kind==='family'||nd.kind==='sub'?nd.bench:nd.kind==='stock'&&nd.parent&&nd.parent.kind!=='sectors'?nd.parent.bench:null;
+  const {idx,n,end,bench}=VIEW,cur=NODES[st.node];
+  // a reference view's own yardstick (ES for Macro) leads the columns when it is not a common one
+  const cols=[...new Set([...(cur.kind==='ref'?[cur.bench]:[]),'SPY','QQQ','RSP','SOXX'])].filter(b=>D.px[b]);
+  const peerOf=nd=>nd.kind==='family'||nd.kind==='sub'?nd.bench:nd.kind==='stock'&&nd.parent&&nd.parent.kind!=='ref'?nd.parent.bench:null;
   const call=(nd,b)=>{if(nd.kind==='stock'&&nd.ticker===b)return '';const r=nd.kind==='stock'?rrgT(nd.ticker,b,idx,n):rrgOf(nd,b,idx,n);
     const x=r.rsr[end],y=r.rsm[end];if(x==null||y==null)return '<span title="not enough history">·</span>';
     const q=quad(x,y);return `<span class="gl" style="color:${Q[q].c}" title="${Q[q].n} against ${b}">${Q[q].s}</span>`;};
@@ -931,7 +941,7 @@ const asOf=nd=>ENTRIES.length&&VIEW?[...windows(nd)].filter(([,ws])=>inW(ws,D.da
 function members(cur){
   const m=$('members');
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
-  if(cur.kind==='sectors'){m.innerHTML=`The eleven SPDR sector ETFs, each measured against ${st.bench==='auto'?'SPY':st.bench}: `+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ')+rost;return;}
+  if(cur.kind==='ref'){m.innerHTML=cur.blurb(st.bench==='auto'?cur.bench:st.bench)+': '+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ')+rost;return;}
   if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${asOf(cur).map(tk).join(', ')}.`+rost;return;}
   if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${asOf(cur).map(tk).join(', ')}.`+rost;
   else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${asOf(s).map(tk).join(' ')}`).join(' · ')+rost;
@@ -953,7 +963,7 @@ for(const nd of Object.values(NODES)){
 }
 // Every ticker gets an entry pointing at the subsector that holds it: stock leaves are not
 // navigable nodes, and a name in two subsectors should surface once per location.
-for(const c of SECT.children)SEARCH.push({id:'sectors',label:c.ticker,co:c.label,path:'Market / S&P 500 sectors',key:(c.ticker+' '+c.label).toLowerCase()});
+for(const R of REFS)for(const c of R.children)SEARCH.push({id:R.id,label:c.ticker,co:c.label,path:R.path,key:(c.ticker+' '+c.label).toLowerCase()});
 for(const nd of Object.values(NODES)){
   if(!(nd.kind==='sub'||(nd.kind==='family'&&nd.members)))continue;
   const base=lineage(nd).slice(0,-1).map(x=>x.label).join(' / ')+' / '+nd.label;
