@@ -29,7 +29,22 @@ def favicon():
 ROOT = Path(__file__).resolve().parent.parent
 tpl = (ROOT / "template.html").read_text()
 data = (ROOT / "build" / "data.json").read_text()
-asof = json.loads(data)["asof"]
+full = json.loads(data)
+asof = full["asof"]
+
+# Every view at the latest date needs about 60 weeks of history (a 26-week baseline for the
+# stability check, smoothing warm-up, a 12-bar tail), but replay reaches back three years.
+# Embed the recent window and let the page fetch the rest from the same site on first use:
+# first load shrinks by more than half and no third-party request is added. Values at the
+# latest date are unchanged - the smoothing's starting point decays away long before it.
+WINDOW = 320
+history = None
+if len(full["dates"]) > WINDOW:
+    history = {"dates": full["dates"], "px": full["px"]}
+    data = json.dumps(dict(full, dates=full["dates"][-WINDOW:],
+                           px={k: v[-WINDOW:] for k, v in full["px"].items()},
+                           full_len=len(full["dates"]), win_start=full["dates"][-WINDOW]),
+                      separators=(",", ":"))
 
 head, body = tpl.split('<div class="app">', 1)
 body = '<div class="app">' + body.replace("__DATA__", data.replace("</", "<\\/"))
@@ -58,6 +73,8 @@ out = ROOT / "site" / "index.html"
 out.parent.mkdir(exist_ok=True)
 out.write_text(page)
 (ROOT / "site" / "favicon.ico").write_bytes(favicon())
+if history:
+    (ROOT / "site" / "history.json").write_text(json.dumps(history, separators=(",", ":")))
 fonts = ROOT / "site" / "fonts"
 fonts.mkdir(exist_ok=True)
 for f in sorted((ROOT / "assets" / "fonts").glob("*.woff2")):

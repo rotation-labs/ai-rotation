@@ -269,7 +269,8 @@ const uniq=f=>f._u||(f._u=f.members?[...new Set(f.members)]:[...new Set(f.childr
 const deep=d=>d._d||(d._d=[...new Set(d.children.flatMap(uniq))]);
 const adhoc=new Set(D.adhoc||[]);
 
-const N=D.dates.length;
+let N=D.dates.length;
+const WIN0=D.win_start||D.dates[0];   // start of the embedded window; history.json holds the rest
 function combine(arrs){
   const out=new Array(N).fill(null);let v=null;
   for(let i=0;i<N;i++){
@@ -297,9 +298,10 @@ function series(n){
   else r=combine(n.children.map(series));
   return SC[n.id]=r;
 }
-const weekIdx=(()=>{const r=[];for(let i=0;i<N;i++){const d=new Date(D.dates[i]+'T12:00:00Z'),nx=i+1<N?new Date(D.dates[i+1]+'T12:00:00Z'):null;
-  if(!nx||nx.getUTCDay()<d.getUTCDay()||(nx-d)>6*864e5)r.push(i);}return r;})();
-const dayIdx=[...Array(N).keys()];
+function buildWeekIdx(){const r=[];for(let i=0;i<N;i++){const d=new Date(D.dates[i]+'T12:00:00Z'),nx=i+1<N?new Date(D.dates[i+1]+'T12:00:00Z'):null;
+  if(!nx||nx.getUTCDay()<d.getUTCDay()||(nx-d)>6*864e5)r.push(i);}return r;}
+let weekIdx=buildWeekIdx();
+let dayIdx=[...Array(N).keys()];
 // The final weekly bar closes on the last available day whether or not the week
 // is over, so treat it as provisional unless it actually ends on a Friday.
 const partialWeek=new Date(D.dates[N-1]+'T12:00:00Z').getUTCDay()!==5;
@@ -329,7 +331,7 @@ function rankScale(idx,n){
   if(RKC[st.frame])return RKC[st.frame];
   let sx=0,sy=0,k=0;
   for(const f of root.children){const r=rrgOf(f,'QQQ',idx,n);
-    for(let i=0;i<r.rsr.length;i++)if(r.rsr[i]!=null&&r.rsm[i]!=null){sx+=(r.rsr[i]-100)**2;sy+=(r.rsm[i]-100)**2;k++;}}
+    for(let i=0;i<r.rsr.length;i++)if(r.rsr[i]!=null&&r.rsm[i]!=null&&D.dates[idx[i]]>=WIN0){sx+=(r.rsr[i]-100)**2;sy+=(r.rsm[i]-100)**2;k++;}}
   return RKC[st.frame]={x:Math.sqrt(sx/k)||1,y:Math.sqrt(sy/k)||1};
 }
 function rrgT(tk,bench,idx,n){
@@ -402,6 +404,8 @@ function writeHash(push){
   const p=new URLSearchParams();
   p.set('node',st.node);p.set('frame',st.frame);p.set('tail',st.tail);p.set('bench',st.bench);
   if(st.end!=null){const ix=st.frame==='W'?weekIdx:dayIdx;const d=D.dates[ix[Math.min(st.end,ix.length-1)]];if(d)p.set('end',d);}
+  else if(st.endDate)p.set('end',st.endDate);          // still waiting for history.json
+  else if(st.endLegacy!=null)p.set('end',st.endLegacy);
   if(st.layers)p.set('layers','1');
   if(st.hide.size)p.set('hide',[...st.hide].join(','));
   const u='#'+p;
@@ -421,6 +425,7 @@ $('tail').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.tail=+b
 $('bench').onchange=()=>{st.bench=$('bench').value;save();render();};
 $('lay').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.layers=b.dataset.v==='1';st.hide=new Set();save();render();};
 $('replay').oninput=()=>{st.end=Math.round(+$('replay').value);stopPlay();writeHash(false);render();};
+for(const ev of ['pointerdown','focus','keydown'])$('replay').addEventListener(ev,()=>loadHistory(),{passive:true});
 $('latest').onclick=()=>{st.end=null;stopPlay();writeHash(false);render();};
 $('crumbs').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
 $('nav').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
@@ -477,9 +482,10 @@ function render(fast,withList){
   const idx=st.frame==='W'?weekIdx:dayIdx,n=st.frame==='W'?10:21;
   const bx=D.px[bench];
   const minEnd=n*2+st.tail+5;
-  if(st.endDate){let k=-1;for(let i=0;i<idx.length;i++){if(D.dates[idx[i]]<=st.endDate)k=i;else break;}
-    st.end=k>=0&&k<idx.length-1?k:null;st.endDate=null;}
-  if(st.endLegacy!=null){st.end=Math.min(st.endLegacy,idx.length-1);st.endLegacy=null;}
+  // A date before the embedded window waits for history.json rather than snapping to latest.
+  if(st.endDate&&!(needHistory()&&st.endDate<D.dates[0])){let k=-1;for(let i=0;i<idx.length;i++){if(D.dates[idx[i]]<=st.endDate)k=i;else break;}
+    st.end=k>=0&&k<idx.length-1?k:null;st.endDate=null;writeHash(false);}
+  if(st.endLegacy!=null&&!needHistory()){st.end=Math.min(st.endLegacy,idx.length-1);st.endLegacy=null;writeHash(false);}
   $('replay').min=minEnd;$('replay').max=idx.length-1;
   const end=st.end==null||st.end>idx.length-1?idx.length-1:Math.max(st.end,minEnd);
   $('replay').value=end+FRAC;
@@ -804,6 +810,25 @@ addEventListener('keydown',e=>{
 });
 
 // ---- Replay autoplay (C6): 150+ weeks of history sat behind a slider nobody drags ----
+// ---- Full history on demand ----
+const needHistory=()=>!!D.full_len&&D.full_len>D.dates.length;
+let HIST=null;
+function loadHistory(){
+  if(!needHistory())return Promise.resolve(true);
+  if(HIST)return HIST;
+  $('replayv').textContent='loading history…';
+  return HIST=fetch('history.json').then(r=>r.ok?r.json():Promise.reject(r.status)).then(h=>{
+    // Pin the replay position to its date: every index shifts when earlier bars arrive.
+    const ix=st.frame==='W'?weekIdx:dayIdx,keep=st.end!=null?D.dates[ix[st.end]]:null;
+    D.dates=h.dates;for(const k in h.px)D.px[k]=h.px[k];
+    N=D.dates.length;weekIdx=buildWeekIdx();dayIdx=[...Array(N).keys()];
+    for(const c of [SC,RC])for(const k in c)delete c[k];
+    if(keep&&st.endLegacy==null){st.endDate=keep;st.end=null;}
+    render();return true;
+  }).catch(()=>{HIST=null;render();return null;});   // offline or file://: stay on the recent window
+}
+if(st.endLegacy!=null||(st.endDate&&st.endDate<D.dates[0]))loadHistory();
+
 // Stepping a whole bar per tick and re-rendering everything read as a slideshow. This runs
 // off requestAnimationFrame at a fixed bars-per-second, interpolates between bars so the
 // dots glide, and freezes the axis scale for the whole run - otherwise the frame rescales
@@ -830,6 +855,7 @@ function lockScale(from,to){
 function stopPlay(){if(PLAY){cancelAnimationFrame(PLAY);PLAY=null;}FRAC=0;SCALELOCK=null;$('play').textContent='▶ Play';}
 $('play').onclick=()=>{
   if(PLAY){stopPlay();writeHash(false);render();return;}   // st.end already holds the bar on screen
+  if(needHistory()){loadHistory().then(ok=>{if(ok!==null)$('play').click();});return;}
   const max=+$('replay').max,min=+$('replay').min;
   if(max<=min)return;
   PLAYPOS=Math.max(min,max-(st.frame==='W'?52:120));
