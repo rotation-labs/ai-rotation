@@ -975,7 +975,8 @@
     "XLB": "Materials",
     "XLU": "Utilities",
     "XLRE": "Real Estate",
-    "XLP": "Consumer Staples"
+    "XLP": "Consumer Staples",
+    "XBI": "Biotech"
   },
   "macro": {
     "ES": {

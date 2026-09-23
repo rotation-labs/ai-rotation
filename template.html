@@ -323,13 +323,13 @@ const NODES={};
 function add(n){NODES[n.id]=n;return n;}
 const root=add({id:'stack',label:'Full stack',kind:'stack',bench:'QQQ',children:[]});
 // Market-wide reference views, outside the AI tree. Dots are labelled by name; the ticker and
-// full name are on hover. Sectors: SPY's eleven sector ETFs against SPY. Macro: index futures,
-// the 10-year yield, crude, VIX, gold, copper, the dollar and bitcoin against ES, so the S&P is
+// full name are on hover. Sectors: SPY's eleven sector ETFs plus XBI (biotech) against SPY.
+// Macro: index futures, the 10-year yield, crude, VIX, gold, copper, the dollar and bitcoin against ES, so the S&P is
 // the yardstick and each dot reads as risk-on or risk-off relative to it. A yield and VIX are
 // levels rather than prices, so their "return" is the change in that level.
 const REFS=[
   add({id:'sectors',label:'S&P 500 sectors',kind:'ref',bench:'SPY',src:D.sectors,path:'Market / S&P 500 sectors',children:[],
-    blurb:b=>`The eleven SPDR sector ETFs, each measured against ${b}`}),
+    blurb:b=>`The eleven SPDR sector ETFs plus biotech (XBI), each measured against ${b}`}),
   add({id:'macro',label:'Macro',kind:'ref',bench:D.px.ES?'ES':'SPY',src:D.macro,path:'Market / Macro',children:[],
     blurb:b=>`Front-month futures (rolls show as small jumps), the 10-year yield and VIX (levels, so up means yields or volatility rising), the dollar index and bitcoin, each measured against ${b}`})];
 for(const R of REFS)for(const [tk,lab] of Object.entries(R.src||{}))
@@ -552,9 +552,10 @@ function plotInfo(idx,end,bench){
   return from;
 }
 
-// Common benchmarks first, then industry peers, then the S&P sector funds.
+// Common benchmarks first, then industry peers, then the S&P sector funds. XBI sits in both
+// Industry and the sectors view; list it once, under Industry.
 const BGRP=[['Broad market',['SPY','QQQ','RSP']],['Industry',['SOXX','SMH','IGV','XBI','BOTZ']],['S&P sectors',Object.keys(D.sectors||{})]]
-  .map(([g,l])=>[g,l.filter(b=>D.px[b])]).filter(([,l])=>l.length);
+  .map(([g,l],i,a)=>[g,l.filter(b=>D.px[b]&&!a.slice(0,i).some(([,p])=>p.includes(b)))]).filter(([,l])=>l.length);
 const BENCH=BGRP.flatMap(([,l])=>l);
 
 // State lived only in localStorage, so a view could not be linked and the back button did
