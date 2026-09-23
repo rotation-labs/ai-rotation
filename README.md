@@ -12,9 +12,9 @@ GitHub Actions (weekdays 21:30 UTC)
   deploy-pages       -> publishes site/ to GitHub Pages
 ```
 
-All RRG math (baskets, RS-Ratio, RS-Momentum, quadrants) runs in the viewer's browser, so the page needs no server.
+All RRG math (baskets, RS-Ratio, RS-Momentum, quadrants) runs in the viewer's browser, so the page needs no server. `index.html` embeds the most recent 320 sessions, enough for every view at the latest date; the full three years sit in `history.json` on the same site and load the first time replay, Play or Compare is used.
 
-Reading the page: view state lives in the URL hash, so any view can be linked and the back button works. `/` focuses the search box. Both axes are scaled to standard deviations and the window is square, so equal distances mean the same thing either way. A badge such as `2/5` marks a quadrant that only holds under the smoothing settings shown — the page re-runs every node under four alternatives. The current, unfinished week is drawn hollow and never earns a NEW badge.
+Reading the page: the default Full stack view compares seven tiers against QQQ; opening a layer switches to its industry peer benchmark, and the Benchmark check under the lists shows each call against SPY, QQQ, RSP, SOXX and the peer. Rows show breadth (the share of members themselves outperforming), the strip above the chart lists recent quadrant changes, and **Compare** plots any two groups against each other. View state lives in the URL hash, so any view can be linked and the back button works. `/` focuses the search box. Both axes are scaled to standard deviations and the window is square, so equal distances mean the same thing either way. A badge such as `2/5` marks a quadrant that only holds under the smoothing settings shown — the page re-runs every node under four alternatives. The current, unfinished week is drawn hollow and never earns a NEW badge.
 If a fetch fails (Yahoo rate limit, a benchmark missing, or more than 10% of tickers missing) the job stops and the previous version stays live.
 
 ## Deployment
@@ -34,6 +34,9 @@ then run the workflow once from the Actions tab.
 
 - **Edit baskets:** change `config/baskets.json` (tier → layer → subsector → tickers) and commit. Any push to `main` triggers a rebuild. Give every new ticker a display name in `names`; it is shown on hover.
   Non-US tickers get a short name in `foreign_listings` mapped to their Yahoo symbol (e.g. `"HYNIX": "000660.KS"`), and a display name in `names` (e.g. `"HYNIX": "SK Hynix"`) so the chart is readable without the glossary. Supported suffixes: `.KS .KQ .T .TW .TWO .SZ .SS .HK .AS .DE .PA .SW .L` (London is quoted in pence and converted accordingly).
+- **Peer benchmarks:** `peer_benchmarks` maps a layer name to the ETF its members are measured against when that layer is opened (Accelerators → SOXX, software → IGV, biotech → XBI). Tier views always use QQQ. Any ETF used must be in `benchmarks` or `sectors`.
+- **Start dates:** `starts` discards a ticker's history before a date, for symbols whose history predates the business they now name (CCXI traded as an empty SPAC until the Agility deal was announced).
+- **Membership changes:** to make replay show a basket as it was, add an entry to `membership_changes.entries`: `{"ticker", "basket": "Layer / Subsector" (or "Layer"), "from", "until"}`. Adding a name on a date is a `from` entry; removing one is an `until` entry kept after the name leaves `groups`; a move is one of each. Don't record renames or classification fixes.
 - **Fonts:** `assets/fonts/*.woff2` are vendored and copied into `site/` at build time, so the page makes no third-party request. See `assets/fonts/NOTICE.md`.
 - **Change the schedule:** edit the `cron` line in `.github/workflows/update.yml` (times are UTC).
 - **Refresh right now:** Actions → Update Rotation → Run workflow.

@@ -111,6 +111,23 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .legend b{color:var(--text);font-weight:500}
 .qrow .br{font-size:11px;color:var(--muted);text-align:right}
 .px{color:var(--weak);font-size:11px;margin-left:5px}
+.tbtn{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--muted)}
+.tbtn:hover{color:var(--text)}.tbtn[aria-pressed="true"]{background:var(--raised);color:var(--text);box-shadow:0 0 0 1px var(--line2)}
+.cmp{border:1px solid var(--line2);border-radius:10px;background:var(--panel);padding:10px 12px;margin:0 0 10px}
+.cmph{display:flex;align-items:baseline;gap:10px;font-size:12px;color:var(--muted);margin-bottom:8px}.cmph b{color:var(--text);font-size:13px}
+.cmpx{margin-left:auto;background:none;border:0;color:var(--muted);font-size:14px;cursor:pointer}
+.cmpsides{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start;margin-bottom:8px}
+.cmpside{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-width:0}
+.cmpside .lab{font-weight:600;color:var(--text);font-size:12px;width:14px}
+.cmpsides .vs{color:var(--faint);font-size:11px;padding-top:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--raised);border:1px solid var(--line2);border-radius:999px;padding:1px 4px 1px 9px;font-size:11.5px;color:var(--text)}
+.chip button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:12px;padding:0 3px}
+.cmpfind{position:relative}.cmpfind input{background:var(--ground);border:1px solid var(--line);border-radius:7px;padding:3px 8px;font-size:11.5px;color:var(--text);width:150px}
+.cmpres{position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:var(--raised);border:1px solid var(--line2);border-radius:8px;padding:4px;min-width:240px;max-height:260px;overflow:auto;box-shadow:0 10px 30px var(--shadow)}
+.cmpres button{display:block;width:100%;background:none;border:0;border-radius:5px;padding:4px 8px;text-align:left;color:var(--text);font-size:12px}
+.cmpres button:hover{background:var(--hover)}.cmpres .p{color:var(--faint);font-size:10.5px;margin-left:6px}
+#cmpsvg{width:100%;height:auto;display:block}
+.cmpstats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:6px}.cmpstats b{color:var(--text);font-weight:500}
 .changes{font-size:12px;color:var(--muted);margin:0 0 8px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);line-height:1.6}
 .changes b{color:var(--text);font-weight:500}.changes .hd{color:var(--faint);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:8px}
 .changes .it{white-space:nowrap;margin-right:14px;display:inline-block}
@@ -161,12 +178,23 @@ svg .dimmed{opacity:.1}
       <div class="tool"><span>Horizon</span><div class="seg" id="frame"><button type="button" data-v="W" title="Weekly bars; trend measured against a 10-week baseline">10-week</button><button type="button" data-v="D" title="Daily bars; trend measured against a 21-session (about one month) baseline">1-month</button></div></div>
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
+      <div class="tool"><button type="button" id="cmpbtn" class="tbtn" aria-pressed="false" title="Compare any two baskets or tickers">Compare</button></div>
     </div>
   </header>
 
   <nav id="nav" aria-label="Baskets"></nav>
 
   <div class="chartwrap">
+    <div class="cmp" id="cmp" hidden>
+      <div class="cmph"><b>Compare</b><span>A relative to B, each equal-weighted; the line rises when A outperforms</span><button type="button" id="cmpx" class="cmpx" aria-label="Close compare">✕</button></div>
+      <div class="cmpsides">
+        <div class="cmpside" data-side="A"><span class="lab">A</span><span class="chips"></span><span class="cmpfind"><input type="search" placeholder="add basket or ticker" aria-label="Add to side A" autocomplete="off"><div class="cmpres" hidden></div></span></div>
+        <div class="vs">vs</div>
+        <div class="cmpside" data-side="B"><span class="lab">B</span><span class="chips"></span><span class="cmpfind"><input type="search" placeholder="add basket or ticker" aria-label="Add to side B" autocomplete="off"><div class="cmpres" hidden></div></span></div>
+      </div>
+      <svg id="cmpsvg" viewBox="0 0 820 170" role="img" aria-label="A relative to B over time"></svg>
+      <div class="cmpstats" id="cmpstats" aria-live="polite"></div>
+    </div>
     <div class="changes" id="changes" aria-live="polite"></div>
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
@@ -394,7 +422,7 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set()};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[]};
 // Full stack plots one dot per tier by default; the toggle expands it to every layer.
 const kids=cur=>cur.kind==='stack'?(st.layers?root.children:DOMAINS.map(d=>NODES[d.g])):cur.children;
 let PROV=false;
@@ -432,6 +460,9 @@ function readHash(){
   if(/^\d{4}-\d{2}-\d{2}$/.test(e))o.endDate=e;else if(/^\d+$/.test(e))o.endLegacy=+e;
   o.layers=h.get('layers')==='1';
   o.hide=new Set((h.get('hide')||'').split(',').filter(x=>/^[a-z0-9-]+$/.test(x)));
+  const tokOk=x=>NODES[x]||(x.startsWith('tk:')&&D.px[x.slice(3)]);
+  o.ca=(h.get('ca')||'').split(',').filter(tokOk);o.cb=(h.get('cb')||'').split(',').filter(tokOk);
+  o.cmp=!!(o.ca.length||o.cb.length);
   return o;
 }
 function writeHash(push){
@@ -442,6 +473,7 @@ function writeHash(push){
   else if(st.endLegacy!=null)p.set('end',st.endLegacy);
   if(st.layers)p.set('layers','1');
   if(st.hide.size)p.set('hide',[...st.hide].join(','));
+  if(st.cmp){p.set('ca',st.ca.join(','));p.set('cb',st.cb.join(','));}
   const u='#'+p;
   if(location.hash===u)return;
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
@@ -450,7 +482,7 @@ Object.assign(st,readHash());
 if(!NODES[st.node])st.node='stack';
 writeHash(false);
 addEventListener('popstate',()=>{
-  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,endDate:null,endLegacy:null,layers:false},readHash());
+  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,endDate:null,endLegacy:null,layers:false,cmp:false,ca:[],cb:[]},readHash());
   if(!NODES[st.node])st.node='stack';
   stopPlay();render();
 });
@@ -614,6 +646,8 @@ function render(fast,withList){
     QORDER.map(q=>`${Q[q].n}: ${VIS.filter(r=>r.q===q).map(r=>r.label).join(', ')||'none'}`).join('. '));
   draw(VIS,ROWS.length>0&&!VIS.length);
   VIEW={idx,n,end,bench};
+  $('cmp').hidden=!st.cmp;$('cmpbtn').setAttribute('aria-pressed',st.cmp);
+  if(st.cmp&&(!fast||withList))compare();
   if(!fast||withList){list(ROWS);changes(VIS);}
   if(!fast)members(cur);
   focus();
@@ -849,6 +883,71 @@ addEventListener('keydown',e=>{
 });
 
 // ---- Replay autoplay (C6): 150+ weeks of history sat behind a slider nobody drags ----
+// ---- Compare: relative value of any two groups ----
+// "Is the power and optics build-out being bid over the chip cycle?" is a question about A
+// against B, which plotting both against QQQ only answers indirectly. Each side is the
+// equal-weighted union of its tokens (tiers, layers, subsectors or tickers).
+const tokTickers=tok=>{if(tok.startsWith('tk:'))return [tok.slice(3)];const nd=NODES[tok];
+  return !nd?[]:nd.kind==='sub'?nd.members:nd.kind==='family'?uniq(nd):nd.kind==='domain'?deep(nd):[];};
+const tokLabel=tok=>tok.startsWith('tk:')?tok.slice(3):(NODES[tok]||{}).label||tok;
+const sideTk=toks=>[...new Set(toks.flatMap(tokTickers))].filter(t=>D.px[t]);
+const CMPC={};
+const sideSeries=toks=>{const k=toks.join(',');return CMPC[k]||(CMPC[k]=sideTk(toks).length?combine(sideTk(toks).map(t=>D.px[t])):null);};
+const CMPOPTS=[...Object.values(NODES).filter(nd=>nd.kind==='domain'||nd.kind==='family'||nd.kind==='sub')
+    .map(nd=>({tok:nd.id,label:nd.label,path:nd.kind==='domain'?'Tier':lineage(nd).slice(1,-1).map(x=>x.label).join(' / '),key:nd.label.toLowerCase()})),
+  ...Object.keys(D.px).sort().map(tk=>({tok:'tk:'+tk,label:tk,path:(D.names&&D.names[tk])||'',key:(tk+' '+((D.names&&D.names[tk])||'')).toLowerCase()}))];
+function compare(){
+  for(const s of ['A','B']){const toks=s==='A'?st.ca:st.cb,el=document.querySelector(`.cmpside[data-side="${s}"] .chips`);
+    el.innerHTML=toks.map((tok,i)=>`<span class="chip">${tokLabel(tok)}<button type="button" data-side="${s}" data-i="${i}" aria-label="Remove ${tokLabel(tok)}">×</button></span>`).join('');}
+  const svgc=$('cmpsvg'),stats=$('cmpstats');svgc.innerHTML='';
+  const A=sideSeries(st.ca),B=sideSeries(st.cb);
+  if(!A||!B){stats.innerHTML='Add at least one basket or ticker to each side.';return;}
+  const {idx,n,end}=VIEW,e=idx[end];
+  // relative line on daily bars, rebased to 100 where both sides first exist
+  const ratio=A.map((a,i)=>a!=null&&B[i]!=null?a/B[i]:null);
+  const i0=ratio.findIndex(v=>v!=null);if(i0<0){stats.textContent='No overlapping history.';return;}
+  const rel=ratio.map(v=>v==null?null:100*v/ratio[i0]);
+  const W=820,H=170,m={l:40,r:10,t:10,b:22},vals=rel.slice(i0).filter(v=>v!=null);
+  let lo=Math.min(...vals,100),hi=Math.max(...vals,100);const pad=(hi-lo)*.08||1;lo-=pad;hi+=pad;
+  const X=i=>m.l+(i-i0)/Math.max(1,N-1-i0)*(W-m.l-m.r),Y=v=>H-m.b-(v-lo)/(hi-lo)*(H-m.t-m.b);
+  const mk=(tg,a)=>{const el=document.createElementNS(NS,tg);for(const k in a)el.setAttribute(k,a[k]);svgc.append(el);return el;};
+  mk('line',{x1:m.l,x2:W-m.r,y1:Y(100),y2:Y(100),stroke:'var(--line2)','stroke-dasharray':'3 4'});
+  let d='';for(let i=i0;i<N;i++)if(rel[i]!=null)d+=(d?'L':'M')+X(i).toFixed(1)+','+Y(rel[i]).toFixed(1);
+  mk('path',{d,fill:'none',stroke:'var(--imp)','stroke-width':1.6});
+  mk('line',{x1:X(e),x2:X(e),y1:m.t,y2:H-m.b,stroke:'var(--weak)','stroke-width':1,'stroke-dasharray':'2 3'});
+  const lab=(x,y,s,anchor='start')=>{const tx=mk('text',{x,y,fill:'var(--faint)','font-size':10.5,'font-family':'Geist Mono, ui-monospace, monospace','text-anchor':anchor});tx.textContent=s;};
+  lab(m.l-6,Y(hi-pad)+4,(hi-pad).toFixed(0),'end');lab(m.l-6,Y(lo+pad)+4,(lo+pad).toFixed(0),'end');lab(m.l-6,Y(100)+4,'100','end');
+  lab(m.l,H-6,fmtD(D.dates[i0]));lab(W-m.r,H-6,fmtD(D.dates[N-1]),'end');
+  // changes up to the replayed date, the rotation of A against B, and breadth on each side
+  const chg=L=>e-L>=i0&&ratio[e]!=null&&ratio[e-L]!=null?pct((ratio[e]/ratio[e-L]-1)*100):'—';
+  const r=rrg(A,B,idx,n),x=r.rsr[end],y=r.rsm[end];
+  let q=null,ten=0;if(x!=null&&y!=null){q=quad(x,y);ten=1;for(let i=end-1;i>=Math.max(0,end-30);i--){if(r.rsr[i]==null||r.rsm[i]==null||quad(r.rsr[i],r.rsm[i])!==q)break;ten++;}}
+  const brd=toks=>{const ts=sideTk(toks);let up=0,k=0;for(const tk of ts){if(tk==='QQQ')continue;const v=rrgT(tk,'QQQ',idx,n).rsr[end];if(v!=null){k++;if(v>100)up++;}}return k?`${Math.round(100*up/k)}% of ${k}`:'—';};
+  stats.innerHTML=`<span><b>A</b> ${st.ca.map(tokLabel).join(' + ')} (${sideTk(st.ca).length}) <b>vs B</b> ${st.cb.map(tokLabel).join(' + ')} (${sideTk(st.cb).length})</span>`
+    +`<span>As of <b>${fmtD(D.dates[e])}</b>: 1m <b>${chg(21)}</b> · 3m <b>${chg(63)}</b> · 6m <b>${chg(126)}</b> · 12m <b>${chg(252)}</b></span>`
+    +(q?`<span>A against B: <b style="color:${Q[q].c}">${Q[q].s} ${Q[q].n}</b> for ${ten}${unit()} · RS-Ratio ${x.toFixed(2)} · Momentum ${y.toFixed(2)}</span>`:'')
+    +`<span>Breadth vs QQQ: A <b>${brd(st.ca)}</b> · B <b>${brd(st.cb)}</b></span>`;
+}
+$('cmpbtn').onclick=()=>{st.cmp=!st.cmp;
+  if(st.cmp&&!st.ca.length&&!st.cb.length){st.ca=['power','network'];st.cb=['semis','compute-accelerators'];}   // the review's question as a starting point
+  if(st.cmp)loadHistory();writeHash(false);render();};
+$('cmpx').onclick=()=>{st.cmp=false;writeHash(false);render();};
+$('cmp').addEventListener('click',e=>{
+  const x=e.target.closest('.chip button');if(x){const arr=x.dataset.side==='A'?st.ca:st.cb;arr.splice(+x.dataset.i,1);writeHash(false);render();return;}
+  const o=e.target.closest('.cmpres button');if(o){const side=o.closest('.cmpside').dataset.side,arr=side==='A'?st.ca:st.cb;
+    if(!arr.includes(o.dataset.tok))arr.push(o.dataset.tok);const inp=o.closest('.cmpfind').querySelector('input');inp.value='';o.closest('.cmpres').hidden=true;writeHash(false);render();}
+});
+for(const inp of document.querySelectorAll('.cmpfind input')){
+  const box=inp.nextElementSibling;
+  inp.addEventListener('input',()=>{const v=inp.value.trim().toLowerCase();if(!v){box.hidden=true;return;}
+    const rank=o=>o.label.toLowerCase()===v?0:o.label.toLowerCase().startsWith(v)?1:2;
+    const hits=CMPOPTS.filter(o=>o.key.includes(v)).sort((a,b)=>rank(a)-rank(b)||a.label.length-b.label.length).slice(0,10);
+    box.innerHTML=hits.length?hits.map(o=>`<button type="button" data-tok="${o.tok}">${o.label}<span class="p">${o.path}</span></button>`).join(''):'<div style="padding:5px 8px;color:var(--muted);font-size:12px">No match</div>';
+    box.hidden=false;});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const b=box.querySelector('button');if(b)b.click();}else if(e.key==='Escape'){inp.value='';box.hidden=true;}});
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.cmpfind'))for(const b of document.querySelectorAll('.cmpres'))b.hidden=true;});
+
 // ---- Full history on demand ----
 const needHistory=()=>!!D.full_len&&D.full_len>D.dates.length;
 let HIST=null;
@@ -861,12 +960,12 @@ function loadHistory(){
     const ix=st.frame==='W'?weekIdx:dayIdx,keep=st.end!=null?D.dates[ix[st.end]]:null;
     D.dates=h.dates;for(const k in h.px)D.px[k]=h.px[k];
     N=D.dates.length;weekIdx=buildWeekIdx();dayIdx=[...Array(N).keys()];
-    for(const c of [SC,RC,MASK])for(const k in c)delete c[k];
+    for(const c of [SC,RC,MASK,CMPC])for(const k in c)delete c[k];
     if(keep&&st.endLegacy==null){st.endDate=keep;st.end=null;}
     render();return true;
   }).catch(()=>{HIST=null;render();return null;});   // offline or file://: stay on the recent window
 }
-if(st.endLegacy!=null||(st.endDate&&st.endDate<D.dates[0]))loadHistory();
+if(st.cmp||st.endLegacy!=null||(st.endDate&&st.endDate<D.dates[0]))loadHistory();   // after the bindings it needs
 
 // Stepping a whole bar per tick and re-rendering everything read as a slideshow. This runs
 // off requestAnimationFrame at a fixed bars-per-second, interpolates between bars so the
