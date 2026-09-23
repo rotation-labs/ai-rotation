@@ -529,7 +529,9 @@ const DESK=matchMedia('(min-width:761px)');
 let navOpen=!matchMedia('(max-width:760px)').matches;
 // At >=761px the <summary> is display:none, so a details left closed by a narrow
 // layout can never be reopened. Force it open whenever we're on the desktop layout.
-DESK.addEventListener('change',()=>render());
+// Safari before 14 has only the old addListener; calling the missing method threw and stopped
+// the whole script, leaving a blank page.
+DESK.addEventListener?DESK.addEventListener('change',()=>render()):DESK.addListener(()=>render());
 function nav(cur){
   // The sidebar is the tree itself: Full stack > tier > layer > subsector, each level
   // indented under its parent and expanded only along the path you are on - except that
