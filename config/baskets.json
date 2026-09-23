@@ -118,7 +118,8 @@
           "TSM",
           "GFS",
           "UMC",
-          "TSEM"
+          "TSEM",
+          "INTC"
         ],
         "Litho & Mask": [
           "ASML",
