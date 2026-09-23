@@ -21,6 +21,14 @@ The build parses the page script with Node before publishing, so a syntax error 
 
 If a fetch fails (Yahoo rate limit, a benchmark missing, or more than 10% of tickers missing) the job stops and the previous version stays live.
 
+## Backtest
+
+`scripts/backtest.py` checks whether the chart's readings (RS-Ratio, RS-Momentum, their inflection, quadrant moves) and plain relative momentum predict forward relative returns. It runs every signal over a grid of settings, horizons (1-26 weeks), benchmarks and universes: the AI stocks over the last three years and over ten, about 40 sector and industry ETFs since 2000, and the 11 SPDR sectors. Spreads and ICs carry Newey-West t-stats, judged against a placebo of random signals run through the same code. Run it from **Actions → Backtest → Run workflow**; it also runs on any push that changes it. The report appears in the run summary and as the `backtest` artifact. Locally:
+
+```
+FETCH_PERIOD=10y python scripts/fetch.py && python scripts/backtest.py   # writes build/backtest/
+```
+
 ## Deployment
 
 The site is deployed from this repository to GitHub Pages at

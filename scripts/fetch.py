@@ -4,7 +4,7 @@ Foreign listings are converted to USD and forward-filled onto the US trading cal
 Exits non-zero (so the scheduled job fails and the last good site stays live) if the
 benchmark data is missing or too many tickers fail.
 """
-import json, math, sys, time
+import json, math, os, sys, time
 from pathlib import Path
 import pandas as pd
 import yfinance as yf
@@ -12,7 +12,7 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parent.parent
 CFG = json.loads((ROOT / "config" / "baskets.json").read_text())
 OUT = ROOT / "build" / "data.json"
-PERIOD = "3y"
+PERIOD = os.environ.get("FETCH_PERIOD", "3y")   # the backtest asks for longer
 MAX_MISSING_SHARE = 0.10
 STALE_SESSIONS = 5   # drop a listing whose last print is more than this many US sessions old
 
