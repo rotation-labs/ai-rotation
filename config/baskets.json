@@ -61,36 +61,23 @@
     "LEADERDRIVE": "688017.SS",
     "TENCENT": "0700.HK",
     "TECAN": "TECN.SW",
-    "ONT": "ONT.L"
+    "ONT": "ONT.L",
+    "SMIC": "0981.HK",
+    "HUAHONG": "1347.HK",
+    "SCREEN": "7735.T",
+    "KOKUSAI": "6525.T",
+    "TOKYOOHKA": "4186.T",
+    "NAURA": "002371.SZ",
+    "AMEC": "688012.SS",
+    "ASMPT": "0522.HK",
+    "TFC": "300394.SZ",
+    "GOLDCIRCUIT": "2368.TW",
+    "EMC": "2383.TW",
+    "VICTORYGIANT": "300476.SZ",
+    "NEXANS": "NEX.PA"
   },
   "groups": {
     "semis": {
-      "Compute": {
-        "GPU / Accel": [
-          "NVDA",
-          "AMD"
-        ],
-        "CPU": [
-          "ARM",
-          "INTC",
-          "AMD"
-        ],
-        "Custom ASIC": [
-          "AVGO",
-          "MRVL",
-          "MEDIATEK"
-        ],
-        "ASIC Design Svcs": [
-          "ALCHIP",
-          "GUC"
-        ],
-        "Edge AI & FPGA": [
-          "AMBA",
-          "LSCC",
-          "SYNA",
-          "CEVA"
-        ]
-      },
       "Memory & Storage": {
         "DRAM / HBM": [
           "MU",
@@ -112,35 +99,6 @@
           "STX"
         ]
       },
-      "Networking Chips": {
-        "Copper / Scale-up": [
-          "ALAB",
-          "CRDO"
-        ],
-        "Optical DSP / SiPh": [
-          "MRVL",
-          "AVGO",
-          "TSEM",
-          "POET"
-        ],
-        "Optical Modules": [
-          "FN",
-          "AAOI",
-          "INNOLIGHT",
-          "EOPTOLINK",
-          "SMTC"
-        ],
-        "Lasers & InP": [
-          "LITE",
-          "COHR",
-          "AXTI"
-        ],
-        "Timing & Mixed-signal": [
-          "SITM",
-          "SLAB",
-          "MXL"
-        ]
-      },
       "Foundry": {
         "Leading-edge": [
           "TSM",
@@ -150,6 +108,10 @@
           "GFS",
           "UMC",
           "TSEM"
+        ],
+        "China Foundry": [
+          "SMIC",
+          "HUAHONG"
         ]
       },
       "SemiCap": {
@@ -161,7 +123,9 @@
           "AMAT",
           "LRCX",
           "TOKYOELEC",
-          "ASMI"
+          "ASMI",
+          "SCREEN",
+          "KOKUSAI"
         ],
         "Process Control": [
           "KLAC",
@@ -169,7 +133,7 @@
           "NVMI",
           "CAMT"
         ],
-        "Semicap Subsystems": [
+        "Subsystems": [
           "MKSI",
           "AEIS",
           "UCTT",
@@ -178,11 +142,16 @@
         "Materials & Wafers": [
           "ENTG",
           "SHINETSU",
-          "SUMCO"
+          "SUMCO",
+          "TOKYOOHKA"
         ],
         "EDA": [
           "SNPS",
           "CDNS"
+        ],
+        "China SemiCap": [
+          "NAURA",
+          "AMEC"
         ]
       },
       "Packaging & Test": {
@@ -194,26 +163,39 @@
           "BESI",
           "KLIC",
           "HANMI",
-          "DISCO"
-        ],
-        "Substrates & PCB": [
-          "IBIDEN",
-          "UNIMICRON",
-          "TTMI"
+          "DISCO",
+          "ASMPT"
         ],
         "ATE": [
           "TER",
           "ADVANTEST",
           "COHU"
         ],
-        "Optical Test": [
+        "Probe, Burn-in & T&M": [
           "AEHR",
           "FORM",
           "VIAV",
           "KEYS"
         ]
       },
-      "Power & Analog": {
+      "CPUs & Edge Silicon": {
+        "CPU": [
+          "ARM",
+          "INTC",
+          "AMD"
+        ],
+        "Edge AI & FPGA": [
+          "AMBA",
+          "LSCC",
+          "SYNA",
+          "CEVA"
+        ]
+      },
+      "Analog & Power Semis": {
+        "Analog": [
+          "TXN",
+          "ADI"
+        ],
         "DC Power / VRM": [
           "MPWR",
           "VICR",
@@ -225,10 +207,13 @@
           "WOLF",
           "AOSL"
         ],
-        "Analog": [
-          "TXN",
-          "ADI"
-        ],
+        "Timing & Mixed-signal": [
+          "SITM",
+          "SLAB",
+          "MXL"
+        ]
+      },
+      "Auto & Mobile": {
         "Auto & MCU": [
           "NXPI",
           "MCHP",
@@ -242,7 +227,23 @@
         ]
       }
     },
-    "hardware": {
+    "compute": {
+      "Accelerators": {
+        "GPU / Accel": [
+          "NVDA",
+          "AMD",
+          "CBRS"
+        ],
+        "Custom ASIC": [
+          "AVGO",
+          "MRVL",
+          "MEDIATEK"
+        ],
+        "ASIC Design Svcs": [
+          "ALCHIP",
+          "GUC"
+        ]
+      },
       "Servers & Storage": {
         "OEM Servers": [
           "DELL",
@@ -263,8 +264,37 @@
           "P",
           "NTAP"
         ]
+      }
+    },
+    "network": {
+      "Networking Chips": {
+        "Copper / Scale-up": [
+          "ALAB",
+          "CRDO",
+          "SMTC"
+        ],
+        "Optical DSP / SiPh": [
+          "MRVL",
+          "AVGO",
+          "TSEM",
+          "POET"
+        ]
       },
-      "Networking & Optics": {
+      "Optical Components": {
+        "Transceivers & Modules": [
+          "FN",
+          "AAOI",
+          "INNOLIGHT",
+          "EOPTOLINK",
+          "TFC"
+        ],
+        "Lasers & InP": [
+          "LITE",
+          "COHR",
+          "AXTI"
+        ]
+      },
+      "Networking Systems": {
         "DC Networking": [
           "ANET",
           "CSCO",
@@ -273,11 +303,21 @@
         "Optical Systems": [
           "CIEN",
           "NOK"
-        ],
-        "Connectors & Fiber": [
+        ]
+      },
+      "Connectivity & Boards": {
+        "Fiber & Connectors": [
           "APH",
           "GLW",
           "TEL"
+        ],
+        "PCB & Substrates": [
+          "IBIDEN",
+          "UNIMICRON",
+          "TTMI",
+          "GOLDCIRCUIT",
+          "EMC",
+          "VICTORYGIANT"
         ]
       }
     },
@@ -306,36 +346,32 @@
           "CAT",
           "CMI",
           "GNRC"
+        ],
+        "Regulated Utilities": [
+          "AEP",
+          "SO",
+          "D",
+          "ETR"
+        ],
+        "Gas Supply": [
+          "WMB",
+          "KMI",
+          "EQT"
         ]
       },
-      "Power Delivery & Cooling": {
-        "Electrical Products": [
-          "ETN",
-          "HUBB",
-          "POWL",
-          "SCHNEIDER"
-        ],
+      "Grid & Electrical": {
         "Transformers & HV": [
           "HITACHI",
           "HDHYUNDAIELEC",
           "LSELECTRIC",
           "HYOSUNGHI"
         ],
-        "Thermal": [
-          "VRT",
-          "MOD",
-          "NVT",
-          "TT",
-          "AVC",
-          "AURAS",
-          "DELTA"
-        ]
-      },
-      "Build & Host": {
-        "Electrical & Mechanical": [
-          "EME",
-          "FIX",
-          "IESC"
+        "Electrical & Cables": [
+          "ETN",
+          "HUBB",
+          "POWL",
+          "SCHNEIDER",
+          "NEXANS"
         ],
         "Utility & Civil": [
           "PWR",
@@ -345,33 +381,87 @@
           "DY",
           "STRL",
           "AGX"
+        ]
+      },
+      "Cooling & DC Construction": {
+        "Thermal": [
+          "VRT",
+          "MOD",
+          "NVT",
+          "TT",
+          "AVC",
+          "AURAS",
+          "DELTA"
         ],
+        "DC Contractors": [
+          "EME",
+          "FIX",
+          "IESC"
+        ]
+      },
+      "AI Capacity": {
         "DC REITs": [
           "EQIX",
           "DLR",
           "IRM"
-        ]
-      }
-    },
-    "cloudsw": {
-      "Cloud": {
-        "Hyperscalers": [
-          "MSFT",
-          "GOOGL",
-          "AMZN",
-          "META",
-          "ORCL"
         ],
         "Neoclouds": [
           "CRWV",
           "NBIS"
         ],
-        "Miners \u2192 HPC": [
+        "HPC Hosts": [
           "IREN",
           "CIFR",
           "WULF",
           "APLD",
           "CORZ"
+        ]
+      }
+    },
+    "platforms": {
+      "Hyperscalers": [
+        "MSFT",
+        "GOOGL",
+        "AMZN",
+        "META",
+        "ORCL"
+      ],
+      "Internet": {
+        "E-commerce": [
+          "SHOP",
+          "MELI",
+          "CPNG",
+          "SE",
+          "EBAY",
+          "ETSY"
+        ],
+        "Travel & Local": [
+          "BKNG",
+          "EXPE",
+          "ABNB",
+          "UBER",
+          "DASH",
+          "LYFT"
+        ],
+        "Streaming & Gaming": [
+          "NFLX",
+          "SPOT",
+          "RBLX",
+          "TTWO"
+        ],
+        "Social & Consumer Apps": [
+          "RDDT",
+          "PINS",
+          "SNAP",
+          "DUOL",
+          "MTCH"
+        ],
+        "China Internet": [
+          "BABA",
+          "PDD",
+          "JD",
+          "BIDU",
+          "TENCENT"
         ]
       },
       "Infrastructure Software": {
@@ -446,62 +536,7 @@
         ]
       }
     },
-    "applied": {
-      "Internet": {
-        "E-commerce": [
-          "SHOP",
-          "MELI",
-          "CPNG",
-          "SE",
-          "EBAY",
-          "ETSY"
-        ],
-        "Travel & Local": [
-          "BKNG",
-          "EXPE",
-          "ABNB",
-          "UBER",
-          "DASH",
-          "LYFT"
-        ],
-        "Streaming & Gaming": [
-          "NFLX",
-          "SPOT",
-          "RBLX",
-          "TTWO"
-        ],
-        "Social & Consumer Apps": [
-          "RDDT",
-          "PINS",
-          "SNAP",
-          "DUOL",
-          "MTCH"
-        ],
-        "China Internet": [
-          "BABA",
-          "PDD",
-          "JD",
-          "BIDU",
-          "TENCENT"
-        ]
-      },
-      "Edge AI & Autonomy": {
-        "Edge Compute": [
-          "AMBA",
-          "AMBQ"
-        ],
-        "Sensing": [
-          "VPG",
-          "OUST",
-          "HSAI",
-          "CGNX"
-        ],
-        "Autonomy": [
-          "MBLY",
-          "PONY",
-          "WRD"
-        ]
-      },
+    "physical": {
       "Robotics": {
         "Humanoids & Robot Makers": [
           "CCXI",
@@ -535,39 +570,56 @@
           "ZBRA"
         ]
       },
-      "Bio AI": {
-        "Bioprocessing & Lab Tools": [
-          "TMO",
-          "DHR",
-          "RVTY",
-          "BRKR",
-          "TECAN"
+      "Edge AI & Autonomy": {
+        "Edge Compute": [
+          "AMBA",
+          "AMBQ"
         ],
-        "Biotech AI": [
-          "RXRX",
-          "ABCL",
-          "ABSI",
-          "GENB"
+        "Sensing": [
+          "VPG",
+          "OUST",
+          "HSAI",
+          "CGNX"
         ],
-        "Genomics & Sequencing": [
-          "ILMN",
-          "TXG",
-          "TWST",
-          "ONT",
-          "PACB"
-        ],
-        "Discovery Platforms": [
-          "SDGR",
-          "CERT",
-          "OABI",
-          "DNA"
-        ],
-        "Precision Diagnostics": [
-          "TEM",
-          "NTRA",
-          "PSNL"
+        "Autonomy": [
+          "MBLY",
+          "PONY",
+          "WRD"
         ]
       }
+    },
+    "bio": {
+      "Bioprocessing & Lab Tools": [
+        "TMO",
+        "DHR",
+        "RVTY",
+        "BRKR",
+        "TECAN"
+      ],
+      "Biotech AI": [
+        "RXRX",
+        "ABCL",
+        "ABSI",
+        "GENB"
+      ],
+      "Genomics & Sequencing": [
+        "ILMN",
+        "TXG",
+        "TWST",
+        "ONT",
+        "PACB"
+      ],
+      "Discovery Platforms": [
+        "SDGR",
+        "CERT",
+        "OABI",
+        "DNA"
+      ],
+      "Precision Diagnostics": [
+        "TEM",
+        "NTRA",
+        "PSNL"
+      ]
     }
   },
   "names": {
@@ -582,6 +634,7 @@
     "ADVANTEST": "Advantest",
     "AEHR": "Aehr Test Systems",
     "AEIS": "Advanced Energy Industries",
+    "AEP": "American Electric Power",
     "AGX": "Argan",
     "AKAM": "Akamai",
     "ALAB": "Astera Labs",
@@ -590,6 +643,7 @@
     "AMBA": "Ambarella",
     "AMBQ": "Ambiq Micro",
     "AMD": "Advanced Micro Devices",
+    "AMEC": "Advanced Micro-Fabrication Equipment",
     "AMKR": "Amkor Technology",
     "AMZN": "Amazon",
     "ANET": "Arista Networks",
@@ -600,6 +654,7 @@
     "ARM": "Arm Holdings",
     "ASMI": "ASM International",
     "ASML": "ASML",
+    "ASMPT": "ASMPT",
     "ASX": "ASE Technology",
     "AURAS": "Auras Technology",
     "AVC": "Asia Vital Components",
@@ -615,6 +670,7 @@
     "BWXT": "BWX Technologies",
     "CAMT": "Camtek",
     "CAT": "Caterpillar",
+    "CBRS": "Cerebras",
     "CCJ": "Cameco",
     "CCXI": "Agility Robotics (Churchill Capital XI SPAC)",
     "CDNS": "Cadence Design Systems",
@@ -637,6 +693,7 @@
     "CRWD": "CrowdStrike",
     "CRWV": "CoreWeave",
     "CSCO": "Cisco Systems",
+    "D": "Dominion Energy",
     "DASH": "DoorDash",
     "DDOG": "Datadog",
     "DELL": "Dell Technologies",
@@ -650,12 +707,15 @@
     "DUOL": "Duolingo",
     "DY": "Dycom Industries",
     "EBAY": "eBay",
+    "EMC": "Elite Material",
     "EME": "EMCOR",
     "ENTG": "Entegris",
     "EOPTOLINK": "Eoptolink",
     "EQIX": "Equinix",
+    "EQT": "EQT",
     "ESTC": "Elastic",
     "ETN": "Eaton",
+    "ETR": "Entergy",
     "ETSY": "Etsy",
     "EXPE": "Expedia",
     "FANUC": "Fanuc",
@@ -673,6 +733,7 @@
     "GIGABYTE": "Gigabyte",
     "GLW": "Corning",
     "GNRC": "Generac",
+    "GOLDCIRCUIT": "Gold Circuit Electronics",
     "GOOGL": "Alphabet",
     "GTLB": "GitLab",
     "GUC": "Global Unichip",
@@ -682,6 +743,7 @@
     "HITACHI": "Hitachi",
     "HPE": "Hewlett Packard Enterprise",
     "HSAI": "Hesai",
+    "HUAHONG": "Hua Hong Semiconductor",
     "HUBB": "Hubbell",
     "HUBS": "HubSpot",
     "HYNIX": "SK Hynix",
@@ -705,6 +767,8 @@
     "KIOXIA": "Kioxia",
     "KLAC": "KLA",
     "KLIC": "Kulicke & Soffa",
+    "KMI": "Kinder Morgan",
+    "KOKUSAI": "Kokusai Electric",
     "LASERTEC": "Lasertec",
     "LEADERDRIVE": "Leader Harmonious Drive Systems",
     "LENOVO": "Lenovo",
@@ -733,8 +797,10 @@
     "MYRG": "MYR Group",
     "NABTESCO": "Nabtesco",
     "NANYA": "Nanya Technology",
+    "NAURA": "NAURA Technology",
     "NBIS": "Nebius",
     "NET": "Cloudflare",
+    "NEXANS": "Nexans",
     "NFLX": "Netflix",
     "NOK": "Nokia",
     "NOW": "ServiceNow",
@@ -791,6 +857,7 @@
     "SAMSUNG": "Samsung Electronics",
     "SANHUA": "Zhejiang Sanhua Intelligent Controls",
     "SCHNEIDER": "Schneider Electric",
+    "SCREEN": "SCREEN Holdings",
     "SDGR": "Schrodinger",
     "SE": "Sea Limited",
     "SERV": "Serve Robotics",
@@ -802,12 +869,14 @@
     "SLAB": "Silicon Laboratories",
     "SMCI": "Super Micro Computer",
     "SMH": "VanEck Semiconductor ETF",
+    "SMIC": "Semiconductor Manufacturing International",
     "SMR": "NuScale Power",
     "SMTC": "Semtech",
     "SNAP": "Snap",
     "SNDK": "Sandisk",
     "SNOW": "Snowflake",
     "SNPS": "Synopsys",
+    "SO": "Southern Company",
     "SOXX": "iShares Semiconductor ETF",
     "SPOT": "Spotify",
     "SPY": "SPDR S&P 500 ETF",
@@ -826,10 +895,12 @@
     "TENB": "Tenable",
     "TENCENT": "Tencent",
     "TER": "Teradyne",
+    "TFC": "TFC Optical Communication",
     "THK": "THK",
     "TLN": "Talen Energy",
     "TMO": "Thermo Fisher Scientific",
     "TOKYOELEC": "Tokyo Electron",
+    "TOKYOOHKA": "Tokyo Ohka Kogyo",
     "TSEM": "Tower Semiconductor",
     "TSM": "TSMC",
     "TT": "Trane",
@@ -849,6 +920,7 @@
     "VEEV": "Veeva Systems",
     "VIAV": "Viavi Solutions",
     "VICR": "Vicor",
+    "VICTORYGIANT": "Victory Giant Technology",
     "VPG": "Vishay Precision Group",
     "VRNS": "Varonis Systems",
     "VRT": "Vertiv",
@@ -857,6 +929,7 @@
     "WDC": "Western Digital",
     "WISTRON": "Wistron",
     "WIWYNN": "Wiwynn",
+    "WMB": "Williams",
     "WOLF": "Wolfspeed",
     "WRD": "WeRide",
     "WULF": "TeraWulf",

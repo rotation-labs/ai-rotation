@@ -164,10 +164,10 @@ svg .dimmed{opacity:.1}
     <details>
       <summary>How to read this</summary>
       <p><b>Axes.</b> Right of center means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above center means that relative strength is accelerating (RS-Momentum above 100). The two raw measures have very different spreads, so each axis is divided by its own dispersion across what is on screen and labelled in standard deviations: +1 means one σ from the crossover, and one σ is the same visual distance on both axes. The window is square and centered, so a rotation traces a circle rather than an ellipse. Groups tend to rotate clockwise: Improving → Leading → Weakening → Lagging.</p>
-      <p><b>Levels.</b> The AI trade is laid out as a value chain in five tiers: Silicon, DC Hardware, Power &amp; Buildout, Cloud &amp; Software and Applied AI. Full stack plots one dot per tier against QQQ, so what you see is rotation within large-cap tech rather than the tech-versus-market trade that dominates against SPY; switch to <em>All layers</em> to see every layer at once. Open a tier for its layers, a layer for its subsectors (Silicon's are measured against SOXX, so you see rotation within semis rather than the semis beta), and a subsector for its stocks. Untick a row in the lists to hide it from the chart; the axes rescale to what is left, and the link keeps the selection. Change the benchmark with the <em>vs</em> control.</p>
+      <p><b>Levels.</b> The AI trade is laid out in seven tiers, cut where it actually trades apart: Core Semis, AI Compute, Networking &amp; Optics, Power &amp; Buildout, Platforms &amp; Software, Physical AI and Bio AI. Full stack plots one dot per tier against QQQ, so what you see is rotation within large-cap tech rather than the tech-versus-market trade that dominates against SPY; switch to <em>All layers</em> to see every layer at once. Open a tier for its layers, a layer for its subsectors or stocks (Core Semis' are measured against SOXX, so you see rotation within semis rather than the semis beta), and a subsector for its stocks. Untick a row in the lists to hide it from the chart; the axes rescale to what is left, and the link keeps the selection. Change the benchmark with the <em>vs</em> control.</p>
       <p><b>Stability.</b> The smoothing choices here (EMA 3 on relative strength, a 10-week or 21-day baseline, one-bar momentum) change the answer more than most readers would guess. Every node is also run under four defensible alternatives — four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing at all — and a badge such as 2/5 marks a call that only holds under the settings shown. Treat those as provisional.</p>
       <p><b>Lists.</b> Each quadrant is sorted strongest first. The arrow is the direction of the last step, the small number is time spent in that quadrant, NEW marks a crossing in the last two bars, and the percentage is relative performance over the tail.</p>
-      <p><b>Method.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded — a portfolio rebalanced back to equal weight every bar, not a buy-and-hold basket. For volatile, dispersed baskets the two differ. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. AVGO, MRVL, TSEM and INTC each sit in two different layers, so they appear as members of two separate baskets; AMD sits in two Compute subsectors but counts once toward the Compute layer. Foreign listings are converted to USD and carried forward on local holidays; note that an Asian close lands 13-15 hours before the US close it is paired with, so on daily bars those names read one session behind the US tape, which matters most where a basket is mostly Asian: <span id="gloss"></span>.</p>
+      <p><b>Method.</b> A basket's return is the equal-weighted mean of its members' one-bar returns, compounded — a portfolio rebalanced back to equal weight every bar, not a buy-and-hold basket. For volatile, dispersed baskets the two differ. A subsector equal-weights its stocks; a layer equal-weights its distinct stocks directly, so subsector size does not change a stock's influence and a name listed in two subsectors of one layer is still counted once. RS = price ÷ benchmark. RS-Ratio = 100 × smoothed RS ÷ its 10-week (21-day) average; RS-Momentum = 100 × the smoothed one-bar change in RS-Ratio. This approximates the proprietary JdK RRG, so levels differ from StockCharts but quadrants and rotation behave the same way. <span id="multi"></span> Foreign listings are converted to USD and carried forward on local holidays; note that an Asian close lands 13-15 hours before the US close it is paired with, so on daily bars those names read one session behind the US tape, which matters most where a basket is mostly Asian: <span id="gloss"></span>.</p>
       <p id="asof"></p>
     </details>
     <p class="foot" id="foot"></p>
@@ -192,11 +192,14 @@ const root=add({id:'stack',label:'Full stack',kind:'stack',bench:'QQQ',children:
 const SECT=add({id:'sectors',label:'S&P 500 sectors',kind:'sectors',bench:'SPY',children:[]});
 for(const [tk,lab] of Object.entries(D.sectors||{}))
   SECT.children.push({id:'sectors-'+tk.toLowerCase(),label:lab,kind:'stock',ticker:tk,parent:SECT,children:[]});
-// The AI trade as a value chain, bottom to top. dm.bench governs the subsectors inside
-// each tier; Silicon's are measured against SOXX to strip out the semis beta.
-const DOMAINS=[{g:'semis',label:'Silicon',bench:'SOXX'},{g:'hardware',label:'DC Hardware',bench:'QQQ'},
-  {g:'power',label:'Power & Buildout',bench:'QQQ'},{g:'cloudsw',label:'Cloud & Software',bench:'QQQ'},
-  {g:'applied',label:'Applied AI',bench:'QQQ'}];
+// Seven tiers, bottom to top, cut where the market actually trades apart: over two years of
+// weekly returns net of QQQ, this grouping separates the baskets better than the five-tier one
+// did (within-tier minus between-tier correlation +0.29 vs +0.23). dm.bench governs the
+// subsectors inside each tier; Core Semis' are measured against SOXX to strip out semis beta.
+const DOMAINS=[{g:'semis',label:'Core Semis',bench:'SOXX'},{g:'compute',label:'AI Compute',bench:'QQQ'},
+  {g:'network',label:'Networking & Optics',bench:'QQQ'},{g:'power',label:'Power & Buildout',bench:'QQQ'},
+  {g:'platforms',label:'Platforms & Software',bench:'QQQ'},{g:'physical',label:'Physical AI',bench:'QQQ'},
+  {g:'bio',label:'Bio AI',bench:'QQQ'}];
 for(const dm of DOMAINS){
   // A domain view is the full-stack view filtered to one side, so it keeps the root's
   // benchmark: a layer sits in the same place whether you reach it from Full stack or from
@@ -206,8 +209,15 @@ for(const dm of DOMAINS){
     const fl=RENAME[fam]||fam;
     const f=add({id:slug(dm.g+'-'+fl),label:fl,kind:'family',domain:dm.label,bench:dm.bench,parent:dn,children:[]});
     root.children.push(f);dn.children.push(f);
+    // A layer with no natural sub-grouping (Hyperscalers, Bio AI's groups) lists its
+    // stocks directly; forcing a one-subsector level in between would just add a click
+    // that opens a single dot.
+    if(Array.isArray(subs)){
+      f.members=subs;
+      for(const t of subs)f.children.push({id:f.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:f,children:[]});
+      continue;
+    }
     for(const [name,m] of Object.entries(subs)){
-      if(dm.g==='ecosystem'&&name==='Semis')continue;
       const s=add({id:slug(dm.g+'-'+name),label:name,kind:'sub',domain:dm.label,bench:dm.bench,parent:f,members:m,children:[]});
       f.children.push(s);
       // Every subsector gets its stocks as children, including a one-member one: without a
@@ -221,7 +231,7 @@ const lineage=n=>{const a=[];while(n){a.unshift(n);n=n.parent;}return a;};
 // Decode them wherever there is room, so the glossary is not the only way to read the chart.
 const coName=n=>n&&n.kind==='stock'&&D.names?D.names[n.ticker]||'':'';
 // Distinct tickers under a layer, in tree order; a name in two of its subsectors appears once.
-const uniq=f=>{const s=new Set();for(const c of f.children)for(const t of c.members)s.add(t);return [...s];};
+const uniq=f=>f.members?[...new Set(f.members)]:[...new Set(f.children.flatMap(c=>c.members))];
 // Distinct tickers under a tier, across all its layers.
 const deep=d=>{const s=new Set();for(const f of d.children)for(const t of uniq(f))s.add(t);return [...s];};
 const adhoc=new Set(D.adhoc||[]);
@@ -378,7 +388,7 @@ function nav(cur){
     h+='<div class="sub">';
     for(const f of dn.children){
       h+=item(f);
-      if(path.has(f.id))h+=`<div class="sub">${f.children.map(s=>item(s)).join('')}</div>`;
+      if(path.has(f.id)&&!f.members)h+=`<div class="sub">${f.children.map(s=>item(s)).join('')}</div>`;
     }
     h+='</div>';
   }
@@ -604,6 +614,11 @@ function list(rows){
     a.append(sec);
   }
 }
+// Which names sit in more than one layer, computed rather than written down, because every
+// reorganisation silently invalidated the hand-written version.
+{const at={};for(const f of root.children)for(const t of uniq(f))(at[t]=at[t]||[]).push(f.label);
+ const multi=Object.entries(at).filter(([,v])=>v.length>1).sort();
+ $('multi').textContent=multi.length?`${multi.map(([k,v])=>`${k} (${v.join(', ')})`).join(', ')} each appear in two layers and count toward each; within a layer a name listed in two subsectors counts once.`:'';}
 // Built from the data so a newly added foreign listing can never be missing from it.
 $('gloss').textContent=Object.entries(D.names||{}).filter(([k])=>D.px[k]).map(([k,v])=>`${k} ${v}`).join(' · ');
 const tk=t=>{const c=D.names&&D.names[t];return c?`<span title="${c}" style="text-decoration:underline dotted;text-underline-offset:3px">${t}</span>`:t;};
@@ -611,6 +626,7 @@ function members(cur){
   const m=$('members');
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
   if(cur.kind==='sectors'){m.innerHTML=`The eleven SPDR sector ETFs, each measured against ${st.bench==='auto'?'SPY':st.bench}: `+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ');return;}
+  if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.map(tk).join(', ')}.`+rost;return;}
   if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${cur.members.map(tk).join(', ')}.`+rost;
   else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${s.members.map(tk).join(' ')}`).join(' · ')+rost;
   else m.innerHTML=`Each ${cur.kind==='stack'&&!st.layers?'tier':'layer'} equal-weights its distinct stocks. `+kids(cur).map(f=>`<b>${f.label}</b> ${(f.kind==='domain'?deep(f):uniq(f)).length}`).join(' · ');
@@ -633,7 +649,7 @@ for(const nd of Object.values(NODES)){
 // navigable nodes, and a name in two subsectors should surface once per location.
 for(const c of SECT.children)SEARCH.push({id:'sectors',label:c.ticker,co:c.label,path:'Market / S&P 500 sectors',key:(c.ticker+' '+c.label).toLowerCase()});
 for(const nd of Object.values(NODES)){
-  if(nd.kind!=='sub')continue;
+  if(!(nd.kind==='sub'||(nd.kind==='family'&&nd.members)))continue;
   const base=lineage(nd).slice(0,-1).map(x=>x.label).join(' / ')+' / '+nd.label;
   for(const tk of nd.members){
     const co=(D.names&&D.names[tk])||'';

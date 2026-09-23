@@ -63,6 +63,25 @@ EXCHANGE_TZ = {".T": "Asia/Tokyo", ".KS": "Asia/Seoul", ".KQ": "Asia/Seoul", ".T
                ".L": "Europe/London", ".SW": "Europe/Zurich"}
 
 
+def tickers(node):
+    """Every ticker under a config node. A layer maps subsectors to lists, or - when it
+    has no natural sub-grouping - is itself a list of tickers."""
+    if isinstance(node, list):
+        return list(node)
+    return [t for v in node.values() for t in tickers(v)]
+
+
+def prune(node, drop):
+    """Remove dropped tickers at any depth and delete whatever ends up empty."""
+    if isinstance(node, list):
+        return [t for t in node if t not in drop]
+    for k in list(node):
+        node[k] = prune(node[k], drop)
+        if not node[k]:
+            del node[k]
+    return node
+
+
 def exchange_tz(symbol):
     """Local time zone of a listing's exchange; suffix-less symbols trade in New York."""
     suf = max((k for k in EXCHANGE_TZ if symbol.endswith(k)), key=len, default=None)
@@ -130,7 +149,7 @@ def main():
     groups = CFG["groups"]
     foreign = CFG["foreign_listings"]
     names = sorted(set(CFG["benchmarks"]) | set(CFG.get("sectors", {}))
-                   | {t for g in groups.values() for f in g.values() for m in f.values() for t in m})
+                   | set(tickers(groups)))
     sym = {n: foreign.get(n, n) for n in names}
     fx_syms = sorted({FX[k][0] for k in FX if any(s.endswith(k) for s in sym.values())})
 
@@ -184,12 +203,7 @@ def main():
     if missing:
         print(f"warning: dropped {missing}", file=sys.stderr)
 
-    for g in groups.values():
-        for fam in g.values():
-            for k in list(fam):
-                fam[k] = [t for t in fam[k] if t not in missing]
-                if not fam[k]:
-                    del fam[k]
+    prune(groups, set(missing))
 
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps({"asof": str(us[-1].date()), "dates": [str(x.date()) for x in us],

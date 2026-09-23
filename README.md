@@ -1,6 +1,6 @@
 # Rotation
 
-A relative rotation graph (RRG) of the AI trade, laid out as a value chain in five tiers - Silicon, DC Hardware, Power & Buildout, Cloud & Software, Applied AI - drilling into layers, subsectors and their stocks, plus a reference view of SPY's eleven sector ETFs. The site is a single static page that rebuilds itself every weekday after the US close.
+A relative rotation graph (RRG) of the AI trade in seven tiers - Core Semis, AI Compute, Networking & Optics, Power & Buildout, Platforms & Software, Physical AI, Bio AI - drilling into layers, subsectors and their stocks, plus a reference view of SPY's eleven sector ETFs. The site is a single static page that rebuilds itself every weekday after the US close.
 
 ## How it works
 
