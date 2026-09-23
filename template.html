@@ -98,7 +98,7 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .qh b{font-weight:600;font-size:13px}
 .qh span{color:var(--faint);font-size:11.5px}
 .qh .n{margin-left:auto;font-family:var(--mono)}
-.qrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto 52px 12px;align-items:center;gap:10px;width:100%;background:none;border:0;border-radius:6px;padding:6px 4px;text-align:left}
+.qrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto 34px 52px 12px;align-items:center;gap:10px;width:100%;background:none;border:0;border-radius:6px;padding:6px 4px;text-align:left}
 .qrow:hover,.qrow.focus{background:var(--panel)}
 .qline{display:flex;align-items:center;gap:2px}.qline .qrow{flex:1;min-width:0}
 .qline.off .qrow{opacity:.38}
@@ -106,8 +106,20 @@ aside{grid-area:list;display:flex;flex-direction:column;gap:14px;min-width:0}
 .showall{background:none;border:1px solid var(--line);border-radius:6px;padding:3px 9px;margin:0 0 10px;color:var(--muted);font-size:11.5px}
 .showall:hover{color:var(--text)}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#list>.legend,#list>.sens,#list>.showall{grid-column:1/-1}
 .legend{font-size:11px;color:var(--muted);line-height:1.55;margin:0 0 12px;padding:7px 9px;border:1px solid var(--line);border-radius:7px}
 .legend b{color:var(--text);font-weight:500}
+.qrow .br{font-size:11px;color:var(--muted);text-align:right}
+.px{color:var(--weak);font-size:11px;margin-left:5px}
+.changes{font-size:12px;color:var(--muted);margin:0 0 8px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);line-height:1.6}
+.changes b{color:var(--text);font-weight:500}.changes .hd{color:var(--faint);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:8px}
+.changes .it{white-space:nowrap;margin-right:14px;display:inline-block}
+.sens{margin-top:14px}.sens h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:500;margin:0 0 6px}
+.sens table{width:100%;border-collapse:collapse;font-size:12px}
+.sens th{font-weight:500;color:var(--faint);font-size:10.5px;text-align:center;padding:3px 2px}.sens th:first-child{text-align:left}
+.sens td{padding:3px 2px;text-align:center;border-top:1px solid var(--line)}.sens td:first-child{text-align:left;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.sens .cur{outline:1px solid var(--line2);outline-offset:-1px;border-radius:3px}
+.sens .gl{font-weight:700}
 .qrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qrow .ar{display:inline-block;color:var(--muted);font-size:12px;width:12px;text-align:center}
 .qrow .ten{color:var(--faint);font-size:11px;min-width:26px;text-align:right}
@@ -155,6 +167,7 @@ svg .dimmed{opacity:.1}
   <nav id="nav" aria-label="Baskets"></nav>
 
   <div class="chartwrap">
+    <div class="changes" id="changes" aria-live="polite"></div>
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
     <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0" step="any"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="play">▶ Play</button><button type="button" id="latest">Latest</button></div>
@@ -251,9 +264,9 @@ const lineage=n=>{const a=[];while(n){a.unshift(n);n=n.parent;}return a;};
 // Decode them wherever there is room, so the glossary is not the only way to read the chart.
 const coName=n=>n&&n.kind==='stock'&&D.names?D.names[n.ticker]||'':'';
 // Distinct tickers under a layer, in tree order; a name in two of its subsectors appears once.
-const uniq=f=>f.members?[...new Set(f.members)]:[...new Set(f.children.flatMap(c=>c.members))];
+const uniq=f=>f._u||(f._u=f.members?[...new Set(f.members)]:[...new Set(f.children.flatMap(c=>c.members))]);
 // Distinct tickers under a tier, across all its layers.
-const deep=d=>{const s=new Set();for(const f of d.children)for(const t of uniq(f))s.add(t);return [...s];};
+const deep=d=>d._d||(d._d=[...new Set(d.children.flatMap(uniq))]);
 const adhoc=new Set(D.adhoc||[]);
 
 const N=D.dates.length;
@@ -319,9 +332,15 @@ function rankScale(idx,n){
     for(let i=0;i<r.rsr.length;i++)if(r.rsr[i]!=null&&r.rsm[i]!=null){sx+=(r.rsr[i]-100)**2;sy+=(r.rsm[i]-100)**2;k++;}}
   return RKC[st.frame]={x:Math.sqrt(sx/k)||1,y:Math.sqrt(sy/k)||1};
 }
-function rrgOf(nd,bench,idx,n){
-  const k=nd.id+'|'+bench+'|'+st.frame;
-  return RC[k]||(RC[k]=rrg(series(nd),D.px[bench],idx,n));
+function rrgT(tk,bench,idx,n){
+  const k='tk:'+tk+'|'+bench+'|'+st.frame;
+  return RC[k]||(RC[k]=rrg(D.px[tk],D.px[bench],idx,n));
+}
+function rrgOf(nd,bench,idx,n,o){
+  // Also caches the stability variants: with every layer on screen, recomputing four
+  // alternative smoothings per dot on each click was most of the render time.
+  const k=nd.id+'|'+bench+'|'+st.frame+(o?`|${o.e}/${o.n}/${o.m}`:'');
+  return RC[k]||(RC[k]=rrg(series(nd),D.px[bench],idx,n,o));
 }
 // Nav dots used to be painted only for nodes currently on the chart, so drilling into a
 // subsector blanked every sibling (and a layer's own dot was never painted while open).
@@ -344,6 +363,7 @@ const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:
 const kids=cur=>cur.kind==='stack'?(st.layers?root.children:DOMAINS.map(d=>NODES[d.g])):cur.children;
 let PROV=false;
 let SIG={x:1,y:1};
+let VIEW=null;
 let FRAC=0;          // sub-bar position during playback, 0 at rest
 let SCALELOCK=null;  // frozen axis scale + window while playing
 // Sample a series at a fractional index so the dots glide between bars instead of jumping.
@@ -444,13 +464,15 @@ function render(fast,withList){
   for(const b of $('tail').children)b.setAttribute('aria-pressed',+b.dataset.v===st.tail);
   $('stackmode').hidden=cur.kind!=='stack';
   for(const b of $('lay').children)b.setAttribute('aria-pressed',(b.dataset.v==='1')===st.layers);
-  $('bench').innerHTML=`<option value="auto">${cur.bench} (default)</option>`+BGRP.map(([g,l])=>`<optgroup label="${g}">${l.filter(b=>b!==cur.bench).map(b=>`<option value="${b}">${b}</option>`).join('')}</optgroup>`).join('');
+  if($('bench').dataset.k!==cur.bench)$('bench').dataset.k=cur.bench,$('bench').innerHTML=`<option value="auto">${cur.bench} (default)</option>`+BGRP.map(([g,l])=>`<optgroup label="${g}">${l.filter(b=>b!==cur.bench).map(b=>`<option value="${b}">${b}</option>`).join('')}</optgroup>`).join('');
   $('bench').value=st.bench==='auto'||st.bench===cur.bench?'auto':st.bench;
   const lin=lineage(cur);
   $('crumbs').innerHTML=lin.map((n,i)=>i===lin.length-1?`<span class="cur">${n.label}</span>`:`<button type="button" data-id="${n.id}">${n.label}</button>`).join('<span class="sep">/</span>');
   $('crumbs').hidden=lin.length<2;
   $('title').textContent=cur.kind==='stack'?'Rotation':cur.label;
   $('asof').textContent=`Prices through ${fmtD(D.asof)}.`;
+  {const np=Object.values(D.proxy||{}).filter(v=>v.includes(D.asof)).length;
+   $('proxynote').textContent=np?`${np} closes on ${fmtD(D.asof)} are intraday proxies pending Yahoo's official close; the next build replaces them.`:'';}
   $('foot').textContent=`Prices through ${fmtD(D.asof)} close · data from Yahoo Finance, refreshed each weekday after the US close · for information only, not investment advice.`;
   const idx=st.frame==='W'?weekIdx:dayIdx,n=st.frame==='W'?10:21;
   const bx=D.px[bench];
@@ -468,14 +490,14 @@ function render(fast,withList){
   // WOLF restarts 2025-09-29. combine() handles the nulls, but the reader cannot see that
   // the basket was smaller then, so say so.
   {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='domain'?deep(cur)
-     :cur.kind==='stack'?[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))]:cur.kind==='sectors'?cur.children.map(c=>c.ticker):null;
+     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='sectors'?cur.children.map(c=>c.ticker):null;
    if(ts&&ts.length){const live=ts.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length;
      ROSTER=live<ts.length?{live,total:ts.length}:null;}else ROSTER=null;}
   $('prov').hidden=!PROV;
   ROWS=[];
   for(const c of kids(cur)){
     if(c.kind==='stock'&&c.ticker===bench)continue;
-    const r=rrg(series(c),bx,idx,n);
+    const r=rrgOf(c,bench,idx,n);
     const pts=[];
     for(let j=-st.tail;j<=0;j++){const u=end+j+FRAC;if(u<0)continue;
       const X=at(r.rsr,u),Y=at(r.rsm,u);if(X!=null&&Y!=null)pts.push([X,Y]);}
@@ -492,13 +514,34 @@ function render(fast,withList){
     if(!fast){
       agree=1;evals=1;outs=[q];
       for(const o of alts){
-        const rr=rrg(series(c),bx,idx,n,o),ok=rr.rsr[end]!=null&&rr.rsm[end]!=null;
+        const rr=rrgOf(c,bench,idx,n,o),ok=rr.rsr[end]!=null&&rr.rsm[end]!=null;
         const qo=ok?quad(rr.rsr[end],rr.rsm[end]):null;outs.push(qo);
         if(ok){evals++;if(qo===q)agree++;}
       }
     }
+    // Breadth: an equal-weight basket can lead on the back of a few names, so show how many
+    // members are themselves right of centre against the same benchmark, plus how spread out
+    // their tail returns are and who drove it. Cached per stock, so it is cheap on replay.
+    const mem=c.kind==='sub'?c.members:c.kind==='family'?uniq(c):c.kind==='domain'?deep(c):null;
+    let br=null,disp=null,top=null,bot=null,prox=0;
+    const bd=D.dates[idx[end]];
+    if(mem&&(!fast||withList)){
+      let up=0,k=0;const rets=[];
+      for(const tk of mem){
+        if(tk===bench||!D.px[tk])continue;
+        const rr=rrgT(tk,bench,idx,n),v=rr.rsr[end];
+        if(v!=null){k++;if(v>100)up++;}
+        const a0=rr.rs[end-st.tail],b0=rr.rs[end];if(a0&&b0)rets.push([tk,(b0/a0-1)*100]);
+        if(D.proxy&&D.proxy[tk]&&D.proxy[tk].includes(bd))prox++;
+      }
+      if(k)br={up,k};
+      if(rets.length>1){const mu=rets.reduce((s,x)=>s+x[1],0)/rets.length;
+        disp=Math.sqrt(rets.reduce((s,x)=>s+(x[1]-mu)**2,0)/rets.length);
+        rets.sort((u,v)=>v[1]-u[1]);top=rets.slice(0,2);bot=rets.slice(-2).reverse();}
+    }else if(c.kind==='stock'&&D.proxy&&D.proxy[c.ticker]&&D.proxy[c.ticker].includes(bd))prox=1;
     ROWS.push({node:c,label:c.label,pts,x,y,q,hdg,ten,prev,rel:a&&b?(b/a-1)*100:null,open:c.children.length>0,
-      rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null),stab:agree,stabN:evals,stabOuts:outs});
+      rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null),stab:agree,stabN:evals,stabOuts:outs,
+      br,disp,top,bot,prox,nmem:mem?mem.length:0});
   }
   // The two axes are both 100-centred but not on the same scale: RS-Ratio is a deviation
   // from a 10-bar baseline, RS-Momentum the one-bar change of that already-smoothed ratio,
@@ -528,7 +571,8 @@ function render(fast,withList){
   svg.setAttribute('aria-label',`Relative rotation graph. ${cur.label} versus ${bench}, ${st.frame==='W'?'weekly':'daily'} bars through ${fmtD(D.dates[idx[end]])}. `+
     QORDER.map(q=>`${Q[q].n}: ${VIS.filter(r=>r.q===q).map(r=>r.label).join(', ')||'none'}`).join('. '));
   draw(VIS,ROWS.length>0&&!VIS.length);
-  if(!fast||withList)list(ROWS);
+  VIEW={idx,n,end,bench};
+  if(!fast||withList){list(ROWS);changes(VIS);}
   if(!fast)members(cur);
   focus();
 }
@@ -616,7 +660,7 @@ function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
   t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
-    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} over tail</span>${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
+    ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} over tail</span>${r.br?`<br><span class="m">Breadth ${r.br.up}/${r.br.k} outperforming${r.disp!=null?` · dispersion ${r.disp.toFixed(1)} pts`:''}${r.top?` · leaders ${r.top.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')} · laggards ${r.bot.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')}`:''}</span>`:''}${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
   if(x+t.offsetWidth>box.width-4)x=e.clientX-box.left-t.offsetWidth-16;
   t.style.left=Math.max(0,x)+'px';t.style.top=y+'px';
@@ -627,6 +671,7 @@ function list(rows){
   if(st.hide.size){const s=document.createElement('button');s.type='button';s.className='showall';
     s.textContent=`Show all (${rows.filter(r=>st.hide.has(r.node.id)).length} hidden)`;
     s.onclick=()=>{st.hide=new Set();writeHash(false);render();};a.append(s);}
+  a.insertAdjacentHTML('beforeend',`<div class="legend"><b>➝</b> last step · <b>3${unit()}</b> time in quadrant${PROV?' (<b>*</b> incl. this week)':''} · <b>NEW</b> crossed in last 2 bars · <b>2/5</b> settings agreeing · <b>%</b> breadth, then tail return${ROWS.some(r=>r.prox)?' · <b>≈</b> intraday-proxy close':''}</div>`);
   for(const q of QORDER){
     const rs=rows.filter(r=>r.q===q).sort((a,b)=>b.rk-a.rk);
     const sec=document.createElement('section');
@@ -634,10 +679,11 @@ function list(rows){
     if(!rs.length)sec.insertAdjacentHTML('beforeend','<div class="empty">None</div>');
     for(const r of rs){
       const b=document.createElement('button');b.type='button';b.className='qrow';b.dataset.id=r.node.id;
-      b.innerHTML=`<span class="nm">${r.label}${adhoc.has(r.node.ticker)?`<span class="co">${coName(r.node)}</span>`:''}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}</span>
+      b.innerHTML=`<span class="nm">${r.label}${adhoc.has(r.node.ticker)?`<span class="co">${coName(r.node)}</span>`:''}${!PROV&&r.ten<=2&&r.prev?`<span class="new" style="background:${Q[q].c}">NEW</span>`:''}${r.prox?`<span class="px" title="${r.node.kind==='stock'?'This close is an intraday proxy':`${r.prox} of ${r.nmem} members' closes are intraday proxies`}; Yahoo has not yet published the official close">≈</span>`:''}</span>
         <span>${r.stab!=null&&r.stabN-r.stab>=2?`<span class="frag" title="Only ${r.stab} of ${r.stabN} evaluable smoothing settings put this in ${Q[q].n}${r.stabN<5?` (${5-r.stabN} lack history)`:''}">${r.stab}/${r.stabN}</span>`:''}</span>
         <span class="ar" style="transform:rotate(${-r.hdg}deg)" title="Heading ${r.hdg.toFixed(0)}°">➝</span>
         <span class="ten num">${r.ten>=30?'30+':r.ten}${unit()}${PROV?'<span title="includes the week still in progress">*</span>':''}</span>
+        <span class="br num" ${r.br?`title="${r.br.up} of ${r.br.k} members are outperforming ${VIEW.bench}'s trend"`:''}>${r.br?Math.round(100*r.br.up/r.br.k)+'%':''}</span>
         <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
         <span class="go">${r.open?'›':''}</span>`;
       const cn=coName(r.node),lb=r.node.parent===SECT?`${r.label} (${r.node.ticker})`:r.label;b.title=(cn?`${lb} — ${cn}`:lb)+(r.open?' · click to open':'');
@@ -657,6 +703,32 @@ function list(rows){
     h.addEventListener('mouseleave',()=>{st.hoverQ=null;focus();});
     a.append(sec);
   }
+  sensitivity(rows.filter(r=>!st.hide.has(r.node.id)));
+}
+// The quadrant call depends on the yardstick: Accelerators were Leading 5/5 against QQQ but
+// Weakening 2/5 against SOXX on the same date. Show each visible dot's call against the common
+// benchmarks and its own industry peer, so that dependence is visible where the call is read.
+function sensitivity(rows){
+  if(!rows.length||!VIEW)return;
+  const {idx,n,end,bench}=VIEW,cols=['SPY','QQQ','RSP','SOXX'].filter(b=>D.px[b]);
+  const peerOf=nd=>nd.kind==='family'||nd.kind==='sub'?nd.bench:nd.kind==='stock'&&nd.parent&&nd.parent.kind!=='sectors'?nd.parent.bench:null;
+  const call=(nd,b)=>{if(nd.kind==='stock'&&nd.ticker===b)return '';const r=nd.kind==='stock'?rrgT(nd.ticker,b,idx,n):rrgOf(nd,b,idx,n);
+    const x=r.rsr[end],y=r.rsm[end];if(x==null||y==null)return '<span title="not enough history">·</span>';
+    const q=quad(x,y);return `<span class="gl" style="color:${Q[q].c}" title="${Q[q].n} against ${b}">${Q[q].s}</span>`;};
+  const rs=[...rows].sort((u,v)=>QORDER.indexOf(u.q)-QORDER.indexOf(v.q)||v.rk-u.rk);
+  let h=`<section class="sens"><h3>Benchmark check</h3><table><thead><tr><th scope="col">vs</th>${cols.map(b=>`<th scope="col" class="${b===bench?'cur':''}">${b}</th>`).join('')}<th scope="col" title="The layer's industry peer benchmark">Peer</th></tr></thead><tbody>`;
+  for(const r of rs){const pb=peerOf(r.node);
+    h+=`<tr><td title="${r.label}">${r.label}</td>${cols.map(b=>`<td class="${b===bench?'cur':''}">${call(r.node,b)}</td>`).join('')}<td>${pb?`${call(r.node,pb)} <span style="font-size:10px;color:var(--faint)">${pb}</span>`:''}</td></tr>`;}
+  $('list').insertAdjacentHTML('beforeend',h+'</tbody></table></section>');
+}
+// "What changed": the dots that crossed into a new quadrant in the last two bars, with how
+// robust each call is and how broad, so the morning question is answered without replaying.
+function changes(vis){
+  const ch=vis.filter(r=>r.prev&&r.ten<=2).sort((u,v)=>u.ten-v.ten||v.rk-u.rk);
+  const el=$('changes');
+  el.innerHTML=`<span class="hd">What changed</span>`+(ch.length?ch.slice(0,6).map(r=>`<span class="it"><b>${r.label}</b> ${Q[r.prev].n} ${Q[r.prev].s} → <span style="color:${Q[r.q].c}">${Q[r.q].s} ${Q[r.q].n}</span>${r.stab!=null?` · ${r.stab}/${r.stabN}`:''}${r.br?` · breadth ${Math.round(100*r.br.up/r.br.k)}%`:''}${r.ten===1?' · this bar':''}</span>`).join('')
+    +(ch.length>6?`<span class="it">+${ch.length-6} more</span>`:''):'No quadrant changes in the last two bars.')
+    +(PROV&&ch.length?' <span title="the latest bar is the week still in progress">(provisional: week in progress)</span>':'');
 }
 // Which names sit in more than one layer, computed rather than written down, because every
 // reorganisation silently invalidated the hand-written version.
