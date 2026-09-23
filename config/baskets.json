@@ -228,7 +228,7 @@
       }
     },
     "ecosystem": {
-      "Compute & Cloud": {
+      "Cloud": {
         "Hyperscalers": [
           "MSFT",
           "GOOGL",
@@ -246,14 +246,9 @@
           "WULF",
           "APLD",
           "CORZ"
-        ],
-        "Edge & CDN": [
-          "NET",
-          "AKAM",
-          "FSLY"
         ]
       },
-      "Hardware": {
+      "Servers & Storage": {
         "OEM Servers": [
           "DELL",
           "SMCI",
@@ -269,6 +264,12 @@
           "WISTRON",
           "GIGABYTE"
         ],
+        "Storage Systems": [
+          "P",
+          "NTAP"
+        ]
+      },
+      "Networking & Optics": {
         "DC Networking": [
           "ANET",
           "CSCO",
@@ -284,7 +285,7 @@
           "TEL"
         ]
       },
-      "Power": {
+      "Power Generation": {
         "IPPs": [
           "VST",
           "CEG",
@@ -308,7 +309,9 @@
           "CAT",
           "CMI",
           "GNRC"
-        ],
+        ]
+      },
+      "Power Delivery & Cooling": {
         "Electrical Products": [
           "ETN",
           "HUBB",
@@ -352,32 +355,65 @@
           "IRM"
         ]
       },
-      "Software": {
-        "Data Infra": [
+      "Infrastructure Software": {
+        "Edge & CDN": [
+          "NET",
+          "AKAM",
+          "FSLY"
+        ],
+        "Data Platforms": [
           "SNOW",
           "MDB",
-          "ESTC"
+          "ESTC",
+          "TDC"
         ],
         "Observability": [
           "DDOG",
           "DT"
         ],
-        "Security": [
-          "CRWD",
-          "PANW",
-          "ZS",
-          "FTNT"
+        "Dev Tools": [
+          "GTLB",
+          "TEAM",
+          "FROG"
         ],
-        "Enterprise Apps": [
+        "Network Security & SASE": [
+          "PANW",
+          "FTNT",
+          "ZS",
+          "CHKP"
+        ],
+        "Endpoint & Identity": [
+          "CRWD",
+          "S",
+          "OKTA",
+          "SAIL"
+        ]
+      },
+      "Application Software": {
+        "Workflow & CRM": [
           "NOW",
           "CRM",
+          "HUBS"
+        ],
+        "HR & Finance": [
           "WDAY",
+          "INTU",
+          "PAYC"
+        ],
+        "Creative & Design": [
           "ADBE",
-          "INTU"
+          "U",
+          "FIG"
         ],
         "AI Platforms": [
           "PLTR",
-          "APP"
+          "AI",
+          "PATH",
+          "SOUN"
+        ],
+        "Adtech": [
+          "APP",
+          "TTD"
         ]
       }
     }
@@ -422,6 +458,7 @@
     "HYOSUNGHI": "Hyosung Heavy Industries",
     "AVC": "Asia Vital Components",
     "AURAS": "Auras Technology",
-    "DELTA": "Delta Electronics"
+    "DELTA": "Delta Electronics",
+    "P": "Everpure"
   }
 }
