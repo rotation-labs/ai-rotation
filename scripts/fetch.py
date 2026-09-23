@@ -54,6 +54,51 @@ def download(symbols, tries=3):
     return frame
 
 
+def fill_unfinalised(frame, lookback=3):
+    """Fill empty daily closes on recent US sessions from that session's intraday bars.
+
+    Yahoo can leave the latest daily candle empty for hours after the close - observed
+    still NaN at 04:00 UTC the next morning - while the session's intraday bars are
+    already published, so a scheduled run shortly after the close would drop a whole
+    session. The last intraday bar can miss the closing auction by a few basis points;
+    every run refetches the full history, so the finalised close replaces it next time.
+    Only US listings are filled: a suffix-less symbol trades on New York hours, so its
+    intraday bars map to a session date unambiguously.
+    """
+    if frame.empty:
+        return frame
+    dates = frame.index[-lookback:]
+    need = sorted({s for d in dates for s in frame.columns
+                   if pd.isna(frame.at[d, s]) and "." not in s and "=" not in s})
+    if not need:
+        return frame
+    try:
+        h = yf.download(need, period="5d", interval="60m", progress=False, auto_adjust=True, threads=True)["Close"]
+    except Exception as e:
+        print(f"intraday fill skipped: {e}", file=sys.stderr)
+        return frame
+    if isinstance(h, pd.Series):
+        h = h.to_frame(need[0])
+    if h.empty:
+        return frame
+    local = h.index.tz_convert("America/New_York") if h.index.tz is not None else h.index
+    day = pd.to_datetime([str(i.date()) for i in local])
+    filled = 0
+    for s in need:
+        if s not in h:
+            continue
+        col = pd.Series(h[s].to_numpy(), index=day).dropna()
+        for d in dates:
+            if pd.isna(frame.at[d, s]):
+                hit = col[col.index == d]
+                if len(hit):
+                    frame.at[d, s] = float(hit.iloc[-1])
+                    filled += 1
+    if filled:
+        print(f"filled {filled} unfinalised daily close(s) from intraday bars", file=sys.stderr)
+    return frame
+
+
 def main():
     groups = CFG["groups"]
     foreign = CFG["foreign_listings"]
@@ -61,17 +106,19 @@ def main():
     sym = {n: foreign.get(n, n) for n in names}
     fx_syms = sorted({FX[k][0] for k in FX if any(s.endswith(k) for s in sym.values())})
 
-    raw = download(list(sym.values()) + fx_syms)
+    raw = fill_unfinalised(download(list(sym.values()) + fx_syms))
 
     # Yahoo serves a live, still-moving value for the session in progress. Stored as-is
-    # it becomes a "close" that never happened, so drop the current day unless the US
-    # cash close (20:00 UTC) has actually passed.
-    now = pd.Timestamp.now(tz="UTC").tz_localize(None)
-    if now < now.normalize() + pd.Timedelta(hours=20, minutes=15):
-        before = len(raw)
-        raw = raw[raw.index < now.normalize()]
-        if len(raw) < before:
-            print(f"dropped {before - len(raw)} in-progress session(s) before the US close", file=sys.stderr)
+    # it becomes a "close" that never happened, so drop the current New York session
+    # until 16:15 local. This is anchored to New York rather than a fixed UTC hour: the
+    # close is 20:00 UTC in summer but 21:00 UTC in winter.
+    ny = pd.Timestamp.now(tz="America/New_York")
+    today = pd.Timestamp(ny.date())
+    cutoff = today if ny.time() < pd.Timestamp("16:15").time() else today + pd.Timedelta(days=1)
+    before = len(raw)
+    raw = raw[raw.index < cutoff]
+    if len(raw) < before:
+        print(f"dropped {before - len(raw)} in-progress or future session row(s)", file=sys.stderr)
 
     if "SPY" not in raw or raw["SPY"].dropna().empty:
         sys.exit("SPY data missing - aborting so the previous site stays up")
