@@ -236,7 +236,6 @@ def run_context(name, px, members, bench_name, regime_bench, min_n=10):
             yr = sp.groupby(sp.index.year).mean()
             yr = yr[sp.groupby(sp.index.year).size() >= 13]
             ft, fb = turnover(top, H), turnover(bot, H)
-            gross = sp.iloc[::H].mean()
             isup = up.reindex(sp.index).fillna(False).astype(bool)
             u, d = sp[isup], sp[~isup]
             rows.append(dict(context=name, bench=bench_name, horizon=H, signal=sname, family=fam,
@@ -246,7 +245,7 @@ def run_context(name, px, members, bench_name, regime_bench, min_n=10):
                              placebo_t95=thr, yrs=len(yr), yrs_pos=int((yr > 0).sum()),
                              spread_up=u.mean(), t_up=nw_t(u, H), spread_down=d.mean(), t_down=nw_t(d, H),
                              weeks_down=len(d), turn_top=ft, turn_bot=fb,
-                             net=gross - 2 * COST * ((ft or 0) + (fb or 0))))
+                             net=sp.mean() - 2 * COST * ((ft or 0) + (fb or 0))))
             if sname in DEFAULTS:
                 series[(sname, H)] = sp
     print(f"{name} vs {bench_name}: {len(members)} names, {len(rows)} cells", file=sys.stderr)
