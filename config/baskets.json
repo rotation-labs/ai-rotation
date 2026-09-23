@@ -49,12 +49,12 @@
         ],
         "Custom ASIC": [
           "AVGO",
-          "MRVL"
+          "MRVL",
+          "MEDIATEK"
         ],
         "ASIC Design Svcs": [
           "ALCHIP",
-          "GUC",
-          "MEDIATEK"
+          "GUC"
         ],
         "Edge AI & FPGA": [
           "AMBA",
