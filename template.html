@@ -11,6 +11,17 @@
   --lead:#6cc28a; --imp:#7ea5e2; --weak:#e2b25c; --lag:#e2746b;
   --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"Geist Mono",ui-monospace,Menlo,Consolas,monospace;
+  --shadow:rgba(0,0,0,.5);
+}
+@media (prefers-color-scheme:light){
+  :root{
+    color-scheme:light;
+    --ground:#f6f7f9; --panel:#fff; --raised:#eef1f4; --hover:#e5e9ee;
+    --line:#e1e5ea; --line2:#c8cfd7;
+    --text:#14171a; --muted:#59616b; --faint:#949ca6;
+    --lead:#2c8a54; --imp:#3568ad; --weak:#a8761c; --lag:#bd4438;
+    --shadow:rgba(16,20,26,.16);
+  }
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -42,7 +53,7 @@ select{background:var(--panel);border:1px solid var(--line);border-radius:7px;pa
 .find{position:relative}
 .find input{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:12px;color:var(--text);width:170px}
 .find input::placeholder{color:var(--faint)}
-#qres{position:absolute;top:calc(100% + 5px);left:0;z-index:20;background:var(--raised);border:1px solid var(--line2);border-radius:8px;padding:4px;min-width:250px;max-height:320px;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#qres{position:absolute;top:calc(100% + 5px);left:0;z-index:20;background:var(--raised);border:1px solid var(--line2);border-radius:8px;padding:4px;min-width:250px;max-height:320px;overflow:auto;box-shadow:0 10px 30px var(--shadow)}
 #qres button{display:block;width:100%;background:none;border:0;border-radius:5px;padding:5px 8px;text-align:left;color:var(--text);font-size:12.5px}
 #qres button:hover,#qres button.sel{background:var(--hover)}
 #qres .p{color:var(--faint);font-size:11px;margin-left:6px}
@@ -54,7 +65,7 @@ nav{grid-area:nav;align-self:start;position:sticky;top:calc(env(safe-area-inset-
 .ni{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;border-radius:6px;padding:5px 8px;text-align:left;color:var(--muted)}
 .ni:hover{background:var(--panel);color:var(--text)}
 .ni[aria-current="true"]{background:var(--raised);color:var(--text)}
-.ni .d{width:7px;height:7px;border-radius:50%;flex:none;background:var(--line2)}
+.ni .d{width:12px;height:12px;border-radius:3px;flex:none;background:var(--line2);color:var(--ground);font-family:var(--mono);font-size:8.5px;font-weight:600;line-height:12px;text-align:center}
 .ni .c{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
 .sub{margin:2px 0 6px 15px;border-left:1px solid var(--line);padding-left:6px}
 .sub .ni{font-size:12.5px;padding:4px 8px}
@@ -340,7 +351,8 @@ function render(){
     const q=quad(x,y);let ten=1,prev=null;
     for(let i=end-1;i>=Math.max(0,end-30);i--){if(r.rsr[i]==null||r.rsm[i]==null)break;const qi=quad(r.rsr[i],r.rsm[i]);if(qi!==q){prev=qi;break;}ten++;}
     const a=r.rs[end-st.tail],b=r.rs[end];
-    ROWS.push({node:c,label:c.label,pts,x,y,q,hdg,ten,prev,rel:a&&b?(b/a-1)*100:null,open:c.children.length>0});
+    ROWS.push({node:c,label:c.label,pts,x,y,q,hdg,ten,prev,rel:a&&b?(b/a-1)*100:null,open:c.children.length>0,
+      rsl:r.rs.slice(Math.max(0,end-39),end+1).filter(v=>v!=null)});
   }
   // The two axes are both 100-centred but not on the same scale: RS-Ratio is a deviation
   // from a 10-bar baseline, RS-Momentum the one-bar change of that already-smoothed ratio,
@@ -362,7 +374,12 @@ function render(){
     r.hdg=h<0?h+360:h;
   }
   nav(cur);
-  for(const r of ROWS){const d=document.querySelector(`#nav .d[data-q="${r.node.id}"]`);if(d)d.style.background=Q[r.q].c;}
+  for(const r of ROWS){const d=document.querySelector(`#nav .d[data-q="${r.node.id}"]`);
+    if(d){d.style.background=Q[r.q].c;d.textContent=r.q;d.title=Q[r.q].n;}}
+  // The SVG was one role="img" with a fixed label, so a screen reader got nothing but
+  // "Relative rotation graph". Summarise the actual state instead.
+  svg.setAttribute('aria-label',`Relative rotation graph. ${cur.label} versus ${bench}, ${st.frame==='W'?'weekly':'daily'} bars through ${fmtD(D.dates[idx[end]])}. `+
+    QORDER.map(q=>`${Q[q].n}: ${ROWS.filter(r=>r.q===q).map(r=>r.label).join(', ')||'none'}`).join('. '));
   draw(ROWS);list(ROWS);members(cur);focus();
 }
 
@@ -399,11 +416,16 @@ function draw(rows){
   el('text',{...mono,x:12,y:(M.t+B)/2,'text-anchor':'middle',fill:'var(--muted)',transform:`rotate(-90 12 ${(M.t+B)/2})`}).textContent='Momentum (σ) →';
   const labels=[];
   for(const r of rows){
-    const c=Q[r.q].c,g=el('g',{class:'s','data-id':r.node.id,style:r.open?'cursor:pointer':'cursor:default'});
+    const c=Q[r.q].c,g=el('g',{class:'s','data-id':r.node.id,tabindex:'0',role:r.open?'button':'img',
+      'aria-label':`${r.label}${coName(r.node)?', '+coName(r.node):''}. ${Q[r.q].n}, ${r.ten>=30?'30 or more':r.ten} ${(st.frame==='W'?'week':'day')+(r.ten===1?'':'s')}. Relative strength ${r.x.toFixed(1)}, momentum ${r.y.toFixed(1)}.${r.open?' Activate to open.':''}`,
+      style:r.open?'cursor:pointer':'cursor:default'});
     const P=r.spts.map(p=>[sx(p[0]),sy(p[1])]),n=P.length;
     for(let i=1;i<n;i++){
       const p0=P[Math.max(0,i-2)],p1=P[i-1],p2=P[i],p3=P[Math.min(n-1,i+1)],f=i/(n-1);
-      const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6],c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+      const seg=Math.hypot(p2[0]-p1[0],p2[1]-p1[1]),cap=seg/3;
+      const clamp=(vx,vy)=>{const L=Math.hypot(vx,vy);return L>cap&&L>0?[vx*cap/L,vy*cap/L]:[vx,vy];};
+      const [u1,v1]=clamp((p2[0]-p0[0])/6,(p2[1]-p0[1])/6),[u2,v2]=clamp((p3[0]-p1[0])/6,(p3[1]-p1[1])/6);
+      const c1=[p1[0]+u1,p1[1]+v1],c2=[p2[0]-u2,p2[1]-v2];
       el('path',{d:`M${p1}C${c1} ${c2} ${p2}`,fill:'none',stroke:c,'stroke-width':(0.8+1.6*f).toFixed(2),'stroke-opacity':(0.12+0.68*f).toFixed(2),'stroke-linecap':'round'},g);
     }
     P.slice(0,-1).forEach((p,i)=>el('circle',{cx:p[0],cy:p[1],r:1.7,fill:c,'fill-opacity':(0.15+0.55*i/(n-1)).toFixed(2)},g));
@@ -415,6 +437,9 @@ function draw(rows){
     g.addEventListener('mouseenter',e=>{st.hover=r.node.id;focus();tip(e,r);});
     g.addEventListener('mousemove',e=>tip(e,r));
     g.addEventListener('mouseleave',()=>{st.hover=null;$('tip').hidden=true;focus();});
+    g.addEventListener('focus',()=>{st.hover=r.node.id;focus();});
+    g.addEventListener('blur',()=>{st.hover=null;$('tip').hidden=true;focus();});
+    g.addEventListener('keydown',e=>{if(r.open&&(e.key==='Enter'||e.key===' ')){e.preventDefault();go(r.node.id);}});
     if(r.open)g.addEventListener('click',()=>go(r.node.id));
     // Touch devices get no hover, so leaf nodes would otherwise be unreadable.
     else g.addEventListener('click',e=>{st.hover=r.node.id;focus();tip(e,r);});
@@ -430,11 +455,19 @@ function draw(rows){
   if(!rows.length)el('text',{x:W/2,y:H/2,'text-anchor':'middle',fill:'var(--muted)','font-size':13}).textContent='Not enough history for this view';
 }
 const pct=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
+// The RRG shows the derivative of relative strength; readers still want the level.
+function spark(a){
+  if(!a||a.length<4)return '';
+  const lo=Math.min(...a),hi=Math.max(...a),rg=hi-lo||1,w=132,h=26;
+  const d=a.map((v,i)=>`${(i/(a.length-1)*w).toFixed(1)},${(h-(v-lo)/rg*h).toFixed(1)}`).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true" style="display:block;margin-top:6px;overflow:visible">
+    <polyline points="${d}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-opacity=".75" stroke-linejoin="round"/></svg>`;
+}
 function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
   t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
-    <span class="num">RS ${r.x.toFixed(2)} (${(r.sx-100>=0?'+':'')}${(r.sx-100).toFixed(1)}σ) · Mom ${r.y.toFixed(2)} (${(r.sy-100>=0?'+':'')}${(r.sy-100).toFixed(1)}σ) · ${pct(r.rel)} over tail</span>${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
+    <span class="num">RS ${r.x.toFixed(2)} (${(r.sx-100>=0?'+':'')}${(r.sx-100).toFixed(1)}σ) · Mom ${r.y.toFixed(2)} (${(r.sy-100>=0?'+':'')}${(r.sy-100).toFixed(1)}σ) · ${pct(r.rel)} over tail</span>${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?'<br><span class="m">Click to open</span>':''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
   if(x+t.offsetWidth>box.width-4)x=e.clientX-box.left-t.offsetWidth-16;
   t.style.left=Math.max(0,x)+'px';t.style.top=y+'px';
