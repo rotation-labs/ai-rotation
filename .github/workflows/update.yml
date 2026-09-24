@@ -16,10 +16,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  actions: write             # lets a run queue the next intraday refresh
 
 jobs:
   build:
@@ -43,9 +40,32 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Serialise deploys only: the chain job below sleeps up to 30 minutes and must not hold
+    # the queue, or a push to main would wait behind it.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # GitHub's scheduler is best-effort and drops most of the 30-minute runs above (on
+  # 2026-09-24 none fired between the open and midday). So each run made during the US
+  # session queues the next one itself at the following :07/:37 slot: once any run lands in
+  # the session - a scheduled one, a push, or Run workflow - refreshes keep coming until the
+  # close. It runs even if this build failed, so one Yahoo hiccup doesn't end the day.
+  next:
+    needs: [build, deploy]
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Queue the next intraday refresh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash scripts/next-refresh.sh
