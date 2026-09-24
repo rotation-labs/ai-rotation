@@ -77,7 +77,12 @@
     "GOLDCIRCUIT": "2368.TW",
     "EMC": "2383.TW",
     "VICTORYGIANT": "300476.SZ",
-    "NEXANS": "NEX.PA"
+    "NEXANS": "NEX.PA",
+    "SOFTBANK": "9984.T",
+    "ZHIPU": "2513.HK",
+    "MINIMAX": "0100.HK",
+    "SENSETIME": "0020.HK",
+    "IFLYTEK": "002230.SZ"
   },
   "groups": {
     "semis": {
@@ -430,6 +435,20 @@
         "META",
         "ORCL"
       ],
+      "AI Models": {
+        "Frontier Lab Backers": [
+          "SOFTBANK",
+          "MSFT",
+          "GOOGL",
+          "AMZN"
+        ],
+        "Listed Model Labs": [
+          "ZHIPU",
+          "MINIMAX",
+          "SENSETIME",
+          "IFLYTEK"
+        ]
+      },
       "Internet": {
         "E-commerce": [
           "SHOP",
@@ -760,6 +779,7 @@
     "IBIDEN": "Ibiden",
     "ICHR": "Ichor",
     "IESC": "IES Holdings",
+    "IFLYTEK": "iFlytek",
     "IGV": "iShares Expanded Tech-Software ETF",
     "ILMN": "Illumina",
     "INFINEON": "Infineon",
@@ -795,6 +815,7 @@
     "MELI": "MercadoLibre",
     "META": "Meta Platforms",
     "MHI": "Mitsubishi Heavy",
+    "MINIMAX": "MiniMax",
     "MKSI": "MKS",
     "MOD": "Modine Manufacturing",
     "MPWR": "Monolithic Power Systems",
@@ -873,6 +894,7 @@
     "SCREEN": "SCREEN Holdings",
     "SDGR": "Schrodinger",
     "SE": "Sea Limited",
+    "SENSETIME": "SenseTime",
     "SERV": "Serve Robotics",
     "SHINETSU": "Shin-Etsu Chemical",
     "SHOP": "Shopify",
@@ -890,6 +912,7 @@
     "SNOW": "Snowflake",
     "SNPS": "Synopsys",
     "SO": "Southern Company",
+    "SOFTBANK": "SoftBank Group",
     "SOXX": "iShares Semiconductor ETF",
     "SPOT": "Spotify",
     "SPY": "SPDR S&P 500 ETF",
@@ -962,6 +985,7 @@
     "XLY": "Consumer Discretionary Select Sector SPDR",
     "YASKAWA": "Yaskawa Electric",
     "ZBRA": "Zebra",
+    "ZHIPU": "Zhipu AI (Knowledge Atlas)",
     "ZS": "Zscaler"
   },
   "sectors": {
