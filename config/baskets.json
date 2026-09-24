@@ -440,11 +440,18 @@
           "GOOGL",
           "META"
         ],
-        "OpenAI Proxies": [
-          "MSFT",
-          "ORCL",
-          "SOFTBANK"
-        ],
+        "OpenAI Proxies": {
+          "_tickers": [
+            "MSFT",
+            "ORCL",
+            "SOFTBANK"
+          ],
+          "_weights": {
+            "MSFT": 1,
+            "ORCL": 3,
+            "SOFTBANK": 3
+          }
+        },
         "Anthropic Proxies": [
           "GOOGL",
           "AMZN"

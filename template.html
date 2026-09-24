@@ -335,6 +335,9 @@ const REFS=[
     blurb:b=>`Front-month futures (rolls show as small jumps), the 10-year yield and VIX (levels, so up means yields or volatility rising), the dollar index and bitcoin, each measured against ${b}`})];
 for(const R of REFS)for(const [tk,lab] of Object.entries(R.src||{}))
   R.children.push({id:R.id+'-'+tk.toLowerCase(),label:lab,kind:'stock',ticker:tk,parent:R,children:[]});
+// A subsector or a direct-list layer is a plain ticker array (equal weight) or
+// {_tickers, _weights} (weighted); either way this pulls out the same {members, weights} shape.
+const unpack=m=>Array.isArray(m)?{members:m,weights:null}:{members:m._tickers,weights:m._weights||null};
 // Seven tiers, bottom to top, cut where the market actually trades apart: over two years of
 // weekly returns net of QQQ, this grouping separates the baskets better than the five-tier one
 // did (within-tier minus between-tier correlation +0.29 vs +0.23). dm.bench governs the
@@ -356,18 +359,22 @@ for(const dm of DOMAINS){
     root.children.push(f);dn.children.push(f);
     // A layer with no natural sub-grouping (Hyperscalers, Bio AI's groups) lists its
     // stocks directly; forcing a one-subsector level in between would just add a click
-    // that opens a single dot.
-    if(Array.isArray(subs)){
-      f.members=subs;
-      for(const t of subs)f.children.push({id:f.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:f,children:[]});
+    // that opens a single dot. Either shape can be a plain array (equal weight) or
+    // {_tickers, _weights} where a proxy's exposure to what the basket tracks differs
+    // enough to say so - Oracle's Stargate backlog moves ORCL more than OpenAI moves MSFT.
+    if(Array.isArray(subs)||(subs&&subs._tickers)){
+      const {members:fm,weights:fw}=unpack(subs);
+      f.members=fm;f.weights=fw;
+      for(const t of fm)f.children.push({id:f.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:f,children:[]});
       continue;
     }
     for(const [name,m] of Object.entries(subs)){
-      const s=add({id:slug(dm.g+'-'+name),label:name,kind:'sub',domain:dm.label,bench:f.bench,parent:f,members:m,children:[]});
+      const {members:sm,weights:sw}=unpack(m);
+      const s=add({id:slug(dm.g+'-'+name),label:name,kind:'sub',domain:dm.label,bench:f.bench,parent:f,members:sm,weights:sw,children:[]});
       f.children.push(s);
       // Every subsector gets its stocks as children, including a one-member one: without a
       // child, opening it from the sidebar or search drew an empty chart.
-      for(const t of m)s.children.push({id:s.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:s,children:[]});
+      for(const t of sm)s.children.push({id:s.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:s,children:[]});
     }
   }
 }
@@ -385,11 +392,14 @@ let N=D.dates.length;
 // Set by the build while the US session is in progress: today's bar is live and still moving.
 const LIVE=D.live&&D.live.date===D.dates[D.dates.length-1]?D.live:null;
 const WIN0=D.win_start||D.dates[0];   // start of the embedded window; history.json holds the rest
-function combine(arrs){
+// wts, when given, is parallel to arrs (relative weight per constituent; equal is the
+// default). A member missing on a given day drops out of both the sum and the divisor, so
+// the weights among whoever is left still do the same job as plain equal weight did.
+function combine(arrs,wts){
   const out=new Array(N).fill(null);let v=null;
   for(let i=0;i<N;i++){
     if(v===null){if(arrs.some(a=>a[i]!=null))v=100;out[i]=v;continue;}
-    let s=0,k=0;for(const a of arrs){const p=a[i-1],q=a[i];if(p!=null&&q!=null&&p>0){s+=q/p-1;k++;}}
+    let s=0,k=0;for(let j=0;j<arrs.length;j++){const a=arrs[j],w=wts?wts[j]:1,p=a[i-1],q=a[i];if(p!=null&&q!=null&&p>0){s+=w*(q/p-1);k+=w;}}
     if(k)v*=1+s/k;out[i]=v;
   }
   return out;
@@ -430,10 +440,15 @@ function wpx(t,ws){          // a ticker's prices, blanked outside its membershi
 function series(n){
   if(SC[n.id])return SC[n.id];
   let r;
-  if(ENTRIES.length&&(n.kind==='sub'||n.kind==='family'||n.kind==='domain'))
-    r=combine([...windows(n)].map(([t,ws])=>wpx(t,ws)).filter(Boolean));
+  if(ENTRIES.length&&(n.kind==='sub'||n.kind==='family'||n.kind==='domain')){
+    // Weights only apply at the subsector's own level (e.g. OpenAI Proxies), never when
+    // rolling up into a layer or tier: those still equal-weight distinct stocks regardless
+    // of which subsector each sits in, so a name's influence there stays taxonomy-blind.
+    const pairs=[...windows(n)].map(([t,ws])=>[wpx(t,ws),n.kind==='sub'&&n.weights?(n.weights[t]??1):1]).filter(([s])=>s);
+    r=combine(pairs.map(p=>p[0]),pairs.map(p=>p[1]));
+  }
   else if(n.kind==='stock')r=D.px[n.ticker];
-  else if(n.kind==='sub')r=n.members.length===1?D.px[n.members[0]]:combine(n.members.map(t=>D.px[t]));
+  else if(n.kind==='sub')r=n.members.length===1?D.px[n.members[0]]:combine(n.members.map(t=>D.px[t]),n.weights&&n.members.map(t=>n.weights[t]??1));
   else if(n.kind==='family'){
     // Equal-weight the layer's unique constituents, not its subsectors. Weighting
     // subsectors equally made a ticker's influence depend on how the taxonomy happened
@@ -1037,13 +1052,17 @@ function strengthList(rows){
     st.node==='macro'?'Futures, yields, volatility and currencies use different units and were not covered by the checked-in study. Read this only as a change in relative levels.':''].filter(Boolean);
   let h=`<section class="sens strn"><p class="note">Relative return against ${VIEW.bench}${range?' from '+range:''}, calculated from common daily endpoints in both Daily and Weekly views. It excludes the latest 20 sessions. Exploratory stock/ETF tests found some persistence, but this basket ranking is not a validated forecast.</p>`
     +warn.map(w=>`<p class="note warn">${w}</p>`).join('')
-    +`<table><thead><tr><th scope="col">#</th><th scope="col">Name</th><th scope="col" title="Relative return over the dates shown">Strength</th><th scope="col" title="Current quadrant">Quadrant</th><th scope="col" title="Eligible members and maximum initial equal weight">Members / max wt</th></tr></thead><tbody>`;
+    +`<table><thead><tr><th scope="col">#</th><th scope="col">Name</th><th scope="col" title="Relative return over the dates shown">Strength</th><th scope="col" title="Current quadrant">Quadrant</th><th scope="col" title="Eligible members and the largest member's share, by weight where the basket has one">Members / max wt</th></tr></thead><tbody>`;
   [...rows].sort(byStr).forEach((r,i)=>{
     const detail=`${Q[r.q].n}. RS-Ratio ${r.x.toFixed(2)}. Momentum ${r.y.toFixed(2)}. ${r.stab==null?'':`${r.stab} of ${r.stabN} model settings agree. `}${r.br?`Breadth ${r.br.up} of ${r.br.k}. `:''}${r.nmem?`${r.nmem} eligible members.`:'Single security.'}`;
     const name=r.open?`<button type="button" class="strname" data-id="${r.node.id}" aria-label="Open ${r.label}. ${detail}">${r.label}</button>`
       :`<span class="strname" tabindex="0" aria-label="${r.label}. ${detail}">${r.label}</span>`;
     const members=r.nmem||1;
-    h+=`<tr data-id="${r.node.id}"><td class="num">${r.str==null?'':i+1}</td><td>${name}</td><td class="num ${r.str==null?'':r.str>=0?'pos':'neg'}">${pct(r.str)}</td><td><span class="gl" style="color:${Q[r.q].c}">${Q[r.q].n}</span></td><td class="num">${members===1?'1 stock':members} / ${(100/members).toFixed(members>20?0:1)}%</td></tr>`;});
+    // A weighted basket's largest share can exceed 1/members (Oracle and SoftBank each
+    // outweigh Microsoft in OpenAI Proxies), so read it off the actual weights when there are any.
+    const w=r.node.weights,ws=w?(r.node.members||[]).map(t=>w[t]??1):null,
+      maxShare=ws?100*Math.max(...ws)/ws.reduce((a,b)=>a+b,0):100/members;
+    h+=`<tr data-id="${r.node.id}"><td class="num">${r.str==null?'':i+1}</td><td>${name}</td><td class="num ${r.str==null?'':r.str>=0?'pos':'neg'}">${pct(r.str)}</td><td><span class="gl" style="color:${Q[r.q].c}">${Q[r.q].n}</span></td><td class="num">${members===1?'1 stock':members} / ${maxShare.toFixed(members>20?0:1)}%</td></tr>`;});
   $('list').insertAdjacentHTML('beforeend',h+'</tbody></table></section>');
   const t=$('list').querySelector('.strn tbody');
   t.addEventListener('mouseover',e=>{const tr=e.target.closest('tr');if(tr&&st.hover!==tr.dataset.id){st.hover=tr.dataset.id;focus();}});
@@ -1106,12 +1125,18 @@ $('gloss').textContent=Object.entries(D.names||{}).filter(([k])=>D.px[k]).map(([
 const tk=t=>{const c=D.names&&D.names[t];return c?`<span title="${c}" style="text-decoration:underline dotted;text-underline-offset:3px">${t}</span>`:t;};
 // Members as of the replayed date once changes are recorded; otherwise today's roster.
 const asOf=nd=>ENTRIES.length&&VIEW?[...windows(nd)].filter(([,ws])=>inW(ws,D.dates[VIEW.idx[VIEW.end]])).map(([t])=>t):(nd.members||uniq(nd));
+// A weighted basket's own line names its members' relative weight rather than claiming
+// equal weight; a name at 1x is left unmarked so the common case still reads plainly.
+const basketLine=cur=>{
+  const w=cur.weights,names=asOf(cur).map(t=>tk(t)+(w&&w[t]&&w[t]!==1?` (${w[t]}x)`:'')).join(', ');
+  return w?`is a basket of ${names}, weighted by estimated exposure`:`is an equal-weight basket of ${names}`;
+};
 function members(cur){
   const m=$('members');
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
   if(cur.kind==='ref'){m.innerHTML=cur.blurb(st.bench==='auto'?cur.bench:st.bench)+': '+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ')+rost;return;}
-  if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${asOf(cur).map(tk).join(', ')}.`+rost;return;}
-  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${asOf(cur).map(tk).join(', ')}.`+rost;
+  if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> ${basketLine(cur)}.`+rost;return;}
+  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> ${basketLine(cur)}.`+rost;
   else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${asOf(s).map(tk).join(' ')}`).join(' · ')+rost;
   else m.innerHTML=`Each ${cur.kind==='stack'&&!st.layers?'tier':'layer'} equal-weights its distinct stocks. `+kids(cur).map(f=>`<b>${f.label}</b> ${(f.kind==='domain'?deep(f):uniq(f)).length}`).join(' · ')+rost;
 }
