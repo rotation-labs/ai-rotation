@@ -452,6 +452,9 @@
             "SOFTBANK": 3
           }
         },
+        "xAI Proxies": [
+          "SPCX"
+        ],
         "Anthropic Proxies": [
           "GOOGL",
           "AMZN"
@@ -928,6 +931,7 @@
     "SO": "Southern Company",
     "SOFTBANK": "SoftBank Group",
     "SOXX": "iShares Semiconductor ETF",
+    "SPCX": "SpaceX",
     "SPOT": "Spotify",
     "SPY": "SPDR S&P 500 ETF",
     "STM": "STMicroelectronics",

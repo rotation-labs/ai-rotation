@@ -155,6 +155,7 @@ button.strname{cursor:pointer;text-decoration:underline;text-decoration-color:va
 .cmpstats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:6px}.cmpstats b{color:var(--text);font-weight:500}
 .plothd{display:flex;align-items:flex-start;justify-content:space-between;gap:4px 12px;margin:0 0 6px}
 .plothd .plotinfo{margin:0}
+.plotctl{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
 .zoom{flex:none;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .zoom .seg button{min-width:26px}
 #zoomv{min-width:34px}
@@ -271,7 +272,7 @@ svg .dimmed{opacity:.1}
       <div class="cmpstats" id="cmpstats" aria-live="polite"></div>
     </div>
     <div class="changes" id="changes" aria-live="polite"></div>
-    <div class="plothd"><div class="plotinfo" id="plotinfo"></div><div class="zoom" role="group" aria-label="Chart scale"><span>Scale</span><div class="seg"><button type="button" id="zoomout" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" id="zoomv" title="Fit every dot (0)">Fit</button><button type="button" id="zoomin" aria-label="Zoom in" title="Zoom in (+) to see small moves; dots beyond the edge are pinned to it">+</button></div><span id="zoomoff" class="num"></span></div></div>
+    <div class="plothd"><div class="plotinfo" id="plotinfo"></div><div class="plotctl"><button type="button" id="tickerbtn" class="tbtn" aria-pressed="false" title="Show each basket's tickers next to its label on the chart">Tickers</button><div class="zoom" role="group" aria-label="Chart scale"><span>Scale</span><div class="seg"><button type="button" id="zoomout" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" id="zoomv" title="Fit every dot (0)">Fit</button><button type="button" id="zoomin" aria-label="Zoom in" title="Zoom in (+) to see small moves; dots beyond the edge are pinned to it">+</button></div><span id="zoomoff" class="num"></span></div></div></div>
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
     <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0" step="any"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="play">▶ Play</button><button type="button" id="latest">Latest</button></div>
@@ -543,7 +544,7 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false,tickers:false};
 let KEYOPEN=false;
 const TOUCH=matchMedia('(pointer:coarse)').matches;
 let TIPFOR=null;   // on touch, the dot whose tooltip is showing; a second tap on it opens it
@@ -606,6 +607,7 @@ function readHash(){
   o.panel=h.get('panel')==='bench'?'b':h.get('panel')==='strength'?'s':'q';
   {const z=+h.get('zoom');o.zoom=z>=1&&z<=ZMAX?z:1;}
   o.mv=h.get('movers')==='1';o.mvb=h.get('mvb')==='peer'?'p':'q';
+  o.tickers=h.get('tickers')==='1';
   return o;
 }
 function writeHash(push){
@@ -620,6 +622,7 @@ function writeHash(push){
   if(st.panel==='b')p.set('panel','bench');else if(st.panel==='s')p.set('panel','strength');
   if(st.zoom>1)p.set('zoom',+st.zoom.toFixed(2));
   if(st.mv){p.set('movers','1');if(st.mvb==='p')p.set('mvb','peer');}
+  if(st.tickers)p.set('tickers','1');
   const u='#'+p;
   if(location.hash===u)return;
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
@@ -832,6 +835,7 @@ function render(fast,withList){
   $('cmp').hidden=!st.cmp;$('cmpbtn').setAttribute('aria-pressed',st.cmp);
   if(st.cmp&&(!fast||withList))compare();
   $('mv').hidden=!st.mv;$('mvbtn').setAttribute('aria-pressed',st.mv);
+  $('tickerbtn').setAttribute('aria-pressed',st.tickers);
   if(st.mv&&(!fast||withList))movers();
   if(!fast||withList){list(ROWS);changes(VIS);}
   if(!fast)members(cur);
@@ -954,7 +958,10 @@ function draw(rows,allHidden){
   const fits=(x,y,w)=>x>=M.l+2&&x+w<=R-2&&y-10>=M.t&&y+3<=B2-2;
   const clash=(x,y,w,L)=>placed.some(p=>x<p.x+p.w+2&&p.x<x+w+2&&y-12<p.y+5&&p.y-12<y+5)
     ||labels.some(o=>o!==L&&o.X>x-6&&o.X<x+w+6&&o.Y>y-16&&o.Y<y+9);
-  for(const L of labels){const w=L.r.label.length*6.7+8,X=L.X,Y=L.Y;
+  // With Tickers on, a basket's label carries its members too (US Frontier Labs GOOGL META),
+  // so the reader does not have to hover every dot to see what is in it.
+  const tix=r=>st.tickers&&r.node.members?r.node.members.join(' '):null;
+  for(const L of labels){const tk=tix(L.r),full=tk?`${L.r.label} ${tk}`:L.r.label,w=full.length*6.7+8,X=L.X,Y=L.Y;
     const cands=[[X+11,Y+4],[X-11-w,Y+4],[X-w/2,Y-12],[X-w/2,Y+20],[X+11,Y-9],[X-11-w,Y-9],
       [X+11,Y+17],[X-11-w,Y+17],[X+11,Y-22],[X-11-w,Y-22],[X+11,Y+30],[X-11-w,Y+30]];
     const pos=cands.find(([x,y])=>fits(x,y,w)&&!clash(x,y,w,L));
@@ -962,7 +969,9 @@ function draw(rows,allHidden){
     const [lx,ly]=pos;placed.push({x:lx,y:ly,w});
     const nx=Math.max(lx,Math.min(X,lx+w)),ny=Math.max(ly-10,Math.min(Y,ly+3));
     if(Math.hypot(nx-X,ny-Y)>14)el('line',{class:'lead','data-id':L.r.node.id,x1:X,y1:Y,x2:nx,y2:ny,stroke:'var(--line2)','stroke-width':1,style:'pointer-events:none'});
-    el('text',{class:'lab','data-id':L.r.node.id,x:lx,y:ly,fill:'var(--text)','font-size':12,'font-weight':500,'font-family':'Geist, system-ui, sans-serif','paint-order':'stroke',stroke:'var(--panel)','stroke-width':4,'stroke-linejoin':'round',style:'pointer-events:none'}).textContent=L.r.label;
+    const lt=el('text',{class:'lab','data-id':L.r.node.id,x:lx,y:ly,fill:'var(--text)','font-size':12,'font-weight':500,'font-family':'Geist, system-ui, sans-serif','paint-order':'stroke',stroke:'var(--panel)','stroke-width':4,'stroke-linejoin':'round',style:'pointer-events:none'});
+    if(tk){lt.textContent='';el('tspan',{},lt).textContent=L.r.label+' ';el('tspan',{fill:'var(--muted)','font-weight':400},lt).textContent=tk;}
+    else lt.textContent=L.r.label;
   }
   $('zoomoff').textContent=pinned?`${pinned} off chart`:'';
   const foot=skipped?`${skipped} unlabelled · ${TOUCH?'tap':'hover'} a dot`:'';
@@ -1372,6 +1381,7 @@ function movers(){
     +` Where a stock <em>is</em> (its relative-strength level, the x-axis) has mattered more than whether it is turning. The universe was chosen in hindsight from AI winners, which flatters any backtest. Treat this list as a watchlist, not a signal.`;
 }
 $('mvbtn').onclick=()=>{st.mv=!st.mv;st.mvall=false;writeHash(false);render();};
+$('tickerbtn').onclick=()=>{st.tickers=!st.tickers;writeHash(false);render();};
 $('mvx').onclick=()=>{st.mv=false;writeHash(false);render();};
 $('mvb').onclick=e=>{const b=e.target.closest('[data-v]');if(b&&b.dataset.v!==st.mvb){st.mvb=b.dataset.v;writeHash(false);render();}};
 $('mv').addEventListener('click',e=>{if(e.target.closest('.mvmore')){st.mvall=true;movers();return;}
