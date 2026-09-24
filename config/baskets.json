@@ -436,13 +436,16 @@
         "ORCL"
       ],
       "AI Models": {
-        "Frontier Lab Backers": [
-          "SOFTBANK",
+        "OpenAI Proxies": [
           "MSFT",
+          "ORCL",
+          "SOFTBANK"
+        ],
+        "Anthropic Proxies": [
           "GOOGL",
           "AMZN"
         ],
-        "Listed Model Labs": [
+        "China Model Labs": [
           "ZHIPU",
           "MINIMAX",
           "SENSETIME",
