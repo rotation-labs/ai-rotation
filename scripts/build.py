@@ -81,6 +81,10 @@ page = f"""<!doctype html>
 # anything, so a bad edit fails the build and the previous good page stays live - the same
 # guarantee the data guards give. Skipped where Node is not installed.
 if shutil.which("node"):
+    regress = subprocess.run(["node", str(ROOT / "scripts" / "check_ui_regressions.mjs")],
+                             capture_output=True, text=True)
+    if regress.returncode:
+        sys.exit("UI regression checks failed - not publishing:\n" + regress.stderr)
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as f:
         f.write("\n".join(re.findall(r"<script>(.*?)</script>", page, re.S)))
     chk = subprocess.run(["node", "--check", f.name], capture_output=True, text=True)
