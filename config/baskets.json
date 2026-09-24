@@ -437,7 +437,8 @@
       ],
       "AI Models": {
         "US Frontier Labs": [
-          "GOOGL"
+          "GOOGL",
+          "META"
         ],
         "OpenAI Proxies": [
           "MSFT",
