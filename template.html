@@ -990,7 +990,10 @@ function spark(a){
 }
 function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
-  const mem=nd.kind==='sub'?nd.members:nd.kind==='family'?nd.children.map(c=>c.label):null;
+  // A sub's own tickers, a direct-list family's (its children are stocks, so this is
+  // tickers too), a family built from subsectors' subsector names, or - the one case this
+  // used to skip - a tier's layer names, so hovering any basket dot says what's inside it.
+  const mem=nd.kind==='sub'||nd.kind==='family'||nd.kind==='domain'?(nd.members||nd.children.map(c=>c.label)):null;
   t.innerHTML=`<b style="color:${Q[r.q].c}">${r.label}</b>${coName(nd)?` <span class="m">${coName(nd)}</span>`:''} <span class="m">· ${Q[r.q].n} for ${r.ten>=30?'30+':r.ten}${unit()}${r.prev?', from '+Q[r.prev].n:''}</span><br>
     ${r.stabOuts?`<span class="m">${r.stab} of ${r.stabN} settings agree: ${r.stabOuts.map((o,i)=>`${['shown','4-bar mom','EMA 5','long base','unsmoothed'][i]} ${o?Q[o].s:'n/a'}`).join(' · ')}</span><br>`:''}<span class="num">RS-Ratio ${r.x.toFixed(2)} · Momentum ${r.y.toFixed(2)} · ${pct(r.rel)} since ${VIEW?VIEW.from:'tail start'}</span>${r.str!=null?`<br><span class="m">Strength ${pct(r.str)}${VIEW?` (${strengthRange(VIEW.idx[VIEW.end])})`:''}${r.spc!=null?` · ${ord(r.spc)} percentile here`:''}</span>`:''}${r.br?`<br><span class="m">Breadth ${r.br.up}/${r.br.k} outperforming${r.disp!=null?` · dispersion ${r.disp.toFixed(1)} pts`:''}${r.top?` · leaders ${r.top.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')} · laggards ${r.bot.map(x=>`${x[0]} ${pct(x[1])}`).join(', ')}`:''}</span>`:''}${mem?`<br><span class="m">${mem.join(' · ')}</span>`:''}${spark(r.rsl)}${r.rsl&&r.rsl.length>3?`<span class="m">relative strength, last ${r.rsl.length} bars</span>`:''}${r.open?`<br><span class="m">${TOUCH?'Tap again to open':'Click to open'}</span>`:''}`;
   t.hidden=false;let x=e.clientX-box.left+16,y=e.clientY-box.top+16;
