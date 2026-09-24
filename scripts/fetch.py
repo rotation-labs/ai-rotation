@@ -65,9 +65,12 @@ EXCHANGE_TZ = {".T": "Asia/Tokyo", ".KS": "Asia/Seoul", ".KQ": "Asia/Seoul", ".T
 
 def tickers(node):
     """Every ticker under a config node. A layer maps subsectors to lists, or - when it
-    has no natural sub-grouping - is itself a list of tickers."""
+    has no natural sub-grouping - is itself a list of tickers. Either can instead be
+    {"_tickers": [...], "_weights": {...}} where members are not equal-weighted."""
     if isinstance(node, list):
         return list(node)
+    if isinstance(node, dict) and "_tickers" in node:
+        return list(node["_tickers"])
     return [t for v in node.values() for t in tickers(v)]
 
 
@@ -75,6 +78,10 @@ def prune(node, drop):
     """Remove dropped tickers at any depth and delete whatever ends up empty."""
     if isinstance(node, list):
         return [t for t in node if t not in drop]
+    if isinstance(node, dict) and "_tickers" in node:
+        node["_tickers"] = [t for t in node["_tickers"] if t not in drop]
+        node["_weights"] = {k: w for k, w in node.get("_weights", {}).items() if k not in drop}
+        return node if node["_tickers"] else None
     for k in list(node):
         node[k] = prune(node[k], drop)
         if not node[k]:

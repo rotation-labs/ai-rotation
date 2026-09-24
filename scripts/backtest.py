@@ -58,6 +58,8 @@ def weekly(daily):
 def tickers(node):
     if isinstance(node, list):
         return list(node)
+    if isinstance(node, dict) and "_tickers" in node:
+        return list(node["_tickers"])
     return [t for v in node.values() for t in tickers(v)]
 
 

@@ -440,10 +440,20 @@
           "GOOGL",
           "META"
         ],
-        "OpenAI Proxies": [
-          "MSFT",
-          "ORCL",
-          "SOFTBANK"
+        "OpenAI Proxies": {
+          "_tickers": [
+            "MSFT",
+            "ORCL",
+            "SOFTBANK"
+          ],
+          "_weights": {
+            "MSFT": 1,
+            "ORCL": 3,
+            "SOFTBANK": 3
+          }
+        },
+        "xAI Proxies": [
+          "SPCX"
         ],
         "Anthropic Proxies": [
           "GOOGL",
@@ -921,6 +931,7 @@
     "SO": "Southern Company",
     "SOFTBANK": "SoftBank Group",
     "SOXX": "iShares Semiconductor ETF",
+    "SPCX": "SpaceX",
     "SPOT": "Spotify",
     "SPY": "SPDR S&P 500 ETF",
     "STM": "STMicroelectronics",

@@ -155,6 +155,7 @@ button.strname{cursor:pointer;text-decoration:underline;text-decoration-color:va
 .cmpstats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:6px}.cmpstats b{color:var(--text);font-weight:500}
 .plothd{display:flex;align-items:flex-start;justify-content:space-between;gap:4px 12px;margin:0 0 6px}
 .plothd .plotinfo{margin:0}
+.plotctl{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
 .zoom{flex:none;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .zoom .seg button{min-width:26px}
 #zoomv{min-width:34px}
@@ -271,7 +272,7 @@ svg .dimmed{opacity:.1}
       <div class="cmpstats" id="cmpstats" aria-live="polite"></div>
     </div>
     <div class="changes" id="changes" aria-live="polite"></div>
-    <div class="plothd"><div class="plotinfo" id="plotinfo"></div><div class="zoom" role="group" aria-label="Chart scale"><span>Scale</span><div class="seg"><button type="button" id="zoomout" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" id="zoomv" title="Fit every dot (0)">Fit</button><button type="button" id="zoomin" aria-label="Zoom in" title="Zoom in (+) to see small moves; dots beyond the edge are pinned to it">+</button></div><span id="zoomoff" class="num"></span></div></div>
+    <div class="plothd"><div class="plotinfo" id="plotinfo"></div><div class="plotctl"><button type="button" id="tickerbtn" class="tbtn" aria-pressed="false" title="Show each basket's tickers next to its label on the chart">Tickers</button><div class="zoom" role="group" aria-label="Chart scale"><span>Scale</span><div class="seg"><button type="button" id="zoomout" aria-label="Zoom out" title="Zoom out (−)">−</button><button type="button" id="zoomv" title="Fit every dot (0)">Fit</button><button type="button" id="zoomin" aria-label="Zoom in" title="Zoom in (+) to see small moves; dots beyond the edge are pinned to it">+</button></div><span id="zoomoff" class="num"></span></div></div></div>
     <svg id="svg" viewBox="0 0 820 620" role="img" aria-label="Relative rotation graph"></svg>
     <div id="tip" hidden></div>
     <div class="replay"><label for="replay">As of</label><input type="range" id="replay" min="0" max="0" value="0" step="any"><span class="num" id="replayv"></span><span class="prov" id="prov" hidden>week in progress</span><button type="button" id="play">▶ Play</button><button type="button" id="latest">Latest</button></div>
@@ -335,6 +336,9 @@ const REFS=[
     blurb:b=>`Front-month futures (rolls show as small jumps), the 10-year yield and VIX (levels, so up means yields or volatility rising), the dollar index and bitcoin, each measured against ${b}`})];
 for(const R of REFS)for(const [tk,lab] of Object.entries(R.src||{}))
   R.children.push({id:R.id+'-'+tk.toLowerCase(),label:lab,kind:'stock',ticker:tk,parent:R,children:[]});
+// A subsector or a direct-list layer is a plain ticker array (equal weight) or
+// {_tickers, _weights} (weighted); either way this pulls out the same {members, weights} shape.
+const unpack=m=>Array.isArray(m)?{members:m,weights:null}:{members:m._tickers,weights:m._weights||null};
 // Seven tiers, bottom to top, cut where the market actually trades apart: over two years of
 // weekly returns net of QQQ, this grouping separates the baskets better than the five-tier one
 // did (within-tier minus between-tier correlation +0.29 vs +0.23). dm.bench governs the
@@ -356,18 +360,22 @@ for(const dm of DOMAINS){
     root.children.push(f);dn.children.push(f);
     // A layer with no natural sub-grouping (Hyperscalers, Bio AI's groups) lists its
     // stocks directly; forcing a one-subsector level in between would just add a click
-    // that opens a single dot.
-    if(Array.isArray(subs)){
-      f.members=subs;
-      for(const t of subs)f.children.push({id:f.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:f,children:[]});
+    // that opens a single dot. Either shape can be a plain array (equal weight) or
+    // {_tickers, _weights} where a proxy's exposure to what the basket tracks differs
+    // enough to say so - Oracle's Stargate backlog moves ORCL more than OpenAI moves MSFT.
+    if(Array.isArray(subs)||(subs&&subs._tickers)){
+      const {members:fm,weights:fw}=unpack(subs);
+      f.members=fm;f.weights=fw;
+      for(const t of fm)f.children.push({id:f.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:f,children:[]});
       continue;
     }
     for(const [name,m] of Object.entries(subs)){
-      const s=add({id:slug(dm.g+'-'+name),label:name,kind:'sub',domain:dm.label,bench:f.bench,parent:f,members:m,children:[]});
+      const {members:sm,weights:sw}=unpack(m);
+      const s=add({id:slug(dm.g+'-'+name),label:name,kind:'sub',domain:dm.label,bench:f.bench,parent:f,members:sm,weights:sw,children:[]});
       f.children.push(s);
       // Every subsector gets its stocks as children, including a one-member one: without a
       // child, opening it from the sidebar or search drew an empty chart.
-      for(const t of m)s.children.push({id:s.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:s,children:[]});
+      for(const t of sm)s.children.push({id:s.id+'-'+slug(t),label:t,kind:'stock',ticker:t,parent:s,children:[]});
     }
   }
 }
@@ -385,11 +393,14 @@ let N=D.dates.length;
 // Set by the build while the US session is in progress: today's bar is live and still moving.
 const LIVE=D.live&&D.live.date===D.dates[D.dates.length-1]?D.live:null;
 const WIN0=D.win_start||D.dates[0];   // start of the embedded window; history.json holds the rest
-function combine(arrs){
+// wts, when given, is parallel to arrs (relative weight per constituent; equal is the
+// default). A member missing on a given day drops out of both the sum and the divisor, so
+// the weights among whoever is left still do the same job as plain equal weight did.
+function combine(arrs,wts){
   const out=new Array(N).fill(null);let v=null;
   for(let i=0;i<N;i++){
     if(v===null){if(arrs.some(a=>a[i]!=null))v=100;out[i]=v;continue;}
-    let s=0,k=0;for(const a of arrs){const p=a[i-1],q=a[i];if(p!=null&&q!=null&&p>0){s+=q/p-1;k++;}}
+    let s=0,k=0;for(let j=0;j<arrs.length;j++){const a=arrs[j],w=wts?wts[j]:1,p=a[i-1],q=a[i];if(p!=null&&q!=null&&p>0){s+=w*(q/p-1);k+=w;}}
     if(k)v*=1+s/k;out[i]=v;
   }
   return out;
@@ -430,10 +441,15 @@ function wpx(t,ws){          // a ticker's prices, blanked outside its membershi
 function series(n){
   if(SC[n.id])return SC[n.id];
   let r;
-  if(ENTRIES.length&&(n.kind==='sub'||n.kind==='family'||n.kind==='domain'))
-    r=combine([...windows(n)].map(([t,ws])=>wpx(t,ws)).filter(Boolean));
+  if(ENTRIES.length&&(n.kind==='sub'||n.kind==='family'||n.kind==='domain')){
+    // Weights only apply at the subsector's own level (e.g. OpenAI Proxies), never when
+    // rolling up into a layer or tier: those still equal-weight distinct stocks regardless
+    // of which subsector each sits in, so a name's influence there stays taxonomy-blind.
+    const pairs=[...windows(n)].map(([t,ws])=>[wpx(t,ws),n.kind==='sub'&&n.weights?(n.weights[t]??1):1]).filter(([s])=>s);
+    r=combine(pairs.map(p=>p[0]),pairs.map(p=>p[1]));
+  }
   else if(n.kind==='stock')r=D.px[n.ticker];
-  else if(n.kind==='sub')r=n.members.length===1?D.px[n.members[0]]:combine(n.members.map(t=>D.px[t]));
+  else if(n.kind==='sub')r=n.members.length===1?D.px[n.members[0]]:combine(n.members.map(t=>D.px[t]),n.weights&&n.members.map(t=>n.weights[t]??1));
   else if(n.kind==='family'){
     // Equal-weight the layer's unique constituents, not its subsectors. Weighting
     // subsectors equally made a ticker's influence depend on how the taxonomy happened
@@ -528,7 +544,7 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false,tickers:false};
 let KEYOPEN=false;
 const TOUCH=matchMedia('(pointer:coarse)').matches;
 let TIPFOR=null;   // on touch, the dot whose tooltip is showing; a second tap on it opens it
@@ -591,6 +607,7 @@ function readHash(){
   o.panel=h.get('panel')==='bench'?'b':h.get('panel')==='strength'?'s':'q';
   {const z=+h.get('zoom');o.zoom=z>=1&&z<=ZMAX?z:1;}
   o.mv=h.get('movers')==='1';o.mvb=h.get('mvb')==='peer'?'p':'q';
+  o.tickers=h.get('tickers')==='1';
   return o;
 }
 function writeHash(push){
@@ -605,6 +622,7 @@ function writeHash(push){
   if(st.panel==='b')p.set('panel','bench');else if(st.panel==='s')p.set('panel','strength');
   if(st.zoom>1)p.set('zoom',+st.zoom.toFixed(2));
   if(st.mv){p.set('movers','1');if(st.mvb==='p')p.set('mvb','peer');}
+  if(st.tickers)p.set('tickers','1');
   const u='#'+p;
   if(location.hash===u)return;
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
@@ -817,6 +835,7 @@ function render(fast,withList){
   $('cmp').hidden=!st.cmp;$('cmpbtn').setAttribute('aria-pressed',st.cmp);
   if(st.cmp&&(!fast||withList))compare();
   $('mv').hidden=!st.mv;$('mvbtn').setAttribute('aria-pressed',st.mv);
+  $('tickerbtn').setAttribute('aria-pressed',st.tickers);
   if(st.mv&&(!fast||withList))movers();
   if(!fast||withList){list(ROWS);changes(VIS);}
   if(!fast)members(cur);
@@ -939,7 +958,10 @@ function draw(rows,allHidden){
   const fits=(x,y,w)=>x>=M.l+2&&x+w<=R-2&&y-10>=M.t&&y+3<=B2-2;
   const clash=(x,y,w,L)=>placed.some(p=>x<p.x+p.w+2&&p.x<x+w+2&&y-12<p.y+5&&p.y-12<y+5)
     ||labels.some(o=>o!==L&&o.X>x-6&&o.X<x+w+6&&o.Y>y-16&&o.Y<y+9);
-  for(const L of labels){const w=L.r.label.length*6.7+8,X=L.X,Y=L.Y;
+  // With Tickers on, a basket's label carries its members too (US Frontier Labs GOOGL META),
+  // so the reader does not have to hover every dot to see what is in it.
+  const tix=r=>st.tickers&&r.node.members?r.node.members.join(' '):null;
+  for(const L of labels){const tk=tix(L.r),full=tk?`${L.r.label} ${tk}`:L.r.label,w=full.length*6.7+8,X=L.X,Y=L.Y;
     const cands=[[X+11,Y+4],[X-11-w,Y+4],[X-w/2,Y-12],[X-w/2,Y+20],[X+11,Y-9],[X-11-w,Y-9],
       [X+11,Y+17],[X-11-w,Y+17],[X+11,Y-22],[X-11-w,Y-22],[X+11,Y+30],[X-11-w,Y+30]];
     const pos=cands.find(([x,y])=>fits(x,y,w)&&!clash(x,y,w,L));
@@ -947,7 +969,9 @@ function draw(rows,allHidden){
     const [lx,ly]=pos;placed.push({x:lx,y:ly,w});
     const nx=Math.max(lx,Math.min(X,lx+w)),ny=Math.max(ly-10,Math.min(Y,ly+3));
     if(Math.hypot(nx-X,ny-Y)>14)el('line',{class:'lead','data-id':L.r.node.id,x1:X,y1:Y,x2:nx,y2:ny,stroke:'var(--line2)','stroke-width':1,style:'pointer-events:none'});
-    el('text',{class:'lab','data-id':L.r.node.id,x:lx,y:ly,fill:'var(--text)','font-size':12,'font-weight':500,'font-family':'Geist, system-ui, sans-serif','paint-order':'stroke',stroke:'var(--panel)','stroke-width':4,'stroke-linejoin':'round',style:'pointer-events:none'}).textContent=L.r.label;
+    const lt=el('text',{class:'lab','data-id':L.r.node.id,x:lx,y:ly,fill:'var(--text)','font-size':12,'font-weight':500,'font-family':'Geist, system-ui, sans-serif','paint-order':'stroke',stroke:'var(--panel)','stroke-width':4,'stroke-linejoin':'round',style:'pointer-events:none'});
+    if(tk){lt.textContent='';el('tspan',{},lt).textContent=L.r.label+' ';el('tspan',{fill:'var(--muted)','font-weight':400},lt).textContent=tk;}
+    else lt.textContent=L.r.label;
   }
   $('zoomoff').textContent=pinned?`${pinned} off chart`:'';
   const foot=skipped?`${skipped} unlabelled · ${TOUCH?'tap':'hover'} a dot`:'';
@@ -1037,13 +1061,17 @@ function strengthList(rows){
     st.node==='macro'?'Futures, yields, volatility and currencies use different units and were not covered by the checked-in study. Read this only as a change in relative levels.':''].filter(Boolean);
   let h=`<section class="sens strn"><p class="note">Relative return against ${VIEW.bench}${range?' from '+range:''}, calculated from common daily endpoints in both Daily and Weekly views. It excludes the latest 20 sessions. Exploratory stock/ETF tests found some persistence, but this basket ranking is not a validated forecast.</p>`
     +warn.map(w=>`<p class="note warn">${w}</p>`).join('')
-    +`<table><thead><tr><th scope="col">#</th><th scope="col">Name</th><th scope="col" title="Relative return over the dates shown">Strength</th><th scope="col" title="Current quadrant">Quadrant</th><th scope="col" title="Eligible members and maximum initial equal weight">Members / max wt</th></tr></thead><tbody>`;
+    +`<table><thead><tr><th scope="col">#</th><th scope="col">Name</th><th scope="col" title="Relative return over the dates shown">Strength</th><th scope="col" title="Current quadrant">Quadrant</th><th scope="col" title="Eligible members and the largest member's share, by weight where the basket has one">Members / max wt</th></tr></thead><tbody>`;
   [...rows].sort(byStr).forEach((r,i)=>{
     const detail=`${Q[r.q].n}. RS-Ratio ${r.x.toFixed(2)}. Momentum ${r.y.toFixed(2)}. ${r.stab==null?'':`${r.stab} of ${r.stabN} model settings agree. `}${r.br?`Breadth ${r.br.up} of ${r.br.k}. `:''}${r.nmem?`${r.nmem} eligible members.`:'Single security.'}`;
     const name=r.open?`<button type="button" class="strname" data-id="${r.node.id}" aria-label="Open ${r.label}. ${detail}">${r.label}</button>`
       :`<span class="strname" tabindex="0" aria-label="${r.label}. ${detail}">${r.label}</span>`;
     const members=r.nmem||1;
-    h+=`<tr data-id="${r.node.id}"><td class="num">${r.str==null?'':i+1}</td><td>${name}</td><td class="num ${r.str==null?'':r.str>=0?'pos':'neg'}">${pct(r.str)}</td><td><span class="gl" style="color:${Q[r.q].c}">${Q[r.q].n}</span></td><td class="num">${members===1?'1 stock':members} / ${(100/members).toFixed(members>20?0:1)}%</td></tr>`;});
+    // A weighted basket's largest share can exceed 1/members (Oracle and SoftBank each
+    // outweigh Microsoft in OpenAI Proxies), so read it off the actual weights when there are any.
+    const w=r.node.weights,ws=w?(r.node.members||[]).map(t=>w[t]??1):null,
+      maxShare=ws?100*Math.max(...ws)/ws.reduce((a,b)=>a+b,0):100/members;
+    h+=`<tr data-id="${r.node.id}"><td class="num">${r.str==null?'':i+1}</td><td>${name}</td><td class="num ${r.str==null?'':r.str>=0?'pos':'neg'}">${pct(r.str)}</td><td><span class="gl" style="color:${Q[r.q].c}">${Q[r.q].n}</span></td><td class="num">${members===1?'1 stock':members} / ${maxShare.toFixed(members>20?0:1)}%</td></tr>`;});
   $('list').insertAdjacentHTML('beforeend',h+'</tbody></table></section>');
   const t=$('list').querySelector('.strn tbody');
   t.addEventListener('mouseover',e=>{const tr=e.target.closest('tr');if(tr&&st.hover!==tr.dataset.id){st.hover=tr.dataset.id;focus();}});
@@ -1106,12 +1134,18 @@ $('gloss').textContent=Object.entries(D.names||{}).filter(([k])=>D.px[k]).map(([
 const tk=t=>{const c=D.names&&D.names[t];return c?`<span title="${c}" style="text-decoration:underline dotted;text-underline-offset:3px">${t}</span>`:t;};
 // Members as of the replayed date once changes are recorded; otherwise today's roster.
 const asOf=nd=>ENTRIES.length&&VIEW?[...windows(nd)].filter(([,ws])=>inW(ws,D.dates[VIEW.idx[VIEW.end]])).map(([t])=>t):(nd.members||uniq(nd));
+// A weighted basket's own line names its members' relative weight rather than claiming
+// equal weight; a name at 1x is left unmarked so the common case still reads plainly.
+const basketLine=cur=>{
+  const w=cur.weights,names=asOf(cur).map(t=>tk(t)+(w&&w[t]&&w[t]!==1?` (${w[t]}x)`:'')).join(', ');
+  return w?`is a basket of ${names}, weighted by estimated exposure`:`is an equal-weight basket of ${names}`;
+};
 function members(cur){
   const m=$('members');
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
   if(cur.kind==='ref'){m.innerHTML=cur.blurb(st.bench==='auto'?cur.bench:st.bench)+': '+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ')+rost;return;}
-  if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${asOf(cur).map(tk).join(', ')}.`+rost;return;}
-  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> is an equal-weight basket of ${asOf(cur).map(tk).join(', ')}.`+rost;
+  if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> ${basketLine(cur)}.`+rost;return;}
+  if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> ${basketLine(cur)}.`+rost;
   else if(cur.kind==='family')m.innerHTML=cur.children.map(s=>`<b>${s.label}</b> ${asOf(s).map(tk).join(' ')}`).join(' · ')+rost;
   else m.innerHTML=`Each ${cur.kind==='stack'&&!st.layers?'tier':'layer'} equal-weights its distinct stocks. `+kids(cur).map(f=>`<b>${f.label}</b> ${(f.kind==='domain'?deep(f):uniq(f)).length}`).join(' · ')+rost;
 }
@@ -1347,6 +1381,7 @@ function movers(){
     +` Where a stock <em>is</em> (its relative-strength level, the x-axis) has mattered more than whether it is turning. The universe was chosen in hindsight from AI winners, which flatters any backtest. Treat this list as a watchlist, not a signal.`;
 }
 $('mvbtn').onclick=()=>{st.mv=!st.mv;st.mvall=false;writeHash(false);render();};
+$('tickerbtn').onclick=()=>{st.tickers=!st.tickers;writeHash(false);render();};
 $('mvx').onclick=()=>{st.mv=false;writeHash(false);render();};
 $('mvb').onclick=e=>{const b=e.target.closest('[data-v]');if(b&&b.dataset.v!==st.mvb){st.mvb=b.dataset.v;writeHash(false);render();}};
 $('mv').addEventListener('click',e=>{if(e.target.closest('.mvmore')){st.mvall=true;movers();return;}
