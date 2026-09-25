@@ -1035,7 +1035,8 @@ function list(rows){
         <span class="br num" ${r.br?`title="${r.br.up} of ${r.br.k} members are outperforming ${VIEW.bench}'s trend"`:''}>${r.br?Math.round(100*r.br.up/r.br.k)+'%':''}</span>
         <span class="rel num ${r.rel==null?'':r.rel>=0?'pos':'neg'}">${pct(r.rel)}</span>
         <span class="go">${r.open?'›':''}</span>`;
-      const cn=coName(r.node),lb=r.node.parent.kind==='ref'?`${r.label} (${r.node.ticker})`:r.label;b.title=(cn?`${lb} — ${cn}`:lb)+(r.open?' · click to open':'');
+      const cn=coName(r.node),lb=r.node.parent.kind==='ref'?`${r.label} (${r.node.ticker})`:r.label,mem=compOf(r.node);
+      b.title=(cn?`${lb} — ${cn}`:lb)+(mem?`: ${mem.join(', ')}`:'')+(r.open?' · click to open':'');
       b.addEventListener('mouseenter',()=>{st.hover=r.node.id;focus();});
       b.addEventListener('mouseleave',()=>{st.hover=null;focus();});
       b.addEventListener('focus',()=>{st.hover=r.node.id;focus();});
