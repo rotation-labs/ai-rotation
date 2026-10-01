@@ -58,4 +58,20 @@ function load(name,context){
   assert.equal(strengthAt({},'QQQ',150),expected);
 }
 
+// A custom view arrives from a link as untrusted JSON and its names are written into markup, so
+// unknown tokens are dropped, duplicates collapse, and nothing that can open a tag or close an
+// attribute survives in a name.
+{
+  const cleanName=load('cleanName',{});
+  const cleanItems=load('cleanItems',{cleanName});
+  const ok=t=>['semis','compute','tk:NVDA'].includes(t);
+  assert.equal(cleanName('<img src=x onerror="alert(1)">',''),'img src=x onerror=alert(1)');
+  assert.equal(cleanName('  Power  & Grid ','x'),'Power & Grid');
+  assert.equal(cleanName('<>',"fallback"),'fallback');
+  const items=cleanItems(['semis','semis','bogus','tk:NVDA',{n:'My "mix"',k:['compute','nope','compute']},{n:'no list'},42],ok);
+  assert.equal(JSON.stringify(items),JSON.stringify(['semis','tk:NVDA',{n:'My mix',k:['compute']}]));
+  assert.equal(cleanItems('not an array',ok).length,0);
+  assert.equal(cleanItems(Array(100).fill(0).map((_,i)=>({n:'b'+i,k:[]})),ok).length,60);
+}
+
 console.log('UI regression checks passed');
