@@ -151,7 +151,25 @@ button.strname{cursor:pointer;text-decoration:underline;text-decoration-color:va
 .cmpres{position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:var(--raised);border:1px solid var(--line2);border-radius:8px;padding:4px;min-width:240px;max-height:260px;overflow:auto;box-shadow:0 10px 30px var(--shadow)}
 .cmpres button{display:block;width:100%;background:none;border:0;border-radius:5px;padding:4px 8px;text-align:left;color:var(--text);font-size:12px}
 .cmpres button:hover{background:var(--hover)}.cmpres .p{color:var(--faint);font-size:10.5px;margin-left:6px}
+.cmpres .none{padding:5px 8px;color:var(--muted);font-size:12px}
 #cmpsvg{width:100%;height:auto;display:block}
+.cvname,.mixname{background:var(--ground);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font:inherit;color:var(--text);min-width:0}
+#cv .cmph{flex-wrap:wrap;align-items:center;gap:6px 10px}#cv .cmph>b{white-space:nowrap}
+.cvname{font-size:13px;font-weight:600;width:210px}
+.mixname{width:120px;font-size:11.5px}
+.cvitems{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px}
+.chip .p{color:var(--faint);font-size:10.5px}
+.chip.mix{border-style:dashed;border-radius:9px;padding:3px 4px 3px 5px;gap:5px;flex-wrap:wrap}
+.chip.mix .in{display:inline-flex;align-items:center;background:var(--panel);border-radius:999px;padding:0 1px 0 7px}
+.chip.mix .cmpfind input{width:110px}
+.cvadd{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cvadd .cmpfind input{width:240px;padding:5px 9px;font-size:12px}
+.cvadd .cvdel{margin-left:auto}
+.cvopt{display:flex;align-items:center}.cvopt>button:first-child{flex:1;min-width:0}
+.cmpres .cvopt .each{width:auto;flex:none;color:var(--muted);font-size:11px;white-space:nowrap}
+.cvhelp{font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5}
+.ni .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ni.cvnew{color:var(--faint);font-size:12.5px}
 .cmpstats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:6px}.cmpstats b{color:var(--text);font-weight:500}
 .plothd{display:flex;align-items:flex-start;justify-content:space-between;gap:4px 12px;margin:0 0 6px}
 .plothd .plotinfo{margin:0}
@@ -225,6 +243,8 @@ svg .dimmed{opacity:.1}
   .qrow{gap:6px;padding:8px 2px}
   .cmpsides{grid-template-columns:1fr}.cmpsides .vs{padding:0}
   .cmpfind input{width:130px}
+  .cvadd .cmpfind{flex:1 1 100%}.cvadd .cmpfind input{width:100%}
+  .cvname{width:100%}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .prov{font-size:11px;color:var(--weak);border:1px dashed var(--weak);border-radius:999px;padding:1px 7px;white-space:nowrap}
@@ -246,6 +266,7 @@ svg .dimmed{opacity:.1}
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
       <div class="tool"><button type="button" id="mvbtn" class="tbtn" aria-pressed="false" title="Stocks or sector ETFs that just changed quadrant">Movers</button></div>
+      <div class="tool"><button type="button" id="cvbtn" class="tbtn" aria-pressed="false" title="Build your own view: any tiers, layers, subsectors or tickers on one chart, or combined into one basket">Customize</button></div>
       <div class="tool"><button type="button" id="cmpbtn" class="tbtn" aria-pressed="false" title="Compare any two baskets or tickers">Compare</button></div>
       </div>
     </div>
@@ -261,6 +282,7 @@ svg .dimmed{opacity:.1}
       <div class="mvcols"><div class="mvcol" id="mvup"></div><div class="mvcol" id="mvdn"></div></div>
       <div class="mvtr" id="mvtr"></div>
     </section>
+    <section class="cmp" id="cv" hidden aria-label="Custom view editor"></section>
     <div class="cmp" id="cmp" hidden>
       <div class="cmph"><b>Compare</b><span>A relative to B, each equal-weighted; the line rises when A outperforms</span><button type="button" id="cmpx" class="cmpx" aria-label="Close compare">✕</button></div>
       <div class="cmpsides">
@@ -287,6 +309,7 @@ svg .dimmed{opacity:.1}
       <p><b>Axes.</b> Right of centre means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above centre means that relative strength is accelerating (RS-Momentum above 100). The two measures have very different spreads, so each axis is divided by its RMS distance from 100 across the dots and tails on screen. These are view-relative units, not a statistical σ: +1 is the same visual distance on both axes, but the numbers are not comparable between views. The window is square and centred, so a rotation traces a circle rather than an ellipse. Raw values are in each dot's tooltip.</p>
       <p><b>Levels.</b> Seven tiers, cut where the AI trade actually moves apart: Core Semis, AI Compute, Networking &amp; Optics, Power &amp; Buildout, Platforms &amp; Software, Physical AI and Bio AI. Full stack and the tier views compare everything against QQQ, a common yardstick; switch Full stack to <em>All layers</em> to see every layer at once. Opening a layer switches to its industry peer (Accelerators against SOXX, software against IGV, biotech against XBI, and so on), so you see which names lead <em>within</em> their industry. The <em>vs</em> control overrides either, and the Benchmark check under the lists shows how the call changes across benchmarks.</p>
       <p><b>Lists.</b> Each quadrant is sorted by strength: relative return over common daily endpoints from about six months ago to one month ago (dots too new for it follow, by distance from the centre). The <em>Strength</em> tab prints the exact dates and ranks every dot on it at once. The arrow is the direction of the last step; the small number is how long the dot has been in that quadrant (<b>*</b> means it includes the week still in progress); NEW marks a crossing in the last two bars; the percentage is relative performance over the tail; breadth is the share of the historically eligible basket members that are themselves right of centre against the same benchmark. Untick a row to hide it; the axes rescale to what is left, and Show all remains available on every list tab. To see small moves when one name sets the scale, use <b>Scale +</b> above the chart (or <kbd>+</kbd> / <kbd>−</kbd>, <kbd>0</kbd> to fit, or pinch on a trackpad); zoomed in, the window follows the bulk of the dots, and any that fall beyond the edge are pinned to it with an arrow in their quadrant's colour.</p>
+      <p><b>Custom views.</b> <em>Customize</em> (or <em>+ New view</em> under My views in the sidebar) starts a view of your own from the dots on the chart. Add any tier, layer, subsector or ticker as its own dot (<em>+ each</em> adds every layer of a tier, or every subsector of a layer, separately), remove what you don't want, and pick the benchmark with <em>vs</em>. A <em>combined basket</em> merges several of them into one dot that equal-weights their distinct stocks, the same rule a layer or tier uses, so a name in two of its parts counts once and weighted proxies are not weighted inside it. Views are kept in this browser only; the page address carries the open view, so a link shares it, and a view opened from someone else's link can be saved to your own list.</p>
       <p><b>Research scope.</b> <code>scripts/backtest.py</code> explores individual stocks and ETFs across several settings, horizons and universes. It does not directly test the seven displayed tier portfolios, and it does not validate this page as an allocation or timing strategy. Strength ranks past relative performance while excluding the latest month; use it as descriptive context, not a forecast. The universe was chosen in 2026 with hindsight, which can flatter results.</p>
       <p><b>Stability.</b> The smoothing choices change the answer more than most readers would guess. Every dot is also run under four alternatives: four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing. A badge such as 2/5 marks a call that only a minority of settings share; a recent listing may lack history for some settings, which then don't count (3/4). Treat badged calls as provisional.</p>
     </details>
@@ -440,6 +463,9 @@ function wpx(t,ws){          // a ticker's prices, blanked outside its membershi
 }
 function series(n){
   if(SC[n.id])return SC[n.id];
+  // A combined basket equal-weights the distinct stocks of everything in it, as a layer or tier
+  // does, with each one's membership windows - the same series Compare draws for one side.
+  if(n.kind==='mix')return SC[n.id]=sideSeries(n.toks);
   let r;
   if(ENTRIES.length&&(n.kind==='sub'||n.kind==='family'||n.kind==='domain')){
     // Weights only apply at the subsector's own level (e.g. OpenAI Proxies), never when
@@ -544,12 +570,12 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false,tickers:false};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false,tickers:false,cv:null,cvedit:false};
 let KEYOPEN=false;
 const TOUCH=matchMedia('(pointer:coarse)').matches;
 let TIPFOR=null;   // on touch, the dot whose tooltip is showing; a second tap on it opens it
 // Full stack plots one dot per tier by default; the toggle expands it to every layer.
-const kids=cur=>cur.kind==='stack'?(st.layers?root.children:DOMAINS.map(d=>NODES[d.g])):cur.children;
+const kids=cur=>cur.kind==='stack'?(st.layers?root.children:DOMAINS.map(d=>NODES[d.g])):cur.kind==='custom'?cvKids():cur.children;
 let PROV=false;
 let SIG={x:1,y:1};
 let VIEW=null;
@@ -560,7 +586,7 @@ const at=(a,x)=>{const i=Math.floor(x),f=x-i,p=a[i];if(p==null)return null;const
 let ROSTER=null;
 try{const s=JSON.parse(localStorage.getItem('rrg-v3')||'null');if(s)Object.assign(st,s,{end:null,hover:null,hoverQ:null});}catch(e){}
 if(!NODES[st.node])st.node='stack';
-const save=push=>{try{localStorage.setItem('rrg-v3',JSON.stringify({node:st.node,bench:st.bench,frame:st.frame,tail:st.tail}))}catch(e){}writeHash(push);};
+const save=push=>{try{localStorage.setItem('rrg-v3',JSON.stringify({node:st.node,bench:st.bench,frame:st.frame,tail:st.tail,cv:st.cv}))}catch(e){}writeHash(push);};
 function go(id){if(!NODES[id])return;if(id!==st.node)st.hide=new Set();st.node=id;st.hover=null;st.hoverQ=null;$('tip').hidden=true;stopPlay();save(true);render();}
 const unit=()=>st.frame==='W'?'w':'d';
 const fmtD=s=>new Date(s+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
@@ -583,6 +609,71 @@ const BGRP=[['Broad market',['SPY','QQQ','RSP']],['Industry',['SOXX','SMH','IGV'
   .map(([g,l])=>[g,l.filter(b=>D.px[b])]).filter(([,l])=>l.length);
 const BENCH=BGRP.flatMap(([,l])=>l);
 
+// ---- Custom views ----
+// The tree fixes what sits next to what: a tier's layers, a layer's subsectors. A custom view is
+// the reader's own chart instead - any tiers, layers, subsectors or tickers plotted together
+// against one benchmark, plus combined baskets that merge several of them into a single dot.
+// Each item is a token (a node id, or tk:TICKER as in Compare) or {n:name, k:[tokens]}.
+// Views are kept in this browser; the open one also rides in the URL, so a link shares it.
+const CVKINDS=new Set(['domain','family','sub']);
+const cvTokOk=t=>typeof t==='string'&&(t.startsWith('tk:')?!!D.px[t.slice(3)]:!!(NODES[t]&&CVKINDS.has(NODES[t].kind)));
+// Names come from links too, and labels are written into markup across the page, so anything
+// that could open a tag or close an attribute is dropped rather than escaped at every use.
+function cleanName(s,dflt){
+  s=String(s==null?'':s).replace(/[<>"'`\\]/g,'').replace(/\s+/g,' ').trim().slice(0,40);
+  return s||dflt;
+}
+function cleanItems(a,ok){
+  const out=[],seen=new Set();
+  for(const x of Array.isArray(a)?a:[]){
+    if(typeof x==='string'){if(ok(x)&&!seen.has(x)){seen.add(x);out.push(x);}}
+    else if(x&&Array.isArray(x.k))out.push({n:cleanName(x.n,'Basket'),k:[...new Set(x.k.filter(ok))]});
+    if(out.length>=60)break;
+  }
+  return out;
+}
+function cleanView(v){
+  if(!v||typeof v!=='object')return null;
+  return {id:typeof v.id==='string'&&/^[a-z0-9]{1,16}$/.test(v.id)?v.id:null,name:cleanName(v.name??v.n,'Custom view'),
+    items:cleanItems(v.items??v.i,cvTokOk),b:typeof v.b==='string'&&v.b!=='QQQ'&&D.px[v.b]?v.b:null};
+}
+const cloneView=v=>JSON.parse(JSON.stringify(v));
+let VIEWS=[];
+try{VIEWS=JSON.parse(localStorage.getItem('rrg-views')||'[]').map(cleanView).filter(v=>v&&v.id);}catch(e){VIEWS=[];}
+const storeViews=()=>{try{localStorage.setItem('rrg-views',JSON.stringify(VIEWS));}catch(e){}};
+// A view whose id is saved here opens as saved (the latest edit wins over an older link);
+// anything else - a link from someone else, a deleted view - opens unsaved.
+const syncView=v=>{if(!v)return null;const s=v.id&&VIEWS.find(x=>x.id===v.id);return s?cloneView(s):{...v,id:null};};
+const CUSTOM=add({id:'custom',kind:'custom',children:[],
+  get label(){return st.cv?st.cv.name:'Custom view';},get bench(){return st.cv&&st.cv.b||'QQQ';}});
+const CVTK={},CVMIX={};
+const hsh=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36);};
+// The dots of the open view. Tiers, layers and subsectors are the tree's own nodes, so they read
+// exactly as they do in the tree and clicking one opens it; tickers and combined baskets get
+// nodes of their own. An empty combined basket has nothing to plot yet and is left off.
+function cvKids(){
+  if(!st.cv)return [];
+  const seen=new Set();
+  return st.cv.items.map(it=>{
+    if(typeof it==='string'){
+      if(!it.startsWith('tk:'))return NODES[it];
+      const t=it.slice(3);return CVTK[t]||(CVTK[t]={id:'cv-'+slug(t),label:t,kind:'stock',ticker:t,parent:CUSTOM,children:[]});
+    }
+    if(!it.k.length||!sideWindows(it.k).size)return null;
+    let id='cvb-'+hsh(it.k.join(','));while(seen.has(id))id+='x';seen.add(id);
+    const m=CVMIX[id]||(CVMIX[id]={id,kind:'mix',toks:it.k.slice(),parent:CUSTOM,children:[]});
+    m.label=it.n;return m;
+  }).filter(Boolean);
+}
+// Every stock the open view draws on, with the membership windows of the baskets it came from.
+let CVWK=null,CVWV=null;
+function cvWindows(){
+  const t=st.cv?st.cv.items.flatMap(it=>typeof it==='string'?[it]:it.k):[],k=t.join(',');
+  if(k!==CVWK){CVWK=k;CVWV=sideWindows(t);}
+  return CVWV;
+}
+const cvTickers=()=>[...cvWindows().keys()];
+
 // State lived only in localStorage, so a view could not be linked and the back button did
 // nothing after drilling three levels deep. Mirror it into the hash instead; localStorage
 // stays as the default for a bare URL.
@@ -592,6 +683,8 @@ const ZSTEPS=[1,1.5,2,3,4,6,8],ZMAX=8;
 function readHash(){
   const h=new URLSearchParams(location.hash.slice(1)),o={};
   if(NODES[h.get('node')])o.node=h.get('node');
+  if(o.node==='custom'){let v=null;try{v=syncView(cleanView(JSON.parse(h.get('view')||'null')));}catch(e){}
+    if(v){o.cv=v;if(!v.id)o.cvedit=true;}else delete o.node;}   // an unsaved view opens with its Save button showing
   if(h.get('frame')==='W'||h.get('frame')==='D')o.frame=h.get('frame');
   if([2,4,8,12].includes(+h.get('tail')))o.tail=+h.get('tail');
   if(h.get('bench')==='auto'||BENCH.includes(h.get('bench')))o.bench=h.get('bench');
@@ -613,6 +706,7 @@ function readHash(){
 function writeHash(push){
   const p=new URLSearchParams();
   p.set('node',st.node);p.set('frame',st.frame);p.set('tail',st.tail);p.set('bench',st.bench);
+  if(st.node==='custom'&&st.cv){const v={n:st.cv.name,i:st.cv.items};if(st.cv.id)v.id=st.cv.id;if(st.cv.b)v.b=st.cv.b;p.set('view',JSON.stringify(v));}
   if(st.end!=null){const ix=st.frame==='W'?weekIdx:dayIdx;const d=D.dates[ix[Math.min(st.end,ix.length-1)]];if(d)p.set('end',d);}
   else if(st.endDate)p.set('end',st.endDate);          // still waiting for history.json
   else if(st.endLegacy!=null)p.set('end',st.endLegacy);
@@ -628,16 +722,20 @@ function writeHash(push){
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
 }
 Object.assign(st,readHash());
-if(!NODES[st.node])st.node='stack';
+st.cv=syncView(cleanView(st.cv));
+if(!NODES[st.node]||(st.node==='custom'&&!st.cv))st.node='stack';
 writeHash(false);
 addEventListener('popstate',()=>{
   Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,endDate:null,endLegacy:null,layers:false,cmp:false,ca:[],cb:[],mv:false,mvb:'q'},readHash());
-  if(!NODES[st.node])st.node='stack';
+  if(!NODES[st.node]||(st.node==='custom'&&!st.cv))st.node='stack';
   stopPlay();render();
 });
 $('frame').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.frame=b.dataset.v;st.end=null;save();render();};
 $('tail').onclick=e=>{const b=e.target.closest('button');if(!b)return;st.tail=+b.dataset.v;save();render();};
-$('bench').onchange=()=>{st.bench=$('bench').value;save();render();};
+// On a custom view the benchmark is part of the view, saved with it, rather than a page-wide override.
+$('bench').onchange=()=>{const v=$('bench').value;
+  if(NODES[st.node].kind==='custom'&&st.cv){if(v!=='auto')st.cv.b=v==='QQQ'?null:v;st.bench='auto';cvChanged();return;}
+  st.bench=v;save();render();};
 const setZoom=z=>{z=Math.min(ZMAX,Math.max(1,z));if(Math.abs(z-st.zoom)<1e-3)return;st.zoom=z;writeHash(false);render(!!PLAY);};
 $('zoomin').onclick=()=>setZoom(ZSTEPS.find(z=>z>st.zoom+1e-3)||ZMAX);
 $('zoomout').onclick=()=>setZoom([...ZSTEPS].reverse().find(z=>z<st.zoom-1e-3)||1);
@@ -649,7 +747,10 @@ $('replay').oninput=()=>{st.end=Math.round(+$('replay').value);stopPlay();writeH
 for(const ev of ['pointerdown','focus','keydown'])$('replay').addEventListener(ev,()=>loadHistory(),{passive:true});
 $('latest').onclick=()=>{st.end=null;st.endDate=null;st.endLegacy=null;stopPlay();writeHash(false);render();};
 $('crumbs').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
-$('nav').onclick=e=>{const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
+$('nav').onclick=e=>{
+  const v=e.target.closest('[data-view]');if(v){openView(v.dataset.view);return;}
+  if(e.target.closest('[data-cvnew]')){newView();return;}
+  const b=e.target.closest('[data-id]');if(b)go(b.dataset.id);};
 
 const DESK=matchMedia('(min-width:761px)');
 let navOpen=!matchMedia('(max-width:760px)').matches;
@@ -681,6 +782,13 @@ function nav(cur){
     h+='</div>';
   }
   h+='</div>';
+  // The reader's own views, kept in this browser, plus one opened from a link and not yet saved.
+  {const on=cur.kind==='custom'&&st.cv,itemLabel=it=>typeof it==='string'?tokLabel(it):it.n;
+   const row=(attr,v,current,count)=>`<button type="button" class="ni stackbtn" ${attr} aria-current="${current}" title="${v.name}${v.items.length?': '+v.items.map(itemLabel).join(', '):''}"><span class="lbl">${v.name}</span><span class="c">${count}</span></button>`;
+   h+=`<div class="navsec navref"><div class="navlbl">My views</div>`
+     +(on&&!st.cv.id?row('data-id="custom"',st.cv,true,'unsaved'):'')
+     +VIEWS.map(v=>row(`data-view="${v.id}"`,v,!!(on&&st.cv.id===v.id),v.items.length)).join('')
+     +`<button type="button" class="ni cvnew" data-cvnew="1" title="Start a view from the dots on this chart, then add, remove or combine baskets and tickers">+ New view</button></div>`;}
   const refs=REFS.filter(R=>R.children.length);
   if(refs.length)h+=`<div class="navsec navref"><div class="navlbl">Reference</div>${refs.map(R=>`<button type="button" class="ni stackbtn" data-id="${R.id}" aria-current="${cur.id===R.id}">${R.label.replace('&','&amp;')}<span class="c">${R.children.length}</span></button>`).join('')}</div>`;
   h+=`<div class="navkey" aria-hidden="true">${QORDER.map(q=>`<span><span class="d" style="background:${Q[q].c}">${Q[q].s}</span>${Q[q].n}</span>`).join('')}</div>`;
@@ -690,6 +798,7 @@ function nav(cur){
 
 let ROWS=[];
 function render(fast,withList){
+  if(st.node==='custom'&&!st.cv)st.node='stack';
   const cur=NODES[st.node];
   const bench=st.bench==='auto'?cur.bench:st.bench;
   for(const b of $('frame').children)b.setAttribute('aria-pressed',b.dataset.v===st.frame);
@@ -738,13 +847,13 @@ function render(fast,withList){
   // WOLF restarts 2025-09-29. combine() handles the nulls, but the reader cannot see that
   // the basket was smaller then, so say so.
   {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='domain'?deep(cur)
-     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='ref'?cur.children.map(c=>c.ticker):null;
+     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='ref'?cur.children.map(c=>c.ticker):cur.kind==='custom'?cvTickers():null;
    let as=ts;
-   if(ENTRIES.length&&ts&&cur.kind!=='ref'){const d=D.dates[idx[end]];as=[...windows(cur)].filter(([,ws])=>inW(ws,d)).map(([x])=>x);}
+   if(ENTRIES.length&&ts&&cur.kind!=='ref'){const d=D.dates[idx[end]];as=[...(cur.kind==='custom'?cvWindows():windows(cur))].filter(([,ws])=>inW(ws,d)).map(([x])=>x);}
    if(as&&as.length){const live=as.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length,ts2=as;
      ROSTER=live<ts2.length?{live,total:ts2.length}:null;}else ROSTER=null;}
   {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='domain'?deep(cur)
-     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='ref'?cur.children.map(c=>c.ticker):[];
+     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='ref'?cur.children.map(c=>c.ticker):cur.kind==='custom'?cvTickers():[];
    const inputs=new Set([...(ts||[]),bench]),start=D.dates[idx[Math.max(0,end-(n*2+st.tail+5))]],finish=D.dates[idx[end]];
    let observations=0,affected=0;
    for(const tk of inputs){const hits=(D.proxy&&D.proxy[tk]||[]).filter(d=>d>=start&&d<=finish).length;if(hits){observations+=hits;affected++;}}
@@ -780,7 +889,8 @@ function render(fast,withList){
     // their tail returns are and who drove it. Cached per stock, so it is cheap on replay.
     const bd=D.dates[idx[end]],liveBar=LIVE&&end===idx.length-1;   // live bars are flagged as a whole, not per close
     let mem=c.kind==='sub'?c.members:c.kind==='family'?uniq(c):c.kind==='domain'?deep(c):null,memw=null;
-    if(mem&&ENTRIES.length&&(c.kind==='sub'||c.kind==='family'||c.kind==='domain')){
+    if(c.kind==='mix'){memw=[...sideWindows(c.toks)].filter(([,ws])=>inW(ws,bd));mem=memw.map(([tk])=>tk);}
+    else if(mem&&ENTRIES.length&&(c.kind==='sub'||c.kind==='family'||c.kind==='domain')){
       memw=[...windows(c)].filter(([,ws])=>inW(ws,bd));mem=memw.map(([tk])=>tk);
     }else if(mem)memw=mem.map(tk=>[tk,[[null,null]]]);
     let br=null,disp=null,top=null,bot=null,prox=0;
@@ -835,6 +945,9 @@ function render(fast,withList){
     QORDER.map(q=>`${Q[q].n}: ${VIS.filter(r=>r.q===q).map(r=>r.label).join(', ')||'none'}`).join('. '));
   draw(VIS,ROWS.length>0&&!VIS.length);
   VIEW={idx,n,end,bench,from:plotInfo(idx,end,bench)};
+  {const on=cur.kind==='custom';if(on&&!cvKids().length)st.cvedit=true;   // an empty view opens straight into its editor
+   $('cvbtn').textContent=on?'Edit view':'Customize';$('cvbtn').setAttribute('aria-pressed',on&&st.cvedit);
+   $('cv').hidden=!(on&&st.cvedit);if(on&&st.cvedit&&!fast)cvEditor(bench);}
   $('cmp').hidden=!st.cmp;$('cmpbtn').setAttribute('aria-pressed',st.cmp);
   if(st.cmp&&(!fast||withList))compare();
   $('mv').hidden=!st.mv;$('mvbtn').setAttribute('aria-pressed',st.mv);
@@ -963,7 +1076,7 @@ function draw(rows,allHidden){
     ||labels.some(o=>o!==L&&o.X>x-6&&o.X<x+w+6&&o.Y>y-16&&o.Y<y+9);
   // With Tickers on, a basket's label carries its members too (US Frontier Labs GOOGL META),
   // so the reader does not have to hover every dot to see what is in it.
-  const tix=r=>st.tickers&&r.node.members?r.node.members.join(' '):null;
+  const tix=r=>{if(!st.tickers)return null;const m=r.node.kind==='mix'?r.node.toks.map(tokLabel):r.node.members;return m?m.join(' '):null;};
   for(const L of labels){const tk=tix(L.r),full=tk?`${L.r.label} ${tk}`:L.r.label,w=full.length*6.7+8,X=L.X,Y=L.Y;
     const cands=[[X+11,Y+4],[X-11-w,Y+4],[X-w/2,Y-12],[X-w/2,Y+20],[X+11,Y-9],[X-11-w,Y-9],
       [X+11,Y+17],[X-11-w,Y+17],[X+11,Y-22],[X-11-w,Y-22],[X+11,Y+30],[X-11-w,Y+30]];
@@ -979,7 +1092,7 @@ function draw(rows,allHidden){
   $('zoomoff').textContent=pinned?`${pinned} off chart`:'';
   const foot=skipped?`${skipped} unlabelled · ${TOUCH?'tap':'hover'} a dot`:'';
   if(foot)el('text',{x:(M.l+R)/2,y:B-12,'text-anchor':'middle',fill:'var(--faint)','font-size':10.5,'font-family':'Geist, system-ui, sans-serif'}).textContent=foot;
-  if(!rows.length)el('text',{x:W/2,y:H/2,'text-anchor':'middle',fill:'var(--muted)','font-size':13}).textContent=allHidden?'Everything is hidden. Use Show all beside the list.':'Not enough history for this view';
+  if(!rows.length)el('text',{x:W/2,y:H/2,'text-anchor':'middle',fill:'var(--muted)','font-size':13}).textContent=allHidden?'Everything is hidden. Use Show all beside the list.':NODES[st.node].kind==='custom'&&!cvKids().length?'Nothing here yet: add a tier, layer, subsector or ticker above':'Not enough history for this view';
 }
 const pct=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
 const ord=n=>n+(n%100>=11&&n%100<=13?'th':['th','st','nd','rd'][n%10]||'th');
@@ -994,7 +1107,7 @@ function spark(a){
 // A sub's own tickers, a direct-list family's (its children are stocks, so this is
 // tickers too), a family built from subsectors' subsector names, or a tier's layer
 // names: what a basket dot's tooltip, and a sidebar row's title, say is inside it.
-const compOf=nd=>nd.kind==='sub'||nd.kind==='family'||nd.kind==='domain'?(nd.members||nd.children.map(c=>c.label)):null;
+const compOf=nd=>nd.kind==='mix'?nd.toks.map(tokLabel):nd.kind==='sub'||nd.kind==='family'||nd.kind==='domain'?(nd.members||nd.children.map(c=>c.label)):null;
 function tip(e,r){
   const t=$('tip'),box=svg.parentElement.getBoundingClientRect(),nd=r.node;
   const mem=compOf(nd);
@@ -1063,7 +1176,8 @@ function strengthList(rows){
   if(!rows.length){$('list').insertAdjacentHTML('beforeend','<div class="empty">Everything is hidden. Use Show all to restore the table and chart.</div>');return;}
   const stocks=rows.every(r=>r.node.kind==='stock'),up=trendUp(VIEW.bench,VIEW.idx[VIEW.end]);
   const day=VIEW.idx[VIEW.end],range=strengthRange(day);
-  const warn=[stocks&&NODES[st.node].kind!=='ref'?'This is a descriptive ranking of stocks inside one basket, not a validated stock-selection result.':'',
+  const warn=[stocks&&NODES[st.node].kind==='custom'?'This is a descriptive ranking of the tickers you picked, not a validated stock-selection result.':
+    stocks&&NODES[st.node].kind!=='ref'?'This is a descriptive ranking of stocks inside one basket, not a validated stock-selection result.':'',
     up===false?`${VIEW.bench} is below its 200-session average; treat the ranking as historical context, not a forecast.`:'',
     st.node==='sectors'?'The checked-in study tests sector ETFs, but this page does not present a validated trading strategy.':'',
     st.node==='macro'?'Futures, yields, volatility and currencies use different units and were not covered by the checked-in study. Read this only as a change in relative levels.':''].filter(Boolean);
@@ -1095,8 +1209,10 @@ function sensitivity(rows){
   if(!rows.length||!VIEW)return;
   const {idx,n,end,bench}=VIEW,cur=NODES[st.node];
   // a reference view's own yardstick (ES for Macro) leads the columns when it is not a common one
-  const cols=[...new Set([...(cur.kind==='ref'?[cur.bench]:[]),'SPY','QQQ','RSP','SOXX'])].filter(b=>D.px[b]);
-  const peerOf=nd=>nd.kind==='family'||nd.kind==='sub'?nd.bench:nd.kind==='stock'&&nd.parent&&nd.parent.kind!=='ref'?nd.parent.bench:null;
+  const cols=[...new Set([...(cur.kind==='ref'||cur.kind==='custom'?[cur.bench]:[]),'SPY','QQQ','RSP','SOXX'])].filter(b=>D.px[b]);
+  // a ticker picked into a custom view has no parent basket there; use the peer of the layer that holds it
+  const peerOf=nd=>nd.kind==='family'||nd.kind==='sub'?nd.bench:nd.kind==='stock'&&nd.parent&&nd.parent.kind==='custom'?(TKLAYER[nd.ticker]||{}).bench||null
+    :nd.kind==='stock'&&nd.parent&&nd.parent.kind!=='ref'?nd.parent.bench:null;
   const call=(nd,b)=>{if(nd.kind==='stock'&&nd.ticker===b)return '';const r=nd.kind==='stock'?rrgT(nd.ticker,b,idx,n):rrgOf(nd,b,idx,n);
     const x=r.rsr[end],y=r.rsm[end];if(x==null||y==null)return '<span title="not enough history">·</span>';
     const q=quad(x,y);return `<span class="gl" style="color:${Q[q].c}" title="${Q[q].n} against ${b}">${Q[q].s}</span>`;};
@@ -1151,6 +1267,10 @@ const basketLine=cur=>{
 function members(cur){
   const m=$('members');
   const rost=ROSTER?` <span class="roster">${ROSTER.live} of ${ROSTER.total} trading on this date.</span>`:'';
+  if(cur.kind==='custom'){const ks=cvKids(),b=st.bench==='auto'?cur.bench:st.bench,d=VIEW?D.dates[VIEW.idx[VIEW.end]]:null;
+    m.innerHTML=ks.length?`<b>${cur.label}</b> is your own view: ${ks.length} dot${ks.length===1?'':'s'}, each measured against ${b}. `
+      +ks.filter(k=>k.kind==='mix').map(k=>`<b>${k.label}</b> equal-weights ${sideTk(k.toks,d).map(tk).join(' ')}`).join(' · ')+rost:'This view is empty.';
+    return;}
   if(cur.kind==='ref'){m.innerHTML=cur.blurb(st.bench==='auto'?cur.bench:st.bench)+': '+cur.children.map(c=>`<b>${c.label}</b> ${tk(c.ticker)}`).join(' · ')+rost;return;}
   if(cur.kind==='family'&&cur.members){m.innerHTML=`<b>${cur.label}</b> ${basketLine(cur)}.`+rost;return;}
   if(cur.kind==='sub')m.innerHTML=`<b>${cur.label}</b> ${basketLine(cur)}.`+rost;
@@ -1167,7 +1287,7 @@ function focus(){
 // ---- Find (C2): 61 nodes and 150+ tickers with no way to answer "where does AMAT sit?" ----
 const SEARCH=[];
 for(const nd of Object.values(NODES)){
-  if(nd.id==='stack')continue;
+  if(nd.id==='stack'||nd.kind==='custom')continue;
   SEARCH.push({id:nd.id,label:nd.label,co:'',
     path:lineage(nd).slice(0,-1).map(x=>x.label).join(' / '),key:nd.label.toLowerCase()});
 }
@@ -1294,16 +1414,132 @@ $('cmp').addEventListener('click',e=>{
   const o=e.target.closest('.cmpres button');if(o){const side=o.closest('.cmpside').dataset.side,arr=side==='A'?st.ca:st.cb;
     if(!arr.includes(o.dataset.tok))arr.push(o.dataset.tok);const inp=o.closest('.cmpfind').querySelector('input');inp.value='';o.closest('.cmpres').hidden=true;writeHash(false);render();}
 });
-for(const inp of document.querySelectorAll('.cmpfind input')){
+// Baskets and tickers matching v (already lower-cased): exact label, then prefix, then substring.
+function findOpts(v){
+  const rank=o=>o.label.toLowerCase()===v?0:o.label.toLowerCase().startsWith(v)?1:2;
+  return CMPOPTS.filter(o=>o.key.includes(v)).sort((a,b)=>rank(a)-rank(b)||a.label.length-b.label.length);
+}
+for(const inp of document.querySelectorAll('#cmp .cmpfind input')){
   const box=inp.nextElementSibling;
   inp.addEventListener('input',()=>{const v=inp.value.trim().toLowerCase();if(!v){box.hidden=true;return;}
-    const rank=o=>o.label.toLowerCase()===v?0:o.label.toLowerCase().startsWith(v)?1:2;
-    const hits=CMPOPTS.filter(o=>o.key.includes(v)).sort((a,b)=>rank(a)-rank(b)||a.label.length-b.label.length).slice(0,10);
-    box.innerHTML=hits.length?hits.map(o=>`<button type="button" data-tok="${o.tok}">${o.label}<span class="p">${o.path}</span></button>`).join(''):'<div style="padding:5px 8px;color:var(--muted);font-size:12px">No match</div>';
+    const hits=findOpts(v).slice(0,10);
+    box.innerHTML=hits.length?hits.map(o=>`<button type="button" data-tok="${o.tok}">${o.label}<span class="p">${o.path}</span></button>`).join(''):'<div class="none">No match</div>';
     box.hidden=false;});
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const b=box.querySelector('button');if(b)b.click();}else if(e.key==='Escape'){inp.value='';box.hidden=true;}});
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.cmpfind'))for(const b of document.querySelectorAll('.cmpres'))b.hidden=true;});
+
+// ---- Custom view editor ----
+const newId=()=>(Date.now().toString(36)+Math.random().toString(36).slice(2,6)).slice(0,16);
+const uniqName=b=>{let n=b,k=2;while(VIEWS.some(v=>v.name===n))n=`${b} ${k++}`;return n;};
+// What a token is, for its chip: a ticker's company name, or the level of the tree it comes from.
+const tokKind=t=>t.startsWith('tk:')?((D.names||{})[t.slice(3)]||'ticker'):{domain:'tier',family:'layer',sub:'subsector'}[NODES[t].kind];
+const tokPath=t=>t.startsWith('tk:')?t.slice(3):lineage(NODES[t]).slice(1).map(x=>x.label).join(' / ');
+// A tier's layers, a layer's subsectors (or its stocks, for a layer that lists them directly).
+const eachOf=tok=>{const nd=NODES[tok];return nd?nd.children.map(c=>c.kind==='stock'?'tk:'+c.ticker:c.id).filter(cvTokOk):[];};
+// A new view starts from whatever is on the chart now - the dots shown, the benchmark in use -
+// so "these, but with that one added" is one click and an edit rather than a rebuild.
+function newView(){
+  const cur=NODES[st.node],bench=st.bench==='auto'?cur.bench:st.bench;
+  const items=cur.kind==='custom'&&st.cv?cloneView(st.cv).items
+    :kids(cur).filter(c=>!st.hide.has(c.id)&&!(c.kind==='stock'&&c.ticker===bench)).map(c=>c.kind==='stock'?'tk:'+c.ticker:c.id).filter(cvTokOk);
+  const name=uniqName(cleanName(cur.kind==='custom'?`${cur.label} copy`:cur.kind==='stack'?'My view':`My ${cur.label}`,'My view'));
+  const v={id:newId(),name,items,b:bench!=='QQQ'&&D.px[bench]?bench:null};
+  VIEWS.push(v);storeViews();
+  st.cv=cloneView(v);st.cvedit=true;st.hide=new Set();st.bench='auto';
+  go('custom');
+}
+function openView(id){
+  const v=VIEWS.find(x=>x.id===id);if(!v)return;
+  st.cv=cloneView(v);st.cvedit=!v.items.length;st.hide=new Set();st.bench='auto';
+  go('custom');
+}
+// Saved views save on every edit; one opened from a link changes only the link until saved.
+function cvPersist(){
+  const v=st.cv;
+  if(v&&v.id){const i=VIEWS.findIndex(x=>x.id===v.id);if(i>=0){VIEWS[i]=cloneView(v);storeViews();}else v.id=null;}
+  save(false);
+}
+const cvChanged=()=>{cvPersist();render();};
+let CVSIG=null,CVFOCUS=null;
+function cvEditor(bench){
+  const el=$('cv'),v=st.cv;if(!v)return;
+  // Rebuilt only when what it lists changes, so a re-render from a rename, a frame switch or a
+  // replay does not wipe a half-typed search or swallow the click that ended a rename.
+  const sig=JSON.stringify([v.id,bench,v.items.map(it=>typeof it==='string'?it:it.k)]);
+  if(sig===CVSIG&&el.firstChild){
+    for(const i of el.querySelectorAll('.cvname,.mixname'))if(document.activeElement!==i){
+      const want=i.classList.contains('cvname')?v.name:(v.items[+i.dataset.i]||{}).n;if(want!=null&&i.value!==want)i.value=want;}
+    return;
+  }
+  CVSIG=sig;
+  const n=cvKids().length;
+  const chip=(t,i)=>`<span class="chip" title="${tokPath(t)}">${tokLabel(t)} <span class="p">${tokKind(t)}</span><button type="button" data-rm="${i}" aria-label="Remove ${tokLabel(t)}">×</button></span>`;
+  const find=(t,ph,lab)=>`<span class="cmpfind" data-t="${t}"><input type="search" placeholder="${ph}" aria-label="${lab}" autocomplete="off"${t==='v'?' id="cvq"':''}><div class="cmpres" hidden></div></span>`;
+  const mix=(it,i)=>`<span class="chip mix"><input class="mixname" data-i="${i}" value="${it.n}" maxlength="40" aria-label="Name of combined basket">`
+    +`<span class="p">=</span>${it.k.length?it.k.map((t,j)=>`<span class="in" title="${tokPath(t)}">${tokLabel(t)}<button type="button" data-rm="${i}.${j}" aria-label="Remove ${tokLabel(t)} from ${it.n}">×</button></span>`).join('<span class="p">+</span>'):'<span class="p">empty</span>'}`
+    +find(i,'add to basket',`Add a basket or ticker to ${it.n}`)+`<button type="button" data-rm="${i}" aria-label="Remove ${it.n}">×</button></span>`;
+  el.innerHTML=`<div class="cmph"><b>Custom view</b><input class="cvname" value="${v.name}" maxlength="40" aria-label="View name">`
+    +`<span>${n} dot${n===1?'':'s'} · vs ${bench}</span>`
+    +(v.id?'':'<button type="button" class="tbtn" data-act="save" title="Keep this view in this browser\'s My views">Save to my views</button>')
+    +`<button type="button" class="cmpx" data-act="done" aria-label="Close the editor">✕</button></div>`
+    +`<div class="cvitems">${v.items.length?v.items.map((it,i)=>typeof it==='string'?chip(it,i):mix(it,i)).join(''):'<span class="empty">Nothing in this view yet.</span>'}</div>`
+    +`<div class="cvadd">${find('v','Add a tier, layer, subsector or ticker','Add a dot to this view')}`
+    +`<button type="button" class="tbtn" data-act="mix" title="One dot that equal-weights the distinct stocks of everything you put in it">+ Combined basket</button>`
+    +(v.items.length?'<button type="button" class="tbtn" data-act="clear">Clear</button>':'')
+    +(v.id?'<button type="button" class="tbtn cvdel" data-act="del">Delete view</button>':'')+`</div>`
+    +`<p class="cvhelp">Each item is its own dot, measured against the view's benchmark (change it with <em>vs</em>). A combined basket is one dot that equal-weights the distinct stocks of everything in it, the way a layer or tier does. `
+    +(v.id?'Changes save automatically in this browser; ':'This view came from a link and is not saved here yet; ')+'the page address shares it.</p>';
+  if(CVFOCUS){const f=el.querySelector(CVFOCUS);CVFOCUS=null;if(f)f.focus();}
+}
+function cvSearch(inp){
+  const box=inp.nextElementSibling,q=inp.value.trim().toLowerCase(),t=inp.closest('.cmpfind').dataset.t;
+  if(!q){box.hidden=true;return;}
+  const it=t==='v'?null:st.cv.items[+t],have=new Set(it?it.k:st.cv.items.filter(x=>typeof x==='string'));
+  const hits=findOpts(q).filter(o=>!have.has(o.tok)).slice(0,10);
+  box.innerHTML=hits.length?hits.map(o=>{
+    const nd=NODES[o.tok],each=!it&&nd&&nd.kind!=='sub'?eachOf(o.tok).length:0,what=nd&&(nd.kind==='domain'?'layers':nd.members?'stocks':'subsectors');
+    return `<div class="cvopt"><button type="button" data-tok="${o.tok}">${o.label}<span class="p">${o.path}</span></button>`
+      +(each?`<button type="button" class="each" data-each="${o.tok}" title="Add each of its ${each} ${what} as its own dot">+ each ${each}</button>`:'')+'</div>';
+  }).join(''):'<div class="none">No match</div>';
+  box.hidden=false;
+}
+$('cvbtn').onclick=()=>{if(NODES[st.node].kind==='custom'){st.cvedit=!st.cvedit;render();}else newView();};
+$('cv').addEventListener('click',e=>{
+  const v=st.cv;if(!v)return;
+  const rm=e.target.closest('[data-rm]');
+  if(rm){const [i,j]=rm.dataset.rm.split('.').map(Number);
+    if(Number.isInteger(j))v.items[i].k.splice(j,1);else v.items.splice(i,1);
+    cvChanged();return;}
+  const o=e.target.closest('.cmpres [data-tok],.cmpres [data-each]');
+  if(o){const t=o.closest('.cmpfind').dataset.t,dst=t==='v'?v.items:v.items[+t].k;
+    for(const x of o.dataset.each?eachOf(o.dataset.each):[o.dataset.tok])if(!dst.includes(x))dst.push(x);
+    CVFOCUS=t==='v'?'#cvq':`.cmpfind[data-t="${t}"] input`;cvChanged();return;}
+  const a=e.target.closest('[data-act]');if(!a)return;
+  const act=a.dataset.act;
+  if(act==='done'){st.cvedit=false;render();}
+  else if(act==='save'){v.id=newId();VIEWS.push(cloneView(v));cvChanged();}
+  else if(act==='mix'){let k=1;while(v.items.some(x=>typeof x!=='string'&&x.n===`Basket ${k}`))k++;
+    v.items.push({n:`Basket ${k}`,k:[]});CVFOCUS=`.cmpfind[data-t="${v.items.length-1}"] input`;cvChanged();}
+  else if(act==='clear'){if(v.items.length<=3||confirm(`Remove all ${v.items.length} items from ${v.name}?`)){v.items=[];CVFOCUS='#cvq';cvChanged();}}
+  else if(act==='del'&&confirm(`Delete the view ${v.name}? This cannot be undone.`)){
+    VIEWS=VIEWS.filter(x=>x.id!==v.id);storeViews();st.cv=null;go('stack');}
+});
+$('cv').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.classList.contains('cvname')){st.cv.name=cleanName(t.value,'Custom view');$('title').textContent=st.cv.name;}
+  else if(t.closest('.cmpfind'))cvSearch(t);
+});
+$('cv').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.classList.contains('cvname')){st.cv.name=cleanName(t.value,'Custom view');t.value=st.cv.name;cvChanged();}
+  else if(t.classList.contains('mixname')){const it=st.cv.items[+t.dataset.i];if(it){it.n=cleanName(t.value,'Basket');t.value=it.n;cvChanged();}}
+});
+$('cv').addEventListener('keydown',e=>{
+  const inp=e.target;if(!inp.closest('.cmpfind'))return;const box=inp.nextElementSibling;
+  if(e.key==='Enter'){const b=box.querySelector('button[data-tok]');if(b){e.preventDefault();b.click();}}
+  else if(e.key==='Escape'){inp.value='';box.hidden=true;}
+});
 
 // ---- Redraw on width changes ----
 {let lw=0,tm=null;addEventListener('resize',()=>{clearTimeout(tm);tm=setTimeout(()=>{const w=svg.parentElement.clientWidth;if(Math.abs(w-lw)>24){lw=w;render();}},120);});}
@@ -1331,7 +1567,7 @@ const TKLAYER={};for(const f of root.children)for(const tk of uniq(f))if(!TKLAYE
 const TKSUB={};for(const nd of Object.values(NODES))if(nd.kind==='sub')for(const tk of nd.members)if(!TKSUB[tk])TKSUB[tk]=nd;
 for(const f of root.children)if(f.members)for(const tk of f.members)if(!TKSUB[tk])TKSUB[tk]=f;
 const scopeTk=cur=>cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):
-  cur.kind==='domain'?deep(cur):cur.kind==='family'?uniq(cur):cur.kind==='sub'?cur.members:cur.id==='sectors'?cur.children.map(c=>c.ticker):[];
+  cur.kind==='domain'?deep(cur):cur.kind==='family'?uniq(cur):cur.kind==='sub'?cur.members:cur.id==='sectors'?cur.children.map(c=>c.ticker):cur.kind==='custom'?cvTickers():[];
 function lastTurn(r,end){        // the quadrant change within the last two bars, if any
   for(const k of [0,1]){const i=end-k,x=r.rsr[i],y=r.rsm[i],x0=r.rsr[i-1],y0=r.rsm[i-1];
     if([x,y,x0,y0].some(v=>v==null))return null;const q=quad(x,y),q0=quad(x0,y0);
