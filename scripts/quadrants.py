@@ -229,15 +229,14 @@ def load():
     return d, dates, px
 
 
-def load_long_sectors():
-    """The SPDR sectors and SPY since 1999, straight from Yahoo; None if that fails."""
-    if os.environ.get("QUAD_LONG", "1") == "0":
-        return None
+def download_max(syms, since="1999-01-01"):
+    """Daily closes for syms over Yahoo's full history from `since`, on SPY's calendar and
+    forward-filled as fetch.py does; None if SPY can't be had."""
     try:
         import yfinance as yf
     except ImportError:
         return None
-    syms = SECTOR_ETFS + ["SPY"]
+    syms = list(dict.fromkeys(list(syms) + ["SPY"]))
     frame = pd.DataFrame()
     for attempt in range(3):
         need = [s for s in syms if s not in frame or frame[s].dropna().empty]
@@ -250,16 +249,23 @@ def load_long_sectors():
             x.index = pd.to_datetime([str(i.date()) for i in x.index])
             frame = x if frame.empty else frame.combine_first(x)
         except Exception as e:
-            print(f"sector download attempt {attempt + 1} failed: {e}", file=sys.stderr)
+            print(f"download attempt {attempt + 1} failed: {e}", file=sys.stderr)
     if "SPY" not in frame or frame["SPY"].dropna().empty:
-        print("warning: no long sector history; skipping it", file=sys.stderr)
+        print("warning: no long history; skipping it", file=sys.stderr)
         return None
-    frame = frame[(frame.index >= "1999-01-01") & frame["SPY"].notna()].ffill()   # as fetch.py does
+    frame = frame[(frame.index >= since) & frame["SPY"].notna()].ffill()
     today = pd.Timestamp.now(tz="America/New_York")
     if frame.index[-1].date() == today.date() and today.time() < pd.Timestamp("16:15").time():
         frame = frame.iloc[:-1]    # an unfinished session
     dates = np.array([str(i.date()) for i in frame.index])
     return dates, {s: frame[s].to_numpy(float) for s in frame}
+
+
+def load_long_sectors():
+    """The SPDR sectors and SPY since 1999, straight from Yahoo; None if that fails."""
+    if os.environ.get("QUAD_LONG", "1") == "0":
+        return None
+    return download_max(SECTOR_ETFS)
 
 
 # ---------------------------------------------------------------- panels

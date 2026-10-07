@@ -1,13 +1,15 @@
 name: Backtest
 
-# Re-runs scripts/backtest.py and scripts/quadrants.py on demand, or when either changes. It
-# never deploys: the reports land in the run summary and as a downloadable artifact.
+# Re-runs scripts/signals.py, scripts/backtest.py and scripts/quadrants.py on demand, or when
+# any of them changes. It never deploys: the reports land in the run summary and as a
+# downloadable artifact.
 on:
   workflow_dispatch: {}
   push:
     paths:
       - scripts/backtest.py
       - scripts/quadrants.py
+      - scripts/signals.py
       - .github/workflows/backtest.yml
 
 permissions:
@@ -33,16 +35,19 @@ jobs:
         run: python scripts/fetch.py
         env:
           FETCH_PERIOD: 10y
+      # The three are independent, so one failing doesn't hide the others' reports.
+      - name: Search for signals
+        run: python scripts/signals.py
       - name: Run backtest
+        if: always() && steps.fetch.outcome == 'success'
         run: python scripts/backtest.py
-      # Independent of the signal backtest, so one failing doesn't hide the other's report.
       - name: Backtest quadrant shifts
         if: always() && steps.fetch.outcome == 'success'
         run: python scripts/quadrants.py
       - name: Publish summary
         if: always()
         run: |
-          for f in build/backtest/quadrants.md build/backtest/report.md; do
+          for f in build/backtest/signals.md build/backtest/quadrants.md build/backtest/report.md; do
             if test -f "$f"; then cat "$f" >> "$GITHUB_STEP_SUMMARY"; echo >> "$GITHUB_STEP_SUMMARY"; fi
           done
       - uses: actions/upload-artifact@v4
