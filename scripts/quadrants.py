@@ -501,7 +501,7 @@ def main():
     unis = ai_universes(d, dates, px) + [sector_universe("sectors", "S&P sectors vs SPY", dates, px)]
     long = load_long_sectors()
     if long:
-        unis.append(sector_universe("sectors_long", "S&P sectors vs SPY, since 1999", *long))
+        unis.append(sector_universe("sectors_long", "S&P sectors vs SPY", *long))   # its sample is "since 1999"
     kinds = MOVES + [k for _, k in GROUPS]
     ev, ru, logs, spans = [], [], [], {}
     for U in unis:
