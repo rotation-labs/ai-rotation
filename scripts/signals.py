@@ -441,7 +441,9 @@ def report(res, D, C, WF, panels):
               f"{pct(f.net)} | {f.turn:.0f}× |")
         w("")
 
-    w("## 4. Holding period (long-short, full sample, annualised net of costs)\n")
+    w("## 4. Holding period (long-short, full sample)\n")
+    w("Annualised return net of costs, with the t-stat of the gross return in brackets: a short hold can carry a "
+      "real gross edge that costs then erase.\n")
     G = res[(res.kind == "cs") & (res["sample"] == "full")]
     w("| Universe | Signal | " + " | ".join(f"{h}w" for h in HOLDS) + " |\n|---|---|" + "---|" * len(HOLDS))
     for key in panels:
