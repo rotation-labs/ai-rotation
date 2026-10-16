@@ -1,6 +1,6 @@
 # Rotation
 
-A relative rotation graph (RRG) of the AI trade in seven tiers - Core Semis, AI Compute, Networking & Optics, Power & Buildout, Platforms & Software, Physical AI, Bio AI - drilling into layers, subsectors and their stocks, plus two reference views: SPY's eleven sector ETFs, and a macro bucket (NQ, RTY, US 10Y yield, crude, VIX, gold, copper, the dollar and bitcoin against ES). The site is a single static page that rebuilds itself every weekday after the US close.
+A relative rotation graph (RRG) of the AI trade in seven tiers - Core Semis, AI Compute, Networking & Optics, Power & Buildout, Platforms & Software, Physical AI, Bio AI - drilling into layers, subsectors and their stocks, plus two reference views: SPY's eleven sector ETFs plus biotech (XBI), and a macro bucket (NQ, RTY, US 10Y yield, crude, VIX, gold, copper, the dollar and bitcoin against ES). The site is a single static page that rebuilds itself every weekday after the US close.
 
 ## How it works
 
