@@ -345,6 +345,7 @@ svg .dimmed{opacity:.1}
       <summary>How to read this</summary>
       <p><b>Axes.</b> Right of centre means the group is outperforming its benchmark's recent trend (RS-Ratio above 100); above centre means that relative strength is accelerating (RS-Momentum above 100). The two measures have very different spreads, so each axis is divided by its RMS distance from 100 across the dots and tails on screen. These are view-relative units, not a statistical σ: +1 is the same visual distance on both axes, but the numbers are not comparable between views. The window is square and centred, so a rotation traces a circle rather than an ellipse. Raw values are in each dot's tooltip.</p>
       <p><b>Levels.</b> Seven tiers, cut where the AI trade actually moves apart: Core Semis, AI Compute, Networking &amp; Optics, Power &amp; Buildout, Platforms &amp; Software, Physical AI and Bio AI. Full stack and the tier views compare everything against QQQ, a common yardstick; switch Full stack to <em>All layers</em> to see every layer at once. Opening a layer switches to its industry peer (Accelerators against SOXX, software against IGV, biotech against XBI, and so on), so you see which names lead <em>within</em> their industry. The <em>vs</em> control overrides either, and the Benchmark check under the lists shows how the call changes across benchmarks.</p>
+      <p><b>Bio x AI.</b> A second stack in the sidebar, with the same shape and rules as the AI trade: 47 life-science names in five tiers that follow the design, make and test, learn, develop and scale loop of AI drug discovery. Its Full stack and tiers are measured against XLV, the healthcare sector, where the AI trade uses QQQ, and the AI drug developers and mRNA layers against XBI. It complements the AI trade's own Bio AI tier, the AI-native slice, with the whole value chain that loop runs through: tools, synthesis, data, CROs, CDMOs and bioprocessing.</p>
       <p><b>Lists.</b> Each quadrant is sorted by strength: relative return over common daily endpoints from about six months ago to one month ago (dots too new for it follow, by distance from the centre). The <em>Strength</em> tab prints the exact dates and ranks every dot on it at once. The arrow is the direction of the last step; the small number is how long the dot has been in that quadrant (<b>*</b> means it includes the week still in progress); NEW marks a crossing in the last two bars; the percentage is relative performance over the tail; breadth is the share of the historically eligible basket members that are themselves right of centre against the same benchmark. Untick a row to hide it; the axes rescale to what is left, and Show all remains available on every list tab. To see small moves when one name sets the scale, use <b>Scale +</b> above the chart (or <kbd>+</kbd> / <kbd>−</kbd>, <kbd>0</kbd> to fit, or pinch on a trackpad); zoomed in, the window follows the bulk of the dots, and any that fall beyond the edge are pinned to it with an arrow in their quadrant's colour.</p>
       <p><b>Custom views.</b> <em>Customize</em> (or <em>+ New view</em> under My views in the sidebar) starts a view of your own from the dots on the chart. Add any tier, layer, subsector or ticker as its own dot (<em>+ each</em> adds every layer of a tier, or every subsector of a layer, separately), remove what you don't want, and pick the benchmark with <em>vs</em>. A <em>combined basket</em> merges several of them into one dot that equal-weights their distinct stocks, the same rule a layer or tier uses, so a name in two of its parts counts once and weighted proxies are not weighted inside it. Views are kept in this browser only; the page address carries the open view, so a link shares it, and a view opened from someone else's link can be saved to your own list.</p>
       <p><b>Drivers.</b> <em>Drivers</em> explains why SPY moved over 1D, 1W, 1M, 3M or YTD, ending at the date on screen. Sector and largest-holding contributions are weight × return, using SPY's reported weights drifted by price to the start of the horizon; that part is arithmetic. Style spreads and macro barometers are scored in σ: the move divided by that series' typical move over the same number of sessions, from its daily changes over the past year. The macro model regresses the past year's daily S&amp;P returns on the 10Y yield, the 2s10s curve, the dollar, oil and high-yield credit; each one's share is its sensitivity times its move, and the residual is what macro does not account for. Scores, correlations and the model describe co-movement, not cause; credit in particular moves with stocks as much as ahead of them.</p>
@@ -384,7 +385,9 @@ const RENAME={};
 const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const NODES={};
 function add(n){NODES[n.id]=n;return n;}
-const root=add({id:'stack',label:'Full stack',kind:'stack',bench:'QQQ',children:[]});
+// A stack is one ecosystem's tree: Full stack > tier > layer > subsector > stock. The AI trade is
+// the first; config.stacks adds more (Bio x AI) with the same shape, rules and benchmark logic.
+const root=add({id:'stack',label:'AI stack',title:'Rotation',kind:'stack',bench:'QQQ',children:[]});
 // Market-wide reference views, outside the AI tree. Dots are labelled by name; the ticker and
 // full name are on hover. Sectors: SPY's eleven sector ETFs against SPY. Macro: index futures,
 // the 10-year yield, crude, VIX, gold, copper, the dollar and bitcoin against ES, so the S&P is
@@ -408,17 +411,26 @@ const DOMAINS=[{g:'semis',label:'Core Semis',bench:'SOXX'},{g:'compute',label:'A
   {g:'network',label:'Networking & Optics',bench:'QQQ'},{g:'power',label:'Power & Buildout',bench:'QQQ'},
   {g:'platforms',label:'Platforms & Software',bench:'QQQ'},{g:'physical',label:'Physical AI',bench:'QQQ'},
   {g:'bio',label:'Bio AI',bench:'QQQ'}];
-for(const dm of DOMAINS){
+root.domains=DOMAINS;
+const STACKS=[root];
+for(const [k,S] of Object.entries(D.stacks||{})){
+  if(NODES[k]||!S.groups)continue;
+  const bench=D.px[S.bench]?S.bench:'QQQ';
+  STACKS.push(add({id:k,label:S.label,title:S.label,kind:'stack',bench,children:[],
+    domains:(S.tiers||[]).filter(t=>S.groups[t.g]&&!NODES[t.g]).map(t=>({...t,bench:t.bench||bench}))}));
+}
+for(const top of STACKS)for(const dm of top.domains){
+  const groups=top===root?D.groups:D.stacks[top.id].groups;
   // A domain view is the full-stack view filtered to one side, so it keeps the root's
   // benchmark: a layer sits in the same place whether you reach it from Full stack or from
   // its domain, and its nav badge means one thing. dm.bench still governs the subsectors.
-  const dn=add({id:dm.g,label:dm.label,kind:'domain',bench:root.bench,parent:root,children:[]});
-  for(const [fam,subs] of Object.entries(D.groups[dm.g])){
+  const dn=add({id:dm.g,label:dm.label,kind:'domain',bench:top.bench,parent:top,children:[]});
+  for(const [fam,subs] of Object.entries(groups[dm.g])){
     const fl=RENAME[fam]||fam;
     // Opening a layer measures its members against the layer's industry peer (Accelerators vs
     // SOXX, software vs IGV); the tier views above compare layers against the common QQQ.
     const f=add({id:slug(dm.g+'-'+fl),label:fl,kind:'family',domain:dm.label,bench:(D.peers||{})[fl]||dm.bench,parent:dn,children:[]});
-    root.children.push(f);dn.children.push(f);
+    top.children.push(f);dn.children.push(f);
     // A layer with no natural sub-grouping (Hyperscalers, Bio AI's groups) lists its
     // stocks directly; forcing a one-subsector level in between would just add a click
     // that opens a single dot. Either shape can be a plain array (equal weight) or
@@ -449,6 +461,9 @@ const uniq=f=>f._u||(f._u=f.members?[...new Set(f.members)]:[...new Set(f.childr
 // Distinct tickers under a tier, across all its layers.
 const deep=d=>d._d||(d._d=[...new Set(d.children.flatMap(uniq))]);
 const adhoc=new Set(D.adhoc||[]);
+// Every distinct ticker in a stack, and the stack a node belongs to (the AI stack for views outside any).
+const allTk=s=>s._all||(s._all=[...new Set(s.domains.flatMap(d=>deep(NODES[d.g])))]);
+const stackOf=n=>{const top=lineage(n)[0];return top&&top.kind==='stack'?top:root;};
 
 let N=D.dates.length;
 // Set by the build while the US session is in progress: today's bar is live and still moving.
@@ -477,7 +492,7 @@ function leaves(n){          // the baskets that hold tickers directly under a n
   if(n.kind==='sub')return [n];
   if(n.kind==='family')return n.members?[n]:n.children.filter(c=>c.kind==='sub');
   if(n.kind==='domain')return n.children.flatMap(leaves);
-  if(n.kind==='stack')return root.children.flatMap(leaves);
+  if(n.kind==='stack')return n.children.flatMap(leaves);
   return [];
 }
 function windows(n){         // ticker -> the [from, until) windows it counts in, under node n
@@ -613,7 +628,7 @@ let KEYOPEN=false;
 const TOUCH=matchMedia('(pointer:coarse)').matches;
 let TIPFOR=null;   // on touch, the dot whose tooltip is showing; a second tap on it opens it
 // Full stack plots one dot per tier by default; the toggle expands it to every layer.
-const kids=cur=>cur.kind==='stack'?(st.layers?root.children:DOMAINS.map(d=>NODES[d.g])):cur.kind==='custom'?cvKids():cur.children;
+const kids=cur=>cur.kind==='stack'?(st.layers?cur.children:cur.domains.map(d=>NODES[d.g])):cur.kind==='custom'?cvKids():cur.children;
 let PROV=false;
 let SIG={x:1,y:1};
 let VIEW=null;
@@ -803,14 +818,17 @@ function nav(cur){
   // The sidebar is the tree itself: Full stack > tier > layer > subsector, each level
   // indented under its parent and expanded only along the path you are on - except that
   // "All layers" on Full stack opens every tier, so the sidebar matches the chart.
-  const path=new Set(lineage(cur).map(n=>n.id)),open=cur.kind==='stack'&&st.layers;
+  const path=new Set(lineage(cur).map(n=>n.id));
   // The sidebar has no chart dot to hover, so the same composition line the tooltip
   // shows becomes each row's native title instead - the friction this was meant to fix
   // was here, not on the chart: browsing baskets is exactly where you'd want to see them.
   const item=(n,cls='')=>{const c=compOf(n);return `<button type="button" class="ni ${cls}" data-id="${n.id}" aria-current="${n.id===cur.id}"${c?` title="${n.label}: ${c.join(', ')}"`:''}><span class="d" data-q="${n.id}"></span><span>${n.label}</span>${n.kind!=='sub'?`<span class="c">${n.children.length}</span>`:''}</button>`;};
   let h=`<details ${DESK.matches||navOpen?'open':''}><summary>Browse baskets</summary>`;
-  h+=`<div class="navsec"><button type="button" class="ni stackbtn" data-id="stack" aria-current="${cur.id==='stack'}">Full stack<span class="c">${DOMAINS.length}</span></button>`;
-  for(const dm of DOMAINS){
+  // One section per ecosystem, each its own tree; labelled once there is more than one.
+  for(const top of STACKS){
+  const open=cur===top&&st.layers;
+  h+=`<div class="navsec${top===root?'':' navref'}">${STACKS.length>1?`<div class="navlbl">${top===root?'AI trade':top.label.replace('&','&amp;')}</div>`:''}<button type="button" class="ni stackbtn" data-id="${top.id}" aria-current="${cur.id===top.id}">Full stack<span class="c">${top.domains.length}</span></button>`;
+  for(const dm of top.domains){
     const dn=NODES[dm.g];
     h+=item(dn,'tier');
     if(!open&&!path.has(dn.id))continue;
@@ -822,6 +840,7 @@ function nav(cur){
     h+='</div>';
   }
   h+='</div>';
+  }
   // The reader's own views, kept in this browser, plus one opened from a link and not yet saved.
   {const on=cur.kind==='custom'&&st.cv,itemLabel=it=>typeof it==='string'?tokLabel(it):it.n;
    const row=(attr,v,current,count)=>`<button type="button" class="ni stackbtn" ${attr} aria-current="${current}" title="${v.name}${v.items.length?': '+v.items.map(itemLabel).join(', '):''}"><span class="lbl">${v.name}</span><span class="c">${count}</span></button>`;
@@ -853,7 +872,7 @@ function render(fast,withList){
   const lin=lineage(cur);
   $('crumbs').innerHTML=lin.map((n,i)=>i===lin.length-1?`<span class="cur">${n.label}</span>`:`<button type="button" data-id="${n.id}">${n.label}</button>`).join('<span class="sep">/</span>');
   $('crumbs').hidden=lin.length<2;
-  $('title').textContent=cur.kind==='stack'?'Rotation':cur.label;
+  $('title').textContent=cur.kind==='stack'?cur.title:cur.label;
   $('asof').textContent=`Prices through ${fmtD(D.asof)}.`;
   {const np=Object.values(D.proxy||{}).filter(v=>v.includes(D.asof)).length;
    $('proxynote').textContent=np?`${np} closes on ${fmtD(D.asof)} are intraday proxies pending Yahoo's official close; the next build replaces them.`:'';}
@@ -887,13 +906,13 @@ function render(fast,withList){
   // WOLF restarts 2025-09-29. combine() handles the nulls, but the reader cannot see that
   // the basket was smaller then, so say so.
   {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='domain'?deep(cur)
-     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='ref'?cur.children.map(c=>c.ticker):cur.kind==='custom'?cvTickers():null;
+     :cur.kind==='stack'?allTk(cur):cur.kind==='ref'?cur.children.map(c=>c.ticker):cur.kind==='custom'?cvTickers():null;
    let as=ts;
    if(ENTRIES.length&&ts&&cur.kind!=='ref'){const d=D.dates[idx[end]];as=[...(cur.kind==='custom'?cvWindows():windows(cur))].filter(([,ws])=>inW(ws,d)).map(([x])=>x);}
    if(as&&as.length){const live=as.filter(x=>D.px[x]&&D.px[x][idx[end]]!=null).length,ts2=as;
      ROSTER=live<ts2.length?{live,total:ts2.length}:null;}else ROSTER=null;}
   {const ts=cur.kind==='sub'?cur.members:cur.kind==='family'?uniq(cur):cur.kind==='domain'?deep(cur)
-     :cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):cur.kind==='ref'?cur.children.map(c=>c.ticker):cur.kind==='custom'?cvTickers():[];
+     :cur.kind==='stack'?allTk(cur):cur.kind==='ref'?cur.children.map(c=>c.ticker):cur.kind==='custom'?cvTickers():[];
    const inputs=new Set([...(ts||[]),bench]),start=D.dates[idx[Math.max(0,end-(n*2+st.tail+5))]],finish=D.dates[idx[end]];
    let observations=0,affected=0;
    for(const tk of inputs){const hits=(D.proxy&&D.proxy[tk]||[]).filter(d=>d>=start&&d<=finish).length;if(hits){observations+=hits;affected++;}}
@@ -1251,9 +1270,10 @@ function sensitivity(rows){
   if(!rows.length||!VIEW)return;
   const {idx,n,end,bench}=VIEW,cur=NODES[st.node];
   // a reference view's own yardstick (ES for Macro) leads the columns when it is not a common one
-  const cols=[...new Set([...(cur.kind==='ref'||cur.kind==='custom'?[cur.bench]:[]),'SPY','QQQ','RSP','SOXX'])].filter(b=>D.px[b]);
+  // the AI stack's industry yardstick is SOXX; another stack's is its own benchmark (XLV for Bio x AI)
+  const top=stackOf(cur),cols=[...new Set([...(cur.kind==='ref'||cur.kind==='custom'?[cur.bench]:[]),'SPY','QQQ','RSP',top===root?'SOXX':top.bench])].filter(b=>D.px[b]);
   // a ticker picked into a custom view has no parent basket there; use the peer of the layer that holds it
-  const peerOf=nd=>nd.kind==='family'||nd.kind==='sub'?nd.bench:nd.kind==='stock'&&nd.parent&&nd.parent.kind==='custom'?(TKLAYER[nd.ticker]||{}).bench||null
+  const peerOf=nd=>nd.kind==='family'||nd.kind==='sub'?nd.bench:nd.kind==='stock'&&nd.parent&&nd.parent.kind==='custom'?(STACKS.map(x=>TKLAYER[x.id][nd.ticker]).find(Boolean)||{}).bench||null
     :nd.kind==='stock'&&nd.parent&&nd.parent.kind!=='ref'?nd.parent.bench:null;
   const call=(nd,b)=>{if(nd.kind==='stock'&&nd.ticker===b)return '';const r=nd.kind==='stock'?rrgT(nd.ticker,b,idx,n):rrgOf(nd,b,idx,n);
     const x=r.rsr[end],y=r.rsm[end];if(x==null||y==null)return '<span title="not enough history">·</span>';
@@ -1291,9 +1311,10 @@ $('changes').addEventListener('mouseleave',()=>{st.hover=null;focus();});
 $('changes').addEventListener('click',e=>{const c=e.target.closest('.card');if(c&&NODES[c.dataset.id])go(c.dataset.id);});
 // Which names sit in more than one layer, computed rather than written down, because every
 // reorganisation silently invalidated the hand-written version.
-{const at={};for(const f of root.children)for(const t of uniq(f))(at[t]=at[t]||[]).push(f.label);
- const multi=Object.entries(at).filter(([,v])=>v.length>1).sort();
- $('multi').textContent=multi.length?`${multi.map(([k,v])=>`${k} (${v.join(', ')})`).join(', ')} each appear in two layers and count toward each; within a layer a name listed in two subsectors counts once.`:'';}
+{const per=STACKS.map(top=>{const at={};for(const f of top.children)for(const t of uniq(f))(at[t]=at[t]||[]).push(f.label);
+   const multi=Object.entries(at).filter(([,v])=>v.length>1).sort();
+   return multi.length?(STACKS.length>1?`${top===root?'AI trade':top.label}: `:'')+multi.map(([k,v])=>`${k} (${v.join(', ')})`).join(', '):'';}).filter(Boolean);
+ $('multi').textContent=per.length?`${per.join('. ')}. Each appears in two layers and counts toward each; within a layer a name listed in two subsectors counts once.`:'';}
 $('mbn').textContent=ENTRIES.length?`${ENTRIES.length} recorded`:'none recorded yet';
 // Built from the data so a newly added foreign listing can never be missing from it.
 $('gloss').textContent=Object.entries(D.names||{}).filter(([k])=>D.px[k]).map(([k,v])=>`${k} ${v}`).join(' · ');
@@ -1329,7 +1350,7 @@ function focus(){
 // ---- Find (C2): 61 nodes and 150+ tickers with no way to answer "where does AMAT sit?" ----
 const SEARCH=[];
 for(const nd of Object.values(NODES)){
-  if(nd.id==='stack'||nd.kind==='custom')continue;
+  if(nd.kind==='stack'||nd.kind==='custom')continue;
   SEARCH.push({id:nd.id,label:nd.label,co:'',
     path:lineage(nd).slice(0,-1).map(x=>x.label).join(' / '),key:nd.label.toLowerCase()});
 }
@@ -1605,10 +1626,14 @@ $('upd').onclick=()=>location.reload();
 // data found quadrant turns have not reliably predicted relative returns (the strength level
 // has mattered more), so this is framed as a watchlist, and it carries its own track record,
 // recomputed from the data, so any edge that emerges as history accumulates shows up here.
-const TKLAYER={};for(const f of root.children)for(const tk of uniq(f))if(!TKLAYER[tk])TKLAYER[tk]=f;
-const TKSUB={};for(const nd of Object.values(NODES))if(nd.kind==='sub')for(const tk of nd.members)if(!TKSUB[tk])TKSUB[tk]=nd;
-for(const f of root.children)if(f.members)for(const tk of f.members)if(!TKSUB[tk])TKSUB[tk]=f;
-const scopeTk=cur=>cur.kind==='stack'?(root._all||(root._all=[...new Set(DOMAINS.flatMap(d=>deep(NODES[d.g])))])):
+// A ticker's layer within each stack: TWST is a Bio AI name in the AI stack and a DNA & RNA
+// Synthesis name in Bio x AI, and its industry peer depends on which you are looking at.
+const TKLAYER={};for(const top of STACKS){const m=TKLAYER[top.id]={};for(const f of top.children)for(const tk of uniq(f))if(!m[tk])m[tk]=f;}
+const TKSUB={};for(const top of STACKS){const m=TKSUB[top.id]={};
+  for(const f of top.children)for(const b of f.members?[f]:f.children)for(const tk of b.members)if(!m[tk])m[tk]=b;}
+// The basket a Movers row opens: in the stack on screen, else wherever else the ticker lives.
+const subOf=(tk,top)=>TKSUB[top.id][tk]||STACKS.map(x=>TKSUB[x.id][tk]).find(Boolean);
+const scopeTk=cur=>cur.kind==='stack'?allTk(cur):
   cur.kind==='domain'?deep(cur):cur.kind==='family'?uniq(cur):cur.kind==='sub'?cur.members:cur.id==='sectors'?cur.children.map(c=>c.ticker):cur.kind==='custom'?cvTickers():[];
 function lastTurn(r,end){        // the quadrant change within the last two bars, if any
   for(const k of [0,1]){const i=end-k,x=r.rsr[i],y=r.rsm[i],x0=r.rsr[i-1],y0=r.rsm[i-1];
@@ -1617,11 +1642,11 @@ function lastTurn(r,end){        // the quadrant change within the last two bars
   return null;
 }
 const TRC={};
-function trackRecord(){           // weekly, vs QQQ, 8-week forward relative return, full universe
-  if(TRC.r)return TRC.r;
+function trackRecord(top){        // weekly, vs the stack's benchmark, 8-week forward relative return, its full universe
+  const bn=top.bench;if(TRC[top.id])return TRC[top.id];
   const idx=weekIdx,n=10,h=8,last=idx.length-1-(partialWeek?1:0),byWeek=new Map();
   // computed directly, not via rrgT: that cache is keyed to the current bar setting and this is always weekly
-  for(const tk of scopeTk(root)){if(!D.px[tk]||tk==='QQQ')continue;const r=rrg(D.px[tk],D.px.QQQ,idx,n);
+  for(const tk of allTk(top)){if(!D.px[tk]||tk===bn)continue;const r=rrg(D.px[tk],D.px[bn],idx,n);
     for(let i=1;i+h<=last;i++){const x=r.rsr[i],y=r.rsm[i],x0=r.rsr[i-1],y0=r.rsm[i-1],a=r.rs[i],b=r.rs[i+h];
       if([x,y,x0,y0,a,b].some(v=>v==null))continue;
       const f=(b/a-1)*100,k=quad(x0,y0)+quad(x,y);let w=byWeek.get(i);if(!w)byWeek.set(i,w={all:[],t:{}});
@@ -1633,25 +1658,25 @@ function trackRecord(){           // weekly, vs QQQ, 8-week forward relative ret
     const blk=new Map();for(const [i,v] of ex){const b=Math.floor(i/h);(blk.get(b)||blk.set(b,[]).get(b)).push(v);}
     const bm=[...blk.values()].map(mean),m=bm.length?mean(bm):null,sd=bm.length>2?Math.sqrt(bm.reduce((s,v)=>s+(v-m)**2,0)/(bm.length-1)):null;
     out[k]={ex:m,t:sd?m/(sd/Math.sqrt(bm.length)):null,ev};}
-  return TRC.r=out;
+  return TRC[top.id]=out;
 }
 function movers(){
-  const cur=NODES[st.node],{idx,n,end}=VIEW,W=st.frame==='W';
-  $('mvb').hidden=cur.id==='sectors';
+  const cur=NODES[st.node],{idx,n,end}=VIEW,W=st.frame==='W',top=stackOf(cur),base=top.bench;
+  $('mvb').hidden=cur.id==='sectors';$('mvb').children[0].textContent='vs '+base;
   for(const b of $('mvb').children)b.setAttribute('aria-pressed',b.dataset.v===st.mvb);
-  $('mvsub').textContent=`${cur.id==='sectors'?'sector ETFs':'stocks'} in ${cur.kind==='stack'?'the whole universe':cur.label} that changed quadrant in the last two ${W?'weeks':'sessions'}${cur.id==='sectors'?' against SPY':''}`;
+  $('mvsub').textContent=`${cur.id==='sectors'?'sector ETFs':'stocks'} in ${cur.kind==='stack'?`the whole ${top===root?'AI':top.label} universe`:cur.label} that changed quadrant in the last two ${W?'weeks':'sessions'}${cur.id==='sectors'?' against SPY':''}`;
   if(cur.kind==='ref'&&cur.id!=='sectors'){$('mvsub').textContent='Movers covers stocks and sector ETFs. Pick a tier, layer or the S&P sectors.';
     $('mvup').innerHTML=$('mvdn').innerHTML='';$('mvtr').textContent='';return;}
   const up=[],dn=[];
   for(const tk of scopeTk(cur)){
-    const b=cur.id==='sectors'?'SPY':st.mvb==='p'?((TKLAYER[tk]||{}).bench||'QQQ'):'QQQ';if(tk===b||!D.px[tk])continue;
+    const b=cur.id==='sectors'?'SPY':st.mvb==='p'?((TKLAYER[top.id][tk]||{}).bench||base):base;if(tk===b||!D.px[tk])continue;
     const r=rrgT(tk,b,idx,n),tr=lastTurn(r,end);if(!tr)continue;
     const a0=r.rs[end-st.tail],b0=r.rs[end];
     const row={tk,...tr,x:r.rsr[end],dy:r.rsm[end]-r.rsm[end-1-tr.ago],rel:a0&&b0?(b0/a0-1)*100:null,b};
     (UP(tr.q)?up:dn).push(row);}
   const rank=(u,v)=>u.ago-v.ago||Math.abs(v.dy)-Math.abs(u.dy);up.sort(rank);dn.sort(rank);
   const cap=st.mvall?1e9:12;
-  const col=(el,rows,title)=>{el.innerHTML=`<h3><b>${title}</b> · ${rows.length}</h3>`+(rows.length?rows.slice(0,cap).map(r=>{const s=TKSUB[r.tk],cn=coName({kind:'stock',ticker:r.tk});
+  const col=(el,rows,title)=>{el.innerHTML=`<h3><b>${title}</b> · ${rows.length}</h3>`+(rows.length?rows.slice(0,cap).map(r=>{const s=subOf(r.tk,top),cn=coName({kind:'stock',ticker:r.tk});
       return `<button type="button" class="mvrow" data-id="${s?s.id:''}" title="${r.tk}${cn?' — '+cn:''}: ${Q[r.q0].n} to ${Q[r.q].n}${r.ago?' one bar ago':' on the latest bar'}, measured against ${r.b}${s?'. Opens '+s.label:''}">${qmini(r.q0,r.q)}`
         +`<span class="nm"><b>${r.tk}</b> <span style="color:${Q[r.q].c}">→ ${Q[r.q].n}</span><span class="sub">${cn&&adhoc.has(r.tk)?cn+' · ':''}${s?s.label:''}${st.mvb==='p'?' · vs '+r.b:''}</span></span>`
         +`<span class="v num">RS ${r.x.toFixed(1)}<br>${pct(r.rel)}</span></button>`;}).join('')
@@ -1659,12 +1684,12 @@ function movers(){
   col($('mvup'),up,'Now Leading / Improving');col($('mvdn'),dn,'Now Weakening / Lagging');
   // track record: needs the full weekly history; computed once per data load
   if(needHistory()){$('mvtr').textContent='Loading the track record…';loadHistory();return;}
-  const T=trackRecord(),lab={GI:'Lagging → Improving',IL:'Improving → Leading',LW:'Leading → Weakening',WG:'Weakening → Lagging'};
+  const T=trackRecord(top),lab={GI:'Lagging → Improving',IL:'Improving → Leading',LW:'Leading → Weakening',WG:'Weakening → Lagging'};
   const sig=Object.entries(T).filter(([,v])=>v.t!=null&&Math.abs(v.t)>=2);
-  $('mvtr').innerHTML=`<b>Track record</b> (weekly bars vs QQQ, whole universe, 8-week return after the turn minus the average stock that week): `
+  $('mvtr').innerHTML=`<b>Track record</b> (weekly bars vs ${base}, the whole ${top===root?'AI':top.label} universe, 8-week return after the turn minus the average stock that week): `
     +Object.entries(T).map(([k,v])=>`${lab[k]} <b>${v.ex==null?'—':pct(v.ex)}</b>${v.t==null?'':` (t ${v.t>=0?'+':''}${v.t.toFixed(1)})`}`).join(' · ')
     +`. <br>${sig.length?`Only ${sig.map(([k])=>lab[k]).join(' and ')} clears |t| ≥ 2, and with several turn types tested even that is weak evidence.`:'None of these turns has reliably predicted relative returns here: every t-statistic is below 2.'}`
-    +` Where a stock <em>is</em> (its relative-strength level, the x-axis) has mattered more than whether it is turning. The universe was chosen in hindsight from AI winners, which flatters any backtest. Treat this list as a watchlist, not a signal.`;
+    +` Where a stock <em>is</em> (its relative-strength level, the x-axis) has mattered more than whether it is turning. The universe was chosen in hindsight from ${top===root?'AI':top.label} winners, which flatters any backtest. Treat this list as a watchlist, not a signal.`;
 }
 $('mvbtn').onclick=()=>{st.mv=!st.mv;st.mvall=false;writeHash(false);render();};
 $('tickerbtn').onclick=()=>{st.tickers=!st.tickers;writeHash(false);render();};
@@ -1781,8 +1806,10 @@ function drivers(){
 
   const styles=DR.styles.map(s=>{const r=drRel(drRet(s.a,i0,i1),drRet(s.b,i0,i1));
     return {...s,r,z:zOf(r,stat(i=>drRel(drRet(s.a,i-1,i),drRet(s.b,i-1,i))).sd)};});
-  const qqq=drRet('QQQ',i0,i1);
-  const tiers=DOMAINS.map(dm=>{const p=series(NODES[dm.g]);return {id:dm.g,l:dm.label,r:drRel(p[i0]!=null&&p[i1]!=null?(p[i1]/p[i0]-1)*100:null,qqq)};}).filter(x=>x.r!=null);
+  // Each stack's tiers against that stack's own benchmark: the AI tiers vs QQQ, Bio x AI's vs XLV.
+  const stacks=STACKS.map(top=>{const br=drRet(top.bench,i0,i1);
+    return {top,name:top===root?'the AI stack':top.label,rows:top.domains.map(dm=>{const p=series(NODES[dm.g]);
+      return {id:dm.g,l:dm.label,r:drRel(p[i0]!=null&&p[i1]!=null?(p[i1]/p[i0]-1)*100:null,br)};}).filter(x=>x.r!=null)};}).filter(x=>x.rows.length);
 
   const baro=DR.barometers.map(b=>{const s=drSeries(b.code);if(!s)return null;const u=b.unit,c=drChg(u,s[i0],s[i1]),S=stat(i=>drChg(u,s[i-1],s[i]));
     return {...b,lvl:s[i1],c,z:zOf(c,S.sd),cor:S.cor,sd:S.sd};}).filter(Boolean);
@@ -1832,7 +1859,7 @@ function drivers(){
    nar.push((big.length?`Macro moves that stood out: ${big.map(b=>`<b>${b.label}</b> ${fu(b.unit,b.c)} (${fz(b.z)})`).join(', ')}.`:'No macro barometer moved more than one typical move.')
      +(c10!=null&&Math.abs(c10)>=0.3?` Over the past 3 months the S&P has tended to move ${c10>0?'<b>with</b> yields':'<b>against</b> yields'} (correlation ${f2(c10)}), so ${c10>0?'growth news more than rates':'rates'} ${c10>0?'has':'have'} been setting the tone.`:''));}
   if(model)nar.push(`At their past-year sensitivities, ${model.parts.map(p=>(DRB[p.code]||{}).short||p.l).join(', ').replace(/, ([^,]*)$/,' and $1')} account for <b>≈${f2(model.ex)} pts</b>; the other <b>${f2(model.res)} pts</b> is equity-specific: earnings, company news, positioning. Together they explain ${Math.round(model.r2*100)}% of daily S&P moves over the past year.`);
-  if(tiers.length>1){const s=[...tiers].sort((a,b)=>b.r-a.r);nar.push(`In the AI stack, <b>${s[0].l}</b> led (${dpct(s[0].r)} vs QQQ) and <b>${s[s.length-1].l}</b> lagged (${dpct(s[s.length-1].r)}).`);}
+  for(const x of stacks)if(x.rows.length>1){const s=[...x.rows].sort((a,b)=>b.r-a.r);nar.push(`In ${x.name}, <b>${s[0].l}</b> led (${dpct(s[0].r)} vs ${x.top.bench}) and <b>${s[s.length-1].l}</b> lagged (${dpct(s[s.length-1].r)}).`);}
   // Breadth check: do the gauges that should move with a real rally (or selloff) agree with it?
   if(!quiet&&spy!=null){const d=Math.sign(spy),sty=(a,b)=>(styles.find(s=>s.a===a&&s.b===b)||{}).r,g=[
       ['equal weight',drRet('RSP',i0,i1)],['small caps',drRet('IWM',i0,i1)],['high beta vs low vol',sty('SPHB','SPLV')],
@@ -1860,9 +1887,9 @@ function drivers(){
      const side=x=>typeof x==='string'?x:x.join('+'),tok=x=>(typeof x==='string'?[x]:x).map(t=>'tk:'+t).join(',');
      h+=row(s.label,s.r,mx,f2(s.r,1),fz(s.z),`${side(s.a)} vs ${side(s.b)}: ${f2(s.r,1)} pts relative${s.z!=null?`, ${fz(s.z)} against its typical ${hd}-session move`:''}. Click to chart it in Compare`,` data-a="${tok(s.a)}" data-b="${tok(s.b)}"`);}
    h+='</div>';}
-  if(tiers.length){const mx=drMax(tiers.map(x=>x.r));
-   h+=`<div class="drcard"><h3>AI stack vs QQQ</h3><p class="hint">The seven tiers' equal-weight return relative to QQQ. Click one to open it.</p>${hd4('','rel.')}`
-     +tiers.map(x=>row(x.l,x.r,mx,'',dpct(x.r),`${x.l}: ${dpct(x.r)} relative to QQQ. Click to open`,` data-id="${x.id}"`)).join('')+'</div>';}
+  for(const {top,rows} of stacks){const mx=drMax(rows.map(x=>x.r)),nm=top===root?'AI stack':top.label.replace('&','&amp;');
+   h+=`<div class="drcard"><h3>${nm} vs ${top.bench}</h3><p class="hint">Each tier's equal-weight return relative to ${top.bench}. Click one to open it.</p>${hd4('','rel.')}`
+     +rows.map(x=>row(x.l.replace('&','&amp;'),x.r,mx,'',dpct(x.r),`${x.l}: ${dpct(x.r)} relative to ${top.bench}. Click to open`,` data-id="${x.id}"`)).join('')+'</div>';}
   {const mx=3;let g='';
    h+=`<div class="drcard drwide"><h3>Macro barometers</h3><p class="hint">Change over the horizon, and how unusual it was: σ is the change divided by the barometer's typical move over this many sessions (bars capped at ±3σ). Corr is its 3-month daily correlation with the S&amp;P; for VIX and yields a negative number is normal.</p>`
      +`<div class="drrow m5 drhd" aria-hidden="true"><span></span><span class="lvl">level</span><span>change</span><span style="text-align:center">σ</span><span>corr</span></div>`;

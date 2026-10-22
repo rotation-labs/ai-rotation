@@ -82,7 +82,15 @@
     "ZHIPU": "2513.HK",
     "MINIMAX": "0100.HK",
     "SENSETIME": "0020.HK",
-    "IFLYTEK": "002230.SZ"
+    "IFLYTEK": "002230.SZ",
+    "GENSCRIPT": "1548.HK",
+    "XTALPI": "2228.HK",
+    "INSILICO": "3696.HK",
+    "WUXIAPP": "2359.HK",
+    "WUXIBIO": "2269.HK",
+    "LONZA": "LONN.SW",
+    "SARTSTED": "DIM.PA",
+    "JEOL": "6951.T"
   },
   "groups": {
     "semis": {
@@ -661,6 +669,135 @@
       ]
     }
   },
+  "stacks": {
+    "bioai": {
+      "_doc": "A second ecosystem on the page, with the same shape as groups: tier -> layer -> subsector -> tickers (or a layer listing tickers directly). Tiers follow the design-make-test-learn loop of AI drug discovery, from the bio x AI primer by @metavestor (Sep 30, 2026). label names the stack, bench is what its Full stack and tiers are measured against, tiers orders and names them; peer_benchmarks still applies by layer name.",
+      "label": "Bio x AI",
+      "bench": "XLV",
+      "tiers": [
+        {
+          "g": "bx-design",
+          "label": "Design"
+        },
+        {
+          "g": "bx-maketest",
+          "label": "Make & Test"
+        },
+        {
+          "g": "bx-learn",
+          "label": "Learn: Bio Data"
+        },
+        {
+          "g": "bx-discover",
+          "label": "AI Drug Developers"
+        },
+        {
+          "g": "bx-scale",
+          "label": "Develop & Scale"
+        }
+      ],
+      "groups": {
+        "bx-design": {
+          "R&D Software & Simulation": [
+            "SDGR",
+            "CERT"
+          ],
+          "Integrated Platforms": [
+            "LLY",
+            "AMZN",
+            "NVDA"
+          ]
+        },
+        "bx-maketest": {
+          "DNA & RNA Synthesis": [
+            "TWST",
+            "GENSCRIPT",
+            "AZTA"
+          ],
+          "Life Science Tools": {
+            "Diversified Tools": [
+              "TMO",
+              "DHR"
+            ],
+            "Analytical & Imaging Instruments": [
+              "RVTY",
+              "BRKR",
+              "WAT",
+              "JEOL"
+            ],
+            "Antibody Discovery Tools": [
+              "OABI"
+            ]
+          },
+          "Autonomous Labs": [
+            "DNA",
+            "TECAN",
+            "A",
+            "XTALPI"
+          ]
+        },
+        "bx-learn": {
+          "Biological Data Generation": [
+            "TXG",
+            "ILMN",
+            "PACB",
+            "ONT",
+            "QGEN"
+          ],
+          "Clinical Data & Diagnostics": {
+            "Oncology Testing & Data": [
+              "TEM",
+              "GH",
+              "GRAL",
+              "NTRA",
+              "CAI"
+            ],
+            "Genetic & Immune Profiling": [
+              "WGS",
+              "ADPT"
+            ]
+          }
+        },
+        "bx-discover": {
+          "Clinical-stage AI Biotechs": {
+            "Antibody & Protein Design": [
+              "ABSI",
+              "ABCL",
+              "GENB"
+            ],
+            "AI Small Molecules": [
+              "INSILICO",
+              "RXRX",
+              "RLAY"
+            ]
+          },
+          "Personalized mRNA": [
+            "MRNA",
+            "MRVI"
+          ]
+        },
+        "bx-scale": {
+          "CROs & CDMOs": {
+            "CROs": [
+              "IQV",
+              "CRL"
+            ],
+            "CDMOs": [
+              "WUXIAPP",
+              "WUXIBIO",
+              "LONZA"
+            ]
+          },
+          "Bioprocessing": [
+            "RGEN",
+            "DHR",
+            "AVTR",
+            "SARTSTED"
+          ]
+        }
+      }
+    }
+  },
   "names": {
     "A": "Agilent",
     "AAOI": "Applied Optoelectronics",
@@ -671,6 +808,7 @@
     "ACCTON": "Accton",
     "ADBE": "Adobe",
     "ADI": "Analog Devices",
+    "ADPT": "Adaptive Biotechnologies",
     "ADVANTEST": "Advantest",
     "AEHR": "Aehr Test Systems",
     "AEIS": "Advanced Energy Industries",
@@ -700,7 +838,9 @@
     "AURAS": "Auras Technology",
     "AVC": "Asia Vital Components",
     "AVGO": "Broadcom",
+    "AVTR": "Avantor",
     "AXTI": "AXT",
+    "AZTA": "Azenta",
     "BABA": "Alibaba",
     "BE": "Bloom Energy",
     "BESI": "BE Semiconductor",
@@ -711,6 +851,7 @@
     "BRKR": "Bruker",
     "BTC": "Bitcoin in USD (BTC-USD)",
     "BWXT": "BWX Technologies",
+    "CAI": "Caris Life Sciences",
     "CAMT": "Camtek",
     "CAT": "Caterpillar",
     "CBRS": "Cerebras",
@@ -779,13 +920,16 @@
     "FTNT": "Fortinet",
     "GC": "Gold futures (GC=F)",
     "GENB": "Generate Biomedicines",
+    "GENSCRIPT": "GenScript",
     "GEV": "GE Vernova",
     "GFS": "GlobalFoundries",
+    "GH": "Guardant Health",
     "GIGABYTE": "Gigabyte",
     "GLW": "Corning",
     "GNRC": "Generac",
     "GOLDCIRCUIT": "Gold Circuit Electronics",
     "GOOGL": "Alphabet",
+    "GRAL": "GRAIL",
     "GTLB": "GitLab",
     "GUC": "Global Unichip",
     "HANMI": "Hanmi Semiconductor",
@@ -810,6 +954,7 @@
     "ILMN": "Illumina",
     "INFINEON": "Infineon",
     "INNOLIGHT": "Zhongji Innolight",
+    "INSILICO": "Insilico Medicine",
     "INTC": "Intel",
     "INTU": "Intuit",
     "INVENTEC": "Inventec",
@@ -820,6 +965,7 @@
     "IWM": "iShares Russell 2000 ETF",
     "IYT": "iShares Transportation Average ETF",
     "JD": "JD.com",
+    "JEOL": "JEOL",
     "JPM": "JPMorgan Chase",
     "KEYENCE": "Keyence",
     "KEYS": "Keysight Technologies",
@@ -835,6 +981,7 @@
     "LEU": "Centrus Energy",
     "LITE": "Lumentum",
     "LLY": "Eli Lilly",
+    "LONZA": "Lonza",
     "LQD": "iShares iBoxx Investment Grade Corporate Bond ETF",
     "LRCX": "Lam Research",
     "LSCC": "Lattice Semiconductor",
@@ -854,6 +1001,8 @@
     "MOD": "Modine Manufacturing",
     "MOVE": "ICE BofA MOVE Index (Treasury volatility)",
     "MPWR": "Monolithic Power Systems",
+    "MRNA": "Moderna",
+    "MRVI": "Maravai LifeSciences",
     "MRVL": "Marvell",
     "MSFT": "Microsoft",
     "MTCH": "Match Group",
@@ -905,6 +1054,7 @@
     "PSNL": "Personalis",
     "PWR": "Quanta Services",
     "QCOM": "Qualcomm",
+    "QGEN": "Qiagen",
     "QLYS": "Qualys",
     "QQQ": "Invesco QQQ Trust",
     "QRVO": "Qorvo",
@@ -914,6 +1064,8 @@
     "RBLX": "Roblox",
     "RBRK": "Rubrik",
     "RDDT": "Reddit",
+    "RGEN": "Repligen",
+    "RLAY": "Relay Therapeutics",
     "RMBS": "Rambus",
     "ROK": "Rockwell Automation",
     "RPD": "Rapid7",
@@ -927,6 +1079,7 @@
     "SAMSUNG": "Samsung Electronics",
     "SANHUA": "Zhejiang Sanhua Intelligent Controls",
     "SANM": "Sanmina",
+    "SARTSTED": "Sartorius Stedim Biotech",
     "SCHNEIDER": "Schneider Electric",
     "SCREEN": "SCREEN Holdings",
     "SDGR": "Schrodinger",
@@ -1013,8 +1166,10 @@
     "VRNS": "Varonis Systems",
     "VRT": "Vertiv",
     "VST": "Vistra",
+    "WAT": "Waters",
     "WDAY": "Workday",
     "WDC": "Western Digital",
+    "WGS": "GeneDx",
     "WISTRON": "Wistron",
     "WIWYNN": "Wiwynn",
     "WMB": "Williams",
@@ -1022,6 +1177,8 @@
     "WOLF": "Wolfspeed",
     "WRD": "WeRide",
     "WULF": "TeraWulf",
+    "WUXIAPP": "WuXi AppTec",
+    "WUXIBIO": "WuXi Biologics",
     "XBI": "SPDR S&P Biotech ETF",
     "XHB": "SPDR S&P Homebuilders ETF",
     "XLB": "Materials Select Sector SPDR",
@@ -1036,6 +1193,7 @@
     "XLV": "Health Care Select Sector SPDR",
     "XLY": "Consumer Discretionary Select Sector SPDR",
     "XOM": "Exxon Mobil",
+    "XTALPI": "XtalPi",
     "YASKAWA": "Yaskawa Electric",
     "ZBRA": "Zebra",
     "ZHIPU": "Zhipu AI (Knowledge Atlas)",
@@ -1114,7 +1272,9 @@
     "Biotech AI": "XBI",
     "Genomics & Sequencing": "XBI",
     "Discovery Platforms": "XBI",
-    "Precision Diagnostics": "XBI"
+    "Precision Diagnostics": "XBI",
+    "Clinical-stage AI Biotechs": "XBI",
+    "Personalized mRNA": "XBI"
   },
   "membership_changes": {
     "_doc": "Each entry says: in this basket (and every level above it), this ticker counts only within [from, until). Adding a name on a date: {ticker, basket, from}. Removing one: {ticker, basket, until} (keep the entry after deleting the name from 'groups', so replay still shows it before that date). Moving one: an 'until' entry for the old basket and a 'from' entry for the new. basket is 'Layer / Subsector', or just 'Layer' for a layer that lists stocks directly. Do not record renames or classification fixes: those correct today's definition rather than change history.",

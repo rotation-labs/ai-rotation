@@ -187,6 +187,8 @@ def fund_weights(fallback):
 
 def main():
     groups = CFG["groups"]
+    # Further ecosystems (Bio x AI) share the tree shape of groups and every rule that goes with it.
+    stacks = {k: v for k, v in CFG.get("stacks", {}).items() if not k.startswith("_")}
     foreign = CFG["foreign_listings"]
     changes = {k: v for k, v in CFG.get("membership_changes", {}).items() if not k.startswith("_")}
     historical = [e["ticker"] for e in changes.get("entries", [])]   # may no longer be in groups
@@ -203,7 +205,8 @@ def main():
                                           for t in ([s[k]] if isinstance(s[k], str) else s[k])}
     dtk |= {t for b in drv.get("barometers", []) for t in b.get("ratio", [])} | set((weights or {}).get("top", {}))
     names = sorted(set(CFG["benchmarks"]) | set(CFG.get("sectors", {})) | set(macro)
-                   | set(tickers(groups)) | set(historical) | set(dsym) | dtk)
+                   | set(tickers(groups)) | {t for v in stacks.values() for t in tickers(v["groups"])}
+                   | set(historical) | set(dsym) | dtk)
     sym = {n: macro[n]["symbol"] if n in macro else dsym.get(n) or foreign.get(n, n) for n in names}
     fx_syms = sorted({FX[k][0] for k in FX if any(s.endswith(k) for s in sym.values())})
 
@@ -266,10 +269,13 @@ def main():
         print(f"warning: dropped {missing}", file=sys.stderr)
 
     prune(groups, set(missing))
+    for v in stacks.values():
+        prune(v["groups"], set(missing))
 
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps({"asof": str(us[-1].date()), "dates": [str(x.date()) for x in us],
                                "px": px, "groups": groups,
+                               "stacks": {k: {x: y for x, y in v.items() if not x.startswith("_")} for k, v in stacks.items()},
                                "names": {k: v for k, v in CFG.get("names", {}).items() if k in px},
                                # ad-hoc display codes (HYNIX, FANUC) rather than real tickers:
                                # the page decodes these inline, and shows every other name on hover

@@ -58,8 +58,10 @@ head, body = tpl.split('<div class="app">', 1)
 body = '<div class="app">' + body.replace("__DATA__", data.replace("</", "<\\/"))
 
 # Counted from the data, so the link preview cannot drift from the page again.
+stacks = json.loads(data).get("stacks") or {}
 desc = (f"Relative rotation graph of the AI trade across {len(json.loads(data)['groups'])} tiers of its value chain, "
-        "from chips to applications, down to the individual stocks.")
+        "from chips to applications, down to the individual stocks"
+        + "".join(f", plus {s['label']} across {len(s['groups'])} tiers" for s in stacks.values()) + ".")
 page = f"""<!doctype html>
 <html lang="en">
 <head>
