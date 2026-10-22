@@ -671,7 +671,7 @@
   },
   "stacks": {
     "bioai": {
-      "_doc": "A second ecosystem on the page, with the same shape as groups: tier -> layer -> subsector -> tickers (or a layer listing tickers directly). Tiers follow the design-make-test-learn loop of AI drug discovery, from the bio x AI primer by @metavestor (Sep 30, 2026). label names the stack, bench is what its Full stack and tiers are measured against, tiers orders and names them; peer_benchmarks still applies by layer name.",
+      "_doc": "A second ecosystem on the page, with the same shape as groups: tier -> layer -> subsector -> tickers (or a layer listing tickers directly). Its layers are the ten buckets of the bio x AI primer by @metavestor (Sep 30, 2026), grouped into tiers that follow the design-make-test-learn loop of AI drug discovery. label names the stack, bench is what its Full stack and tiers are measured against, tiers orders and names them; peer_benchmarks still applies by layer name.",
       "label": "Bio x AI",
       "bench": "XLV",
       "tiers": [
@@ -685,11 +685,7 @@
         },
         {
           "g": "bx-learn",
-          "label": "Learn: Bio Data"
-        },
-        {
-          "g": "bx-discover",
-          "label": "AI Drug Developers"
+          "label": "Learn: Data"
         },
         {
           "g": "bx-scale",
@@ -698,42 +694,39 @@
       ],
       "groups": {
         "bx-design": {
-          "R&D Software & Simulation": [
-            "SDGR",
-            "CERT"
-          ],
           "Integrated Platforms": [
             "LLY",
             "AMZN",
             "NVDA"
+          ],
+          "R&D Software & Simulation": [
+            "SDGR",
+            "RVTY",
+            "CERT"
           ]
         },
         "bx-maketest": {
           "DNA & RNA Synthesis": [
             "TWST",
-            "GENSCRIPT",
-            "AZTA"
+            "AZTA",
+            "DHR",
+            "GENSCRIPT"
           ],
-          "Life Science Tools": {
-            "Diversified Tools": [
-              "TMO",
-              "DHR"
-            ],
-            "Analytical & Imaging Instruments": [
-              "RVTY",
-              "BRKR",
-              "WAT",
-              "JEOL"
-            ],
-            "Antibody Discovery Tools": [
-              "OABI"
-            ]
-          },
-          "Autonomous Labs": [
+          "Life Science Tools": [
+            "TMO",
+            "DHR",
+            "RVTY",
+            "BRKR",
+            "WAT",
+            "OABI",
+            "JEOL"
+          ],
+          "Autonomous Labs & Lab Services": [
             "DNA",
-            "TECAN",
             "A",
-            "XTALPI"
+            "TECAN",
+            "XTALPI",
+            "RHHBY"
           ]
         },
         "bx-learn": {
@@ -741,53 +734,38 @@
             "TXG",
             "ILMN",
             "PACB",
-            "ONT",
-            "QGEN"
+            "QGEN",
+            "ONT"
           ],
-          "Clinical Data & Diagnostics": {
-            "Oncology Testing & Data": [
-              "TEM",
-              "GH",
-              "GRAL",
-              "NTRA",
-              "CAI"
-            ],
-            "Genetic & Immune Profiling": [
-              "WGS",
-              "ADPT"
-            ]
-          }
-        },
-        "bx-discover": {
-          "Clinical-stage AI Biotechs": {
-            "Antibody & Protein Design": [
-              "ABSI",
-              "ABCL",
-              "GENB"
-            ],
-            "AI Small Molecules": [
-              "INSILICO",
-              "RXRX",
-              "RLAY"
-            ]
-          },
-          "Personalized mRNA": [
+          "Individualized Medicine & Clinical Data": [
+            "TEM",
+            "GH",
+            "GRAL",
+            "NTRA",
+            "CAI",
+            "WGS",
+            "ADPT",
             "MRNA",
             "MRVI"
           ]
         },
         "bx-scale": {
-          "CROs & CDMOs": {
-            "CROs": [
-              "IQV",
-              "CRL"
-            ],
-            "CDMOs": [
-              "WUXIAPP",
-              "WUXIBIO",
-              "LONZA"
-            ]
-          },
+          "AI Drug Discovery & Clinical-stage Biotechs": [
+            "ABSI",
+            "ABCL",
+            "RXRX",
+            "GENB",
+            "RLAY",
+            "INSILICO",
+            "IAM"
+          ],
+          "CROs & CDMOs": [
+            "IQV",
+            "CRL",
+            "LONZA",
+            "WUXIAPP",
+            "WUXIBIO"
+          ],
           "Bioprocessing": [
             "RGEN",
             "DHR",
@@ -945,6 +923,7 @@
     "HYG": "iShares iBoxx High Yield Corporate Bond ETF",
     "HYNIX": "SK Hynix",
     "HYOSUNGHI": "Hyosung Heavy Industries",
+    "IAM": "Iambic Therapeutics",
     "IBIDEN": "Ibiden",
     "ICHR": "Ichor",
     "IEF": "iShares 7-10 Year Treasury Bond ETF",
@@ -1065,6 +1044,7 @@
     "RBRK": "Rubrik",
     "RDDT": "Reddit",
     "RGEN": "Repligen",
+    "RHHBY": "Roche (ADR)",
     "RLAY": "Relay Therapeutics",
     "RMBS": "Rambus",
     "ROK": "Rockwell Automation",
@@ -1273,8 +1253,7 @@
     "Genomics & Sequencing": "XBI",
     "Discovery Platforms": "XBI",
     "Precision Diagnostics": "XBI",
-    "Clinical-stage AI Biotechs": "XBI",
-    "Personalized mRNA": "XBI"
+    "AI Drug Discovery & Clinical-stage Biotechs": "XBI"
   },
   "membership_changes": {
     "_doc": "Each entry says: in this basket (and every level above it), this ticker counts only within [from, until). Adding a name on a date: {ticker, basket, from}. Removing one: {ticker, basket, until} (keep the entry after deleting the name from 'groups', so replay still shows it before that date). Moving one: an 'until' entry for the old basket and a 'from' entry for the new. basket is 'Layer / Subsector', or just 'Layer' for a layer that lists stocks directly. Do not record renames or classification fixes: those correct today's definition rather than change history.",

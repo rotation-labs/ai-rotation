@@ -239,7 +239,11 @@ def main():
         p = raw[s].dropna() if s in raw else pd.Series(dtype=float)
         if n in starts:
             p = p[p.index >= starts[n]]
-        if len(p) < 60:
+        # Under 60 prints usually means a broken or sparse symbol. A fresh listing is the exception
+        # (Iambic, IAM, listed 2026-10-15): it joins its baskets from its second session, as any
+        # late starter does, and gets a dot of its own once it has the history for one.
+        fresh = len(p) >= 2 and len(us) > 60 and p.index[0] >= us[-60]
+        if len(p) < 60 and not fresh:
             missing.append(n)
             continue
         # A halted, delisted or silently broken listing would otherwise be forward-filled
