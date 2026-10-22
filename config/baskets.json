@@ -664,6 +664,7 @@
   "names": {
     "A": "Agilent",
     "AAOI": "Applied Optoelectronics",
+    "AAPL": "Apple",
     "ABCL": "AbCellera Biologics",
     "ABNB": "Airbnb",
     "ABSI": "Absci",
@@ -690,6 +691,7 @@
     "APH": "Amphenol",
     "APLD": "Applied Digital",
     "APP": "Applovin",
+    "ARKK": "ARK Innovation ETF",
     "ARM": "Arm Holdings",
     "ASMI": "ASM International",
     "ASML": "ASML",
@@ -705,6 +707,7 @@
     "BIDU": "Baidu",
     "BKNG": "Booking Holdings",
     "BOTZ": "Global X Robotics & AI ETF",
+    "BRK-B": "Berkshire Hathaway",
     "BRKR": "Bruker",
     "BTC": "Bitcoin in USD (BTC-USD)",
     "BWXT": "BWX Technologies",
@@ -727,6 +730,7 @@
     "COHR": "Coherent",
     "COHU": "Cohu",
     "CORZ": "Core Scientific",
+    "COST": "Costco",
     "CPNG": "Coupang",
     "CRDO": "Credo",
     "CRL": "Charles River Laboratories",
@@ -740,6 +744,7 @@
     "DELL": "Dell Technologies",
     "DELTA": "Delta Electronics",
     "DHR": "Danaher",
+    "DIA": "SPDR Dow Jones Industrial Average ETF",
     "DISCO": "Disco",
     "DLR": "Digital Realty Trust",
     "DNA": "Ginkgo Bioworks",
@@ -749,6 +754,8 @@
     "DXY": "US Dollar Index (DX-Y.NYB)",
     "DY": "Dycom Industries",
     "EBAY": "eBay",
+    "EEM": "iShares MSCI Emerging Markets ETF",
+    "EFA": "iShares MSCI EAFE ETF",
     "EMC": "Elite Material",
     "EME": "EMCOR",
     "ENTG": "Entegris",
@@ -791,10 +798,12 @@
     "HUAHONG": "Hua Hong Semiconductor",
     "HUBB": "Hubbell",
     "HUBS": "HubSpot",
+    "HYG": "iShares iBoxx High Yield Corporate Bond ETF",
     "HYNIX": "SK Hynix",
     "HYOSUNGHI": "Hyosung Heavy Industries",
     "IBIDEN": "Ibiden",
     "ICHR": "Ichor",
+    "IEF": "iShares 7-10 Year Treasury Bond ETF",
     "IESC": "IES Holdings",
     "IFLYTEK": "iFlytek",
     "IGV": "iShares Expanded Tech-Software ETF",
@@ -808,7 +817,10 @@
     "IREN": "IREN",
     "IRM": "Iron Mountain",
     "ISRG": "Intuitive Surgical",
+    "IWM": "iShares Russell 2000 ETF",
+    "IYT": "iShares Transportation Average ETF",
     "JD": "JD.com",
+    "JPM": "JPMorgan Chase",
     "KEYENCE": "Keyence",
     "KEYS": "Keysight Technologies",
     "KIOXIA": "Kioxia",
@@ -816,15 +828,20 @@
     "KLIC": "Kulicke & Soffa",
     "KMI": "Kinder Morgan",
     "KOKUSAI": "Kokusai Electric",
+    "KRE": "SPDR S&P Regional Banking ETF",
     "LASERTEC": "Lasertec",
     "LEADERDRIVE": "Leader Harmonious Drive Systems",
     "LENOVO": "Lenovo",
     "LEU": "Centrus Energy",
     "LITE": "Lumentum",
+    "LLY": "Eli Lilly",
+    "LQD": "iShares iBoxx Investment Grade Corporate Bond ETF",
     "LRCX": "Lam Research",
     "LSCC": "Lattice Semiconductor",
     "LSELECTRIC": "LS Electric",
     "LYFT": "Lyft",
+    "MA": "Mastercard",
+    "MAGS": "Roundhill Magnificent Seven ETF",
     "MBLY": "Mobileye",
     "MCHP": "Microchip Technology",
     "MDB": "MongoDB",
@@ -835,10 +852,12 @@
     "MINIMAX": "MiniMax",
     "MKSI": "MKS",
     "MOD": "Modine Manufacturing",
+    "MOVE": "ICE BofA MOVE Index (Treasury volatility)",
     "MPWR": "Monolithic Power Systems",
     "MRVL": "Marvell",
     "MSFT": "Microsoft",
     "MTCH": "Match Group",
+    "MTUM": "iShares MSCI USA Momentum Factor ETF",
     "MTZ": "MasTec",
     "MU": "Micron",
     "MXL": "MaxLinear",
@@ -889,6 +908,7 @@
     "QLYS": "Qualys",
     "QQQ": "Invesco QQQ Trust",
     "QRVO": "Qorvo",
+    "QUAL": "iShares MSCI USA Quality Factor ETF",
     "QUANTA": "Quanta Computer",
     "RAINBOWROBO": "Rainbow Robotics",
     "RBLX": "Roblox",
@@ -932,8 +952,12 @@
     "SOFTBANK": "SoftBank Group",
     "SOXX": "iShares Semiconductor ETF",
     "SPCX": "SpaceX",
+    "SPHB": "Invesco S&P 500 High Beta ETF",
+    "SPLV": "Invesco S&P 500 Low Volatility ETF",
     "SPOT": "Spotify",
     "SPY": "SPDR S&P 500 ETF",
+    "SPYG": "SPDR Portfolio S&P 500 Growth ETF",
+    "SPYV": "SPDR Portfolio S&P 500 Value ETF",
     "STM": "STMicroelectronics",
     "STRL": "Sterling Infrastructure",
     "STX": "Seagate",
@@ -951,11 +975,13 @@
     "TER": "Teradyne",
     "TFC": "TFC Optical Communication",
     "THK": "THK",
+    "TIP": "iShares TIPS Bond ETF",
     "TLN": "Talen Energy",
     "TMO": "Thermo Fisher Scientific",
     "TOKYOELEC": "Tokyo Electron",
     "TOKYOOHKA": "Tokyo Ohka Kogyo",
     "TSEM": "Tower Semiconductor",
+    "TSLA": "Tesla",
     "TSM": "TSMC",
     "TT": "Trane",
     "TTD": "The Trade Desk",
@@ -972,11 +998,17 @@
     "UMC": "United Microelectronics",
     "UNIMICRON": "Unimicron",
     "US10Y": "US 10-year Treasury yield (^TNX)",
+    "US2Y": "US 2-year Treasury yield (futures)",
+    "US30Y": "US 30-year Treasury yield",
+    "US3M": "13-week US Treasury bill yield",
+    "USDJPY": "US dollar / Japanese yen",
+    "V": "Visa",
     "VEEV": "Veeva Systems",
     "VIAV": "Viavi Solutions",
     "VICR": "Vicor",
     "VICTORYGIANT": "Victory Giant Technology",
     "VIX": "Cboe Volatility Index (^VIX)",
+    "VIX3M": "Cboe 3-month volatility index",
     "VPG": "Vishay Precision Group",
     "VRNS": "Varonis Systems",
     "VRT": "Vertiv",
@@ -986,10 +1018,12 @@
     "WISTRON": "Wistron",
     "WIWYNN": "Wiwynn",
     "WMB": "Williams",
+    "WMT": "Walmart",
     "WOLF": "Wolfspeed",
     "WRD": "WeRide",
     "WULF": "TeraWulf",
     "XBI": "SPDR S&P Biotech ETF",
+    "XHB": "SPDR S&P Homebuilders ETF",
     "XLB": "Materials Select Sector SPDR",
     "XLC": "Communication Services Select Sector SPDR",
     "XLE": "Energy Select Sector SPDR",
@@ -1001,6 +1035,7 @@
     "XLU": "Utilities Select Sector SPDR",
     "XLV": "Health Care Select Sector SPDR",
     "XLY": "Consumer Discretionary Select Sector SPDR",
+    "XOM": "Exxon Mobil",
     "YASKAWA": "Yaskawa Electric",
     "ZBRA": "Zebra",
     "ZHIPU": "Zhipu AI (Knowledge Atlas)",
@@ -1090,5 +1125,304 @@
         "from": "2026-09-23"
       }
     ]
+  },
+  "drivers": {
+    "_doc": "The Drivers panel: why SPY moved over a chosen horizon. indices are headline ETFs; styles are relative-return spreads (a vs b, either side a ticker or a list equal-weighted); barometers are macro series grouped for the table - 'symbol' adds a Yahoo series under that code, 'ratio'/'spread' derive one from two codes, and unit says how to read a change (pct, bp for yields and yield spreads, pts for index levels, x for a ratio level); short names it inside a sentence. model lists the barometers the S&P is regressed on. weights is SPY's sector mix and top holdings as of a date: fetch.py refreshes it from Yahoo each build and falls back to this copy, drifted by price.",
+    "indices": [
+      "SPY",
+      "QQQ",
+      "DIA",
+      "IWM",
+      "RSP"
+    ],
+    "styles": [
+      {
+        "label": "Growth vs value",
+        "a": "SPYG",
+        "b": "SPYV",
+        "group": "Style & size"
+      },
+      {
+        "label": "Momentum vs S&P",
+        "a": "MTUM",
+        "b": "SPY",
+        "group": "Style & size"
+      },
+      {
+        "label": "Quality vs S&P",
+        "a": "QUAL",
+        "b": "SPY",
+        "group": "Style & size"
+      },
+      {
+        "label": "Small vs large caps",
+        "a": "IWM",
+        "b": "SPY",
+        "group": "Style & size"
+      },
+      {
+        "label": "Equal vs cap weight",
+        "a": "RSP",
+        "b": "SPY",
+        "group": "Style & size"
+      },
+      {
+        "label": "Magnificent 7 vs S&P",
+        "a": "MAGS",
+        "b": "SPY",
+        "group": "Style & size"
+      },
+      {
+        "label": "High beta vs low vol",
+        "a": "SPHB",
+        "b": "SPLV",
+        "group": "Risk appetite"
+      },
+      {
+        "label": "Cyclicals vs defensives",
+        "a": [
+          "XLY",
+          "XLI",
+          "XLF",
+          "XLB"
+        ],
+        "b": [
+          "XLP",
+          "XLU",
+          "XLV"
+        ],
+        "group": "Risk appetite"
+      },
+      {
+        "label": "Speculative growth vs S&P",
+        "a": "ARKK",
+        "b": "SPY",
+        "group": "Risk appetite"
+      },
+      {
+        "label": "Semis vs software",
+        "a": "SMH",
+        "b": "IGV",
+        "group": "Industry tells"
+      },
+      {
+        "label": "Regional banks vs S&P",
+        "a": "KRE",
+        "b": "SPY",
+        "group": "Industry tells"
+      },
+      {
+        "label": "Transports vs S&P",
+        "a": "IYT",
+        "b": "SPY",
+        "group": "Industry tells"
+      },
+      {
+        "label": "Homebuilders vs S&P",
+        "a": "XHB",
+        "b": "SPY",
+        "group": "Industry tells"
+      },
+      {
+        "label": "Developed ex-US vs S&P",
+        "a": "EFA",
+        "b": "SPY",
+        "group": "Global"
+      },
+      {
+        "label": "Emerging markets vs S&P",
+        "a": "EEM",
+        "b": "SPY",
+        "group": "Global"
+      }
+    ],
+    "barometers": [
+      {
+        "code": "US3M",
+        "symbol": "^IRX",
+        "label": "US 3M bill yield",
+        "unit": "bp",
+        "group": "Rates"
+      },
+      {
+        "code": "US2Y",
+        "symbol": "2YY=F",
+        "label": "US 2Y yield",
+        "unit": "bp",
+        "group": "Rates",
+        "short": "the 2Y yield"
+      },
+      {
+        "code": "US10Y",
+        "label": "US 10Y yield",
+        "unit": "bp",
+        "group": "Rates",
+        "short": "the 10Y yield"
+      },
+      {
+        "code": "US30Y",
+        "symbol": "^TYX",
+        "label": "US 30Y yield",
+        "unit": "bp",
+        "group": "Rates"
+      },
+      {
+        "code": "CURVE",
+        "spread": [
+          "US10Y",
+          "US2Y"
+        ],
+        "label": "2s10s curve",
+        "unit": "bp",
+        "group": "Rates",
+        "short": "the curve"
+      },
+      {
+        "code": "BEI",
+        "ratio": [
+          "TIP",
+          "IEF"
+        ],
+        "label": "Inflation-linked vs Treasuries (TIP/IEF)",
+        "unit": "pct",
+        "group": "Rates"
+      },
+      {
+        "code": "MOVE",
+        "symbol": "^MOVE",
+        "label": "Bond volatility (MOVE)",
+        "unit": "pts",
+        "group": "Rates"
+      },
+      {
+        "code": "HYCR",
+        "ratio": [
+          "HYG",
+          "IEF"
+        ],
+        "label": "High yield vs Treasuries (HYG/IEF)",
+        "unit": "pct",
+        "group": "Credit",
+        "short": "credit"
+      },
+      {
+        "code": "IGCR",
+        "ratio": [
+          "LQD",
+          "IEF"
+        ],
+        "label": "Investment grade vs Treasuries (LQD/IEF)",
+        "unit": "pct",
+        "group": "Credit"
+      },
+      {
+        "code": "VIX",
+        "label": "VIX",
+        "unit": "pts",
+        "group": "Volatility",
+        "short": "the VIX"
+      },
+      {
+        "code": "VTS",
+        "ratio": [
+          "VIX",
+          "VIX3M"
+        ],
+        "label": "VIX term structure (VIX/VIX3M)",
+        "unit": "x",
+        "group": "Volatility"
+      },
+      {
+        "code": "DXY",
+        "label": "US dollar index",
+        "unit": "pct",
+        "group": "Dollar & FX",
+        "short": "the dollar"
+      },
+      {
+        "code": "USDJPY",
+        "symbol": "JPY=X",
+        "label": "USD/JPY",
+        "unit": "pct",
+        "group": "Dollar & FX",
+        "short": "the yen"
+      },
+      {
+        "code": "CL",
+        "label": "Crude oil",
+        "unit": "pct",
+        "group": "Commodities",
+        "short": "oil"
+      },
+      {
+        "code": "GC",
+        "label": "Gold",
+        "unit": "pct",
+        "group": "Commodities",
+        "short": "gold"
+      },
+      {
+        "code": "HG",
+        "label": "Copper",
+        "unit": "pct",
+        "group": "Commodities",
+        "short": "copper"
+      },
+      {
+        "code": "CUAU",
+        "ratio": [
+          "HG",
+          "GC"
+        ],
+        "label": "Copper/gold ratio",
+        "unit": "pct",
+        "group": "Commodities"
+      },
+      {
+        "code": "BTC",
+        "label": "Bitcoin",
+        "unit": "pct",
+        "group": "Crypto",
+        "short": "bitcoin"
+      }
+    ],
+    "extra": {
+      "VIX3M": "^VIX3M"
+    },
+    "model": [
+      "US10Y",
+      "CURVE",
+      "DXY",
+      "CL",
+      "HYCR"
+    ],
+    "weights": {
+      "asof": "2026-10-21",
+      "source": "Yahoo Finance (Morningstar sectors) for SPY",
+      "sectors": {
+        "XLRE": 0.017,
+        "XLY": 0.0874,
+        "XLB": 0.0156,
+        "XLP": 0.0433,
+        "XLK": 0.4045,
+        "XLC": 0.0995,
+        "XLF": 0.112,
+        "XLU": 0.0188,
+        "XLI": 0.0754,
+        "XLE": 0.034,
+        "XLV": 0.0926
+      },
+      "top": {
+        "NVDA": 0.0836,
+        "AAPL": 0.0735,
+        "MSFT": 0.0576,
+        "AMZN": 0.037,
+        "GOOGL": 0.055,
+        "AVGO": 0.0253,
+        "META": 0.0242,
+        "MU": 0.0182,
+        "TSLA": 0.0151
+      }
+    }
   }
 }

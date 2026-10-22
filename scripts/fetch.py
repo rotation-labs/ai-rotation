@@ -156,6 +156,35 @@ def fill_unfinalised(frame, lookback=3):
     return frame
 
 
+# Yahoo reports SPY's sector mix in Morningstar's sector names; each maps to one SPDR sector fund.
+SECTOR_FUND = {"technology": "XLK", "communication_services": "XLC", "consumer_cyclical": "XLY",
+               "financial_services": "XLF", "healthcare": "XLV", "industrials": "XLI", "energy": "XLE",
+               "basic_materials": "XLB", "utilities": "XLU", "realestate": "XLRE", "consumer_defensive": "XLP"}
+
+
+def fund_weights(fallback):
+    """SPY's sector weights and top holdings, for the Drivers panel's contribution maths.
+
+    Refreshed from Yahoo on every build. That endpoint is less dependable than prices, so on
+    any failure or implausible answer the copy in config/baskets.json is used instead; the page
+    drifts either one by price from its as-of date, so a stale copy degrades slowly rather than
+    breaking. Never fatal: the panel is an extra, not a reason to keep the previous site up.
+    """
+    try:
+        fd = yf.Ticker("SPY").funds_data
+        sectors = {SECTOR_FUND[k]: round(float(v), 4) for k, v in fd.sector_weightings.items() if k in SECTOR_FUND}
+        top = {}
+        for s, v in fd.top_holdings["Holding Percent"].items():
+            s = "GOOGL" if s == "GOOG" else s.replace(".", "-")   # one Alphabet; BRK.B is BRK-B on Yahoo
+            top[s] = round(top.get(s, 0) + float(v), 4)
+        if len(sectors) != len(SECTOR_FUND) or not 0.95 < sum(sectors.values()) < 1.05 or not top:
+            raise ValueError(f"implausible weights: {sectors} {top}")
+        return {"asof": None, "source": "Yahoo Finance (Morningstar sectors) for SPY", "sectors": sectors, "top": top}
+    except Exception as e:
+        print(f"warning: SPY weights unavailable ({e}); using the copy dated {fallback.get('asof')}", file=sys.stderr)
+        return dict(fallback)
+
+
 def main():
     groups = CFG["groups"]
     foreign = CFG["foreign_listings"]
@@ -164,9 +193,18 @@ def main():
     # Macro series (futures, a yield, VIX, the dollar, bitcoin) go by short display codes
     # mapped to their Yahoo symbols, the same way foreign listings do.
     macro = CFG.get("macro", {})
+    # The Drivers panel's extra series: headline and factor ETFs, rates, credit and volatility
+    # gauges (a code with a "symbol" is a Yahoo series named by that code, as in macro), and
+    # SPY's largest holdings, whose weights decide which stocks it needs.
+    drv = CFG.get("drivers", {})
+    weights = fund_weights(drv.get("weights", {})) if drv else None
+    dsym = {b["code"]: b["symbol"] for b in drv.get("barometers", []) if "symbol" in b} | drv.get("extra", {})
+    dtk = set(drv.get("indices", [])) | {t for s in drv.get("styles", []) for k in "ab"
+                                          for t in ([s[k]] if isinstance(s[k], str) else s[k])}
+    dtk |= {t for b in drv.get("barometers", []) for t in b.get("ratio", [])} | set((weights or {}).get("top", {}))
     names = sorted(set(CFG["benchmarks"]) | set(CFG.get("sectors", {})) | set(macro)
-                   | set(tickers(groups)) | set(historical))
-    sym = {n: macro[n]["symbol"] if n in macro else foreign.get(n, n) for n in names}
+                   | set(tickers(groups)) | set(historical) | set(dsym) | dtk)
+    sym = {n: macro[n]["symbol"] if n in macro else dsym.get(n) or foreign.get(n, n) for n in names}
     fx_syms = sorted({FX[k][0] for k in FX if any(s.endswith(k) for s in sym.values())})
 
     raw = fill_unfinalised(download(list(sym.values()) + fx_syms))
@@ -241,6 +279,7 @@ def main():
                                "benchmarks": [b for b in CFG["benchmarks"] if b in px],
                                "peers": CFG.get("peer_benchmarks", {}),
                                "membership": changes,
+                               "drivers": drivers_payload(drv, weights, px, us),
                                # set only while the US session is in progress and today has trades
                                "live": ({"date": str(today.date()),
                                          "time": ny.strftime("%I:%M%p").lstrip("0").lower() + " ET"}
@@ -251,6 +290,24 @@ def main():
                                          and any(d in us for d in PROXY[s])}},
                               separators=(",", ":")))
     print(f"wrote {OUT} - {len(px)} series through {us[-1].date()}")
+
+
+def drivers_payload(drv, weights, px, us):
+    """The Drivers config as the page needs it: only what has prices, weights dated."""
+    if not drv:
+        return None
+    have = lambda t: all(x in px for x in ([t] if isinstance(t, str) else t))
+    baro = [b for b in drv.get("barometers", [])
+            if have(b.get("ratio") or b.get("spread") or b["code"])]
+    w = dict(weights)
+    w["asof"] = w.get("asof") or str(us[-1].date())
+    w["sectors"] = {k: v for k, v in w.get("sectors", {}).items() if k in px}
+    w["top"] = {k: v for k, v in w.get("top", {}).items() if k in px}
+    return {"indices": [t for t in drv.get("indices", []) if t in px],
+            "styles": [s for s in drv.get("styles", []) if have(s["a"]) and have(s["b"])],
+            "barometers": [{k: v for k, v in b.items() if k != "symbol"} for b in baro],
+            "model": [m for m in drv.get("model", []) if any(b["code"] == m for b in baro)],
+            "weights": w}
 
 
 if __name__ == "__main__":

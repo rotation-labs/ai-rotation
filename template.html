@@ -14,6 +14,9 @@
   --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"Geist Mono",ui-monospace,Menlo,Consolas,monospace;
   --shadow:rgba(0,0,0,.5);
+  /* Gain/loss fills for the Drivers bars: blue/red rather than the quadrant green/red, which
+     fall to ΔE 5.8 apart for deuteranopes. Checked with the dataviz palette validator. */
+  --up:#6494e8; --dn:#dd6559;
 }
 @media (prefers-color-scheme:light){
   :root{
@@ -23,6 +26,7 @@
     --text:#14171a; --muted:#59616b; --faint:#64686d;
     --lead:#297e4e; --imp:#3568ad; --weak:#8e691c; --lag:#bd4438;
     --shadow:rgba(16,20,26,.16);
+    --up:#3568ad; --dn:#bd4438;
   }
 }
 *{box-sizing:border-box}
@@ -138,6 +142,32 @@ button.strname{cursor:pointer;text-decoration:underline;text-decoration-color:va
 .mvmore{font-size:11px;color:var(--muted);padding:5px 2px;background:none;border:0;cursor:pointer}
 .mvtr{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.6}.mvtr b{color:var(--text);font-weight:500}
 @media (max-width:600px){.mvcols{grid-template-columns:1fr}}
+.drtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px;margin:0 0 10px}
+.drtile{background:var(--raised);border-radius:8px;padding:6px 9px;min-width:0}
+.drtile .k{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drtile .v{display:block;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.drtile .z{display:block;font-size:10.5px;color:var(--faint)}
+.drreg{font-size:12.5px;margin:0 0 6px}.drreg b{font-weight:600}.drreg span{color:var(--muted)}
+.drnar{margin:0 0 12px;padding-left:18px;font-size:12.5px;line-height:1.55;color:var(--muted)}.drnar li{margin:2px 0}.drnar b{color:var(--text);font-weight:500}
+.drgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 22px}
+.drcard{min-width:0}.drwide{grid-column:1/-1}
+.drcard h3{margin:0 0 2px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:500}
+.drcard .hint{font-size:11px;color:var(--faint);margin:0 0 5px;line-height:1.45}
+.drrow{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(56px,1fr) 50px 54px;gap:8px;align-items:center;width:100%;padding:3px 2px;font-size:12px;background:none;border:0;border-top:1px solid var(--line);text-align:left;color:var(--text)}
+.drrow.m5{grid-template-columns:minmax(0,1.6fr) 62px 56px minmax(56px,1fr) 44px}
+button.drrow{cursor:pointer}button.drrow:hover{background:var(--raised)}
+.drrow .lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drrow .v{text-align:right;font-size:11.5px;white-space:nowrap}.drrow .v2{text-align:right;font-size:11px;color:var(--muted);white-space:nowrap}
+.drrow.tot{font-weight:600}.drrow .co{color:var(--muted);font-size:11px;margin-left:4px}.drrow.res .lb{color:var(--muted)}
+.drhd{border-top:0;padding-top:0;padding-bottom:1px;font-size:10.5px;color:var(--faint)}.drhd span{text-align:right}
+.drgrp{font-size:10.5px;color:var(--faint);padding:7px 2px 2px}
+.dbar{position:relative;height:10px}
+.dbar::before{content:'';position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line2)}
+.dbar i{position:absolute;top:0;height:10px}
+.dbar i.u{left:50%;background:var(--up);border-radius:0 4px 4px 0}.dbar i.d{right:50%;background:var(--dn);border-radius:4px 0 0 4px}
+.drnote{font-size:11px;color:var(--faint);margin:10px 0 0;line-height:1.5}
+@media (max-width:700px){.drgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:600px){.drrow.m5{grid-template-columns:minmax(0,1.6fr) 54px minmax(48px,1fr) 40px}.drrow.m5 .lvl{display:none}}
 .cmp{border:1px solid var(--line2);border-radius:10px;background:var(--panel);padding:10px 12px;margin:0 0 10px}
 .cmph{display:flex;align-items:baseline;gap:10px;font-size:12px;color:var(--muted);margin-bottom:8px}.cmph b{color:var(--text);font-size:13px}
 .cmpx{margin-left:auto;background:none;border:0;color:var(--muted);font-size:14px;cursor:pointer}
@@ -266,6 +296,7 @@ svg .dimmed{opacity:.1}
       <div class="tool"><span>Tail</span><div class="seg" id="tail"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8">8</button><button type="button" data-v="12">12</button></div></div>
       <div class="tool"><label for="bench">vs</label><select id="bench"></select></div>
       <div class="tool"><button type="button" id="mvbtn" class="tbtn" aria-pressed="false" title="Stocks or sector ETFs that just changed quadrant">Movers</button></div>
+      <div class="tool"><button type="button" id="drbtn" class="tbtn" aria-pressed="false" title="Why the S&amp;P moved: sector and mega-cap contributions, style spreads and macro barometers">Drivers</button></div>
       <div class="tool"><button type="button" id="cvbtn" class="tbtn" aria-pressed="false" title="Build your own view: any tiers, layers, subsectors or tickers on one chart, or combined into one basket">Customize</button></div>
       <div class="tool"><button type="button" id="cmpbtn" class="tbtn" aria-pressed="false" title="Compare any two baskets or tickers">Compare</button></div>
       </div>
@@ -281,6 +312,12 @@ svg .dimmed{opacity:.1}
         <button type="button" id="mvx" class="cmpx" aria-label="Close movers">✕</button></div>
       <div class="mvcols"><div class="mvcol" id="mvup"></div><div class="mvcol" id="mvdn"></div></div>
       <div class="mvtr" id="mvtr"></div>
+    </section>
+    <section class="mv" id="dr" hidden aria-label="Market drivers">
+      <div class="cmph"><h2 class="mvh">Drivers</h2><span id="drsub"></span>
+        <span class="seg" id="drh" role="group" aria-label="Horizon"><button type="button" data-v="1D">1D</button><button type="button" data-v="1W">1W</button><button type="button" data-v="1M">1M</button><button type="button" data-v="3M">3M</button><button type="button" data-v="YTD">YTD</button></span>
+        <button type="button" id="drx" class="cmpx" aria-label="Close drivers">✕</button></div>
+      <div id="drbody"></div>
     </section>
     <section class="cmp" id="cv" hidden aria-label="Custom view editor"></section>
     <div class="cmp" id="cmp" hidden>
@@ -310,6 +347,7 @@ svg .dimmed{opacity:.1}
       <p><b>Levels.</b> Seven tiers, cut where the AI trade actually moves apart: Core Semis, AI Compute, Networking &amp; Optics, Power &amp; Buildout, Platforms &amp; Software, Physical AI and Bio AI. Full stack and the tier views compare everything against QQQ, a common yardstick; switch Full stack to <em>All layers</em> to see every layer at once. Opening a layer switches to its industry peer (Accelerators against SOXX, software against IGV, biotech against XBI, and so on), so you see which names lead <em>within</em> their industry. The <em>vs</em> control overrides either, and the Benchmark check under the lists shows how the call changes across benchmarks.</p>
       <p><b>Lists.</b> Each quadrant is sorted by strength: relative return over common daily endpoints from about six months ago to one month ago (dots too new for it follow, by distance from the centre). The <em>Strength</em> tab prints the exact dates and ranks every dot on it at once. The arrow is the direction of the last step; the small number is how long the dot has been in that quadrant (<b>*</b> means it includes the week still in progress); NEW marks a crossing in the last two bars; the percentage is relative performance over the tail; breadth is the share of the historically eligible basket members that are themselves right of centre against the same benchmark. Untick a row to hide it; the axes rescale to what is left, and Show all remains available on every list tab. To see small moves when one name sets the scale, use <b>Scale +</b> above the chart (or <kbd>+</kbd> / <kbd>−</kbd>, <kbd>0</kbd> to fit, or pinch on a trackpad); zoomed in, the window follows the bulk of the dots, and any that fall beyond the edge are pinned to it with an arrow in their quadrant's colour.</p>
       <p><b>Custom views.</b> <em>Customize</em> (or <em>+ New view</em> under My views in the sidebar) starts a view of your own from the dots on the chart. Add any tier, layer, subsector or ticker as its own dot (<em>+ each</em> adds every layer of a tier, or every subsector of a layer, separately), remove what you don't want, and pick the benchmark with <em>vs</em>. A <em>combined basket</em> merges several of them into one dot that equal-weights their distinct stocks, the same rule a layer or tier uses, so a name in two of its parts counts once and weighted proxies are not weighted inside it. Views are kept in this browser only; the page address carries the open view, so a link shares it, and a view opened from someone else's link can be saved to your own list.</p>
+      <p><b>Drivers.</b> <em>Drivers</em> explains why SPY moved over 1D, 1W, 1M, 3M or YTD, ending at the date on screen. Sector and largest-holding contributions are weight × return, using SPY's reported weights drifted by price to the start of the horizon; that part is arithmetic. Style spreads and macro barometers are scored in σ: the move divided by that series' typical move over the same number of sessions, from its daily changes over the past year. The macro model regresses the past year's daily S&amp;P returns on the 10Y yield, the 2s10s curve, the dollar, oil and high-yield credit; each one's share is its sensitivity times its move, and the residual is what macro does not account for. Scores, correlations and the model describe co-movement, not cause; credit in particular moves with stocks as much as ahead of them.</p>
       <p><b>Research scope.</b> <code>scripts/backtest.py</code> explores individual stocks and ETFs across several settings, horizons and universes. It does not directly test the seven displayed tier portfolios, and it does not validate this page as an allocation or timing strategy. Strength ranks past relative performance while excluding the latest month; use it as descriptive context, not a forecast. The universe was chosen in 2026 with hindsight, which can flatter results.</p>
       <p><b>Stability.</b> The smoothing choices change the answer more than most readers would guess. Every dot is also run under four alternatives: four-bar momentum, EMA 5 with a longer baseline, a much longer baseline, and no smoothing. A badge such as 2/5 marks a call that only a minority of settings share; a recent listing may lack history for some settings, which then don't count (3/4). Treat badged calls as provisional.</p>
     </details>
@@ -570,7 +608,7 @@ function paintNav(idx,n,end){
 // (100,100) -> Leading. Exact equality is vanishingly rare; this is deliberate, not incidental.
 const quad=(x,y)=>x>=100?(y>=100?'L':'W'):(y>=100?'I':'G');
 
-const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false,tickers:false,cv:null,cvedit:false};
+const st={node:'stack',bench:'auto',frame:'W',tail:4,end:null,hover:null,hoverQ:null,layers:false,hide:new Set(),cmp:false,ca:[],cb:[],panel:'q',zoom:1,mv:false,mvb:'q',mvall:false,tickers:false,cv:null,cvedit:false,dr:false,drh:'1W'};
 let KEYOPEN=false;
 const TOUCH=matchMedia('(pointer:coarse)').matches;
 let TIPFOR=null;   // on touch, the dot whose tooltip is showing; a second tap on it opens it
@@ -701,6 +739,7 @@ function readHash(){
   {const z=+h.get('zoom');o.zoom=z>=1&&z<=ZMAX?z:1;}
   o.mv=h.get('movers')==='1';o.mvb=h.get('mvb')==='peer'?'p':'q';
   o.tickers=h.get('tickers')==='1';
+  o.dr=h.get('drivers')==='1';o.drh=['1D','1W','1M','3M','YTD'].includes(h.get('drh'))?h.get('drh'):'1W';
   return o;
 }
 function writeHash(push){
@@ -717,6 +756,7 @@ function writeHash(push){
   if(st.zoom>1)p.set('zoom',+st.zoom.toFixed(2));
   if(st.mv){p.set('movers','1');if(st.mvb==='p')p.set('mvb','peer');}
   if(st.tickers)p.set('tickers','1');
+  if(st.dr){p.set('drivers','1');if(st.drh!=='1W')p.set('drh',st.drh);}
   const u='#'+p;
   if(location.hash===u)return;
   push?history.pushState(null,'',u):history.replaceState(null,'',u);
@@ -726,7 +766,7 @@ st.cv=syncView(cleanView(st.cv));
 if(!NODES[st.node]||(st.node==='custom'&&!st.cv))st.node='stack';
 writeHash(false);
 addEventListener('popstate',()=>{
-  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,endDate:null,endLegacy:null,layers:false,cmp:false,ca:[],cb:[],mv:false,mvb:'q'},readHash());
+  Object.assign(st,{node:'stack',bench:'auto',frame:'W',tail:4,end:null,endDate:null,endLegacy:null,layers:false,cmp:false,ca:[],cb:[],mv:false,mvb:'q',dr:false,drh:'1W'},readHash());
   if(!NODES[st.node]||(st.node==='custom'&&!st.cv))st.node='stack';
   stopPlay();render();
 });
@@ -953,6 +993,8 @@ function render(fast,withList){
   $('mv').hidden=!st.mv;$('mvbtn').setAttribute('aria-pressed',st.mv);
   $('tickerbtn').setAttribute('aria-pressed',st.tickers);
   if(st.mv&&(!fast||withList))movers();
+  $('dr').hidden=!(st.dr&&DR);$('drbtn').setAttribute('aria-pressed',st.dr);
+  if(st.dr&&DR&&(!fast||withList))drivers();
   if(!fast||withList){list(ROWS);changes(VIS);}
   if(!fast)members(cur);
   focus();
@@ -1631,6 +1673,219 @@ $('mvb').onclick=e=>{const b=e.target.closest('[data-v]');if(b&&b.dataset.v!==st
 $('mv').addEventListener('click',e=>{if(e.target.closest('.mvmore')){st.mvall=true;movers();return;}
   const r=e.target.closest('.mvrow');if(r&&r.dataset.id&&NODES[r.dataset.id])go(r.dataset.id);});
 
+// ---- Drivers ----
+// Why did the index move? Three readings of one horizon ending at the date on screen. Accounting:
+// each sector's and top holding's share of SPY's return, weight times return, from SPY's reported
+// weights drifted by price - arithmetic, not inference. Style: factor and industry spreads. Macro:
+// how far each barometer moved against its own typical move, and a regression of daily S&P returns
+// on a few of them. The last two describe what moved together, not what caused what.
+const DR=D.drivers&&D.drivers.barometers?D.drivers:null;
+$('drbtn').parentElement.hidden=!DR;
+const DRH={'1D':1,'1W':5,'1M':21,'3M':63,'YTD':0};
+const DRWIN=252,DRCOR=63;     // a year of sessions for typical moves and the model; 3 months for correlations
+const DRB={};for(const b of DR?DR.barometers:[])DRB[b.code]=b;
+const IDXL={SPY:'S&P 500',QQQ:'Nasdaq-100',DIA:'Dow',IWM:'Russell 2000',RSP:'S&P equal weight'};
+const DRS={};
+function drSeries(code){
+  if(DRS[code])return DRS[code];
+  const b=DRB[code]||{},pair=b.ratio||b.spread;
+  if(!pair)return D.px[code]||null;
+  const [a,c]=pair.map(t=>D.px[t]);if(!a||!c)return null;
+  return DRS[code]=a.map((v,i)=>v==null||c[i]==null?null:b.spread?v-c[i]:c[i]>0?v/c[i]:null);
+}
+// A change in the barometer's own unit: % for prices and ratios, basis points for yields (quoted
+// in percent) and yield spreads, points for levels such as VIX, a plain difference for a ratio level.
+const drChg=(u,a,b)=>a==null||b==null?null:u==='pct'?(a>0?(b/a-1)*100:null):u==='bp'?(b-a)*100:b-a;
+// Simple % return; a list is an equal-weight basket rebalanced daily, the rule every basket here uses.
+function drRet(t,i0,i1){
+  if(typeof t==='string'){const p=D.px[t];return p&&p[i0]!=null&&p[i1]!=null&&p[i0]>0?(p[i1]/p[i0]-1)*100:null;}
+  let v=1;
+  for(let i=i0+1;i<=i1;i++){let s=0,k=0;
+    for(const x of t){const p=D.px[x];if(p&&p[i-1]!=null&&p[i]!=null&&p[i-1]>0){s+=p[i]/p[i-1]-1;k++;}}
+    if(!k)return null;v*=1+s/k;}
+  return (v-1)*100;
+}
+const drRel=(a,b)=>a==null||b==null?null:((1+a/100)/(1+b/100)-1)*100;
+function corr(a,b){
+  let n=0,sa=0,sb=0,saa=0,sbb=0,sab=0;
+  for(let i=0;i<a.length;i++){const x=a[i],y=b[i];if(x==null||y==null)continue;n++;sa+=x;sb+=y;saa+=x*x;sbb+=y*y;sab+=x*y;}
+  if(n<20)return null;const c=(sab-sa*sb/n)/Math.sqrt((saa-sa*sa/n)*(sbb-sb*sb/n));return isFinite(c)?c:null;
+}
+// Least squares with an intercept, by the normal equations: at most a handful of regressors over a
+// year of sessions. A whisper of ridge keeps a near-collinear pair (10Y and the curve) solvable.
+function ols(X,y){
+  const k=X[0].length+1,A=Array.from({length:k},()=>new Array(k+1).fill(0));
+  for(let r=0;r<X.length;r++){const v=[1,...X[r]];for(let i=0;i<k;i++){for(let j=0;j<k;j++)A[i][j]+=v[i]*v[j];A[i][k]+=v[i]*y[r];}}
+  for(let i=1;i<k;i++)A[i][i]*=1+1e-6;
+  for(let c=0;c<k;c++){let p=c;for(let r=c+1;r<k;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;
+    [A[c],A[p]]=[A[p],A[c]];if(!A[c][c])return null;
+    for(let r=0;r<k;r++)if(r!==c){const f=A[r][c]/A[c][c];for(let j=c;j<=k;j++)A[r][j]-=f*A[c][j];}}
+  const b=A.map((row,i)=>row[k]/A[i][i]);
+  const my=y.reduce((s,v)=>s+v,0)/y.length;let sse=0,sst=0;
+  X.forEach((x,r)=>{const f=b[0]+x.reduce((s,v,j)=>s+v*b[j+1],0);sse+=(y[r]-f)**2;sst+=(y[r]-my)**2;});
+  return {b,r2:sst?1-sse/sst:null};
+}
+// Index weights at day i, from weights reported at an as-of date: each name's (or sector fund's)
+// price relative to SPY's since then. Ignores index changes and buybacks in between, so it is a
+// close approximation that loosens the further the horizon sits from the as-of date.
+function drWeights(i){
+  const W=DR.weights,spy=D.px.SPY;let iw=0;
+  for(let j=0;j<N;j++){if(D.dates[j]<=W.asof)iw=j;else break;}
+  const drift=(t,w)=>{const p=D.px[t];return p&&p[iw]&&p[i]&&spy[iw]&&spy[i]?w*(p[i]/p[iw])/(spy[i]/spy[iw]):null;};
+  const sec=Object.entries(W.sectors||{}).map(([t,w])=>[t,drift(t,w)]).filter(x=>x[1]!=null);
+  const tot=sec.reduce((s,x)=>s+x[1],0)||1;      // sectors cover the whole index, so they sum to one
+  return {sectors:sec.map(([t,w])=>[t,w/tot]),top:Object.entries(W.top||{}).map(([t,w])=>[t,drift(t,w)]).filter(x=>x[1]!=null)};
+}
+// A value that rounds to zero prints as zero, never -0.00.
+const z0=(v,d)=>Math.abs(v)<0.5*10**-d?0:v;
+const f2=(v,d=2)=>v==null?'—':(z0(v,d)>=0?'+':'')+z0(v,d).toFixed(d);
+const dpct=v=>pct(v==null?v:z0(v,1));
+const fz=z=>z==null?'':`${z>=0?'+':''}${z.toFixed(1)}σ`;
+const fu=(u,v)=>v==null?'—':u==='pct'?dpct(v):u==='bp'?f2(v,0)+'bp':f2(v,u==='x'?2:1);
+function fLvl(b,v){
+  if(v==null||(b.ratio&&b.unit==='pct'))return '';      // a price ratio's level means nothing on its own
+  if(b.spread)return (v*100).toFixed(0)+'bp';
+  if(b.unit==='bp')return v.toFixed(2)+'%';
+  if(b.unit==='x')return v.toFixed(2);
+  return v>=1e4?(v/1e3).toFixed(1)+'K':v>=100?v.toFixed(1):v.toFixed(2);
+}
+function dbar(v,mx){
+  if(v==null||!mx)return '<span class="dbar" aria-hidden="true"></span>';
+  return `<span class="dbar" aria-hidden="true"><i class="${v>=0?'u':'d'}" style="width:${Math.min(50,Math.abs(v)/mx*50).toFixed(1)}%"></i></span>`;
+}
+const drMax=a=>Math.max(1e-9,...a.filter(v=>v!=null).map(Math.abs));
+function drivers(){
+  const body=$('drbody'),{idx,end}=VIEW,i1=idx[end],H=st.drh;
+  for(const b of $('drh').children)b.setAttribute('aria-pressed',b.dataset.v===H);
+  let i0=i1-DRH[H];
+  if(H==='YTD'){const y=D.dates[i1].slice(0,4)+'-01-01';i0=-1;for(let i=0;i<=i1;i++){if(D.dates[i]<y)i0=i;else break;}}
+  if((i0<0||i1-DRWIN<1)&&needHistory()){$('drsub').textContent='';body.innerHTML='<div class="empty">Loading the history this needs…</div>';loadHistory();return;}
+  if(i0<0||i0>=i1){$('drsub').textContent='';body.innerHTML='<div class="empty">Not enough history for this horizon at this date.</div>';return;}
+  const hd=i1-i0,live=LIVE&&i1===N-1,lo=Math.max(1,i1-DRWIN+1);
+  $('drsub').textContent=`why SPY moved, ${fmtD(D.dates[i0])} close → ${fmtD(D.dates[i1])}${live?` (live ${LIVE.time})`:''} · ${hd} session${hd>1?'s':''}`;
+  // Typical move: the daily standard deviation over the trailing year, scaled by √sessions.
+  const ys=[];for(let i=lo;i<=i1;i++)ys.push(drRet('SPY',i-1,i));
+  const stat=fn=>{const xs=[];for(let i=lo;i<=i1;i++)xs.push(fn(i));const v=xs.filter(x=>x!=null);
+    const m=v.reduce((s,x)=>s+x,0)/(v.length||1),sd=v.length>20?Math.sqrt(v.reduce((s,x)=>s+(x-m)**2,0)/(v.length-1)):null;
+    return {sd,cor:corr(xs.slice(-DRCOR),ys.slice(-DRCOR))};};
+  const zOf=(c,sd)=>c!=null&&sd?c/(sd*Math.sqrt(hd)):null;
+  const spy=drRet('SPY',i0,i1),spyZ=zOf(spy,stat(i=>ys[i-lo]).sd);
+  const idxs=DR.indices.map(t=>{const r=drRet(t,i0,i1);return {t,r,z:t==='SPY'?spyZ:zOf(r,stat(i=>drRet(t,i-1,i)).sd)};});
+
+  // Accounting: sector and top-holding contributions, in percentage points of SPY's return.
+  const W=drWeights(i0);
+  const secs=W.sectors.map(([t,w])=>{const r=drRet(t,i0,i1);return {t,l:(D.sectors||{})[t]||t,w,r,c:r==null?null:w*r};}).filter(x=>x.c!=null).sort((a,b)=>b.c-a.c);
+  const secSum=secs.reduce((s,x)=>s+x.c,0);
+  const tops=W.top.map(([t,w])=>{const r=drRet(t,i0,i1);return {t,w,r,c:r==null?null:w*r};}).filter(x=>x.c!=null).sort((a,b)=>b.c-a.c);
+  const topW=tops.reduce((s,x)=>s+x.w,0),topC=tops.reduce((s,x)=>s+x.c,0);
+
+  const styles=DR.styles.map(s=>{const r=drRel(drRet(s.a,i0,i1),drRet(s.b,i0,i1));
+    return {...s,r,z:zOf(r,stat(i=>drRel(drRet(s.a,i-1,i),drRet(s.b,i-1,i))).sd)};});
+  const qqq=drRet('QQQ',i0,i1);
+  const tiers=DOMAINS.map(dm=>{const p=series(NODES[dm.g]);return {id:dm.g,l:dm.label,r:drRel(p[i0]!=null&&p[i1]!=null?(p[i1]/p[i0]-1)*100:null,qqq)};}).filter(x=>x.r!=null);
+
+  const baro=DR.barometers.map(b=>{const s=drSeries(b.code);if(!s)return null;const u=b.unit,c=drChg(u,s[i0],s[i1]),S=stat(i=>drChg(u,s[i-1],s[i]));
+    return {...b,lvl:s[i1],c,z:zOf(c,S.sd),cor:S.cor,sd:S.sd};}).filter(Boolean);
+  const BZ={};for(const b of baro)BZ[b.code]=b;
+
+  // Macro model: daily S&P returns on the daily changes of a few barometers over the past year.
+  // A barometer's share of the move is its sensitivity times how far it moved over the horizon.
+  let model=null;
+  {const codes=DR.model.filter(c=>drSeries(c)),X=[],y=[];
+   for(let i=lo;i<=i1;i++){const r=ys[i-lo],x=codes.map(c=>{const s=drSeries(c);return drChg(drUnit(c),s[i-1],s[i]);});
+     if(r!=null&&x.every(v=>v!=null)){X.push(x);y.push(r);}}
+   const fit=X.length>=120?ols(X,y):null;
+   if(fit){const parts=codes.map((c,j)=>{let m=0;for(let i=i0+1;i<=i1;i++){const s=drSeries(c),v=drChg(drUnit(c),s[i-1],s[i]);if(v!=null)m+=v;}
+       return {code:c,l:(DRB[c]||{}).label||c,beta:fit.b[j+1],mv:m,c:fit.b[j+1]*m};});
+     const ex=parts.reduce((s,p)=>s+p.c,0);model={parts,ex,res:spy-ex,r2:fit.r2,n:X.length};}}
+
+  // ---- the reading ----
+  const zs=c=>(BZ[c]||{}).z,quiet=spyZ!=null&&Math.abs(spyZ)<0.4,yz=zs('US10Y');
+  const yUp=yz!=null&&yz>=0.5,yDn=yz!=null&&yz<=-0.5,up=spy>=0;
+  const y10=BZ.US10Y?`the 10Y yield ${BZ.US10Y.c>=0?'rose':'fell'} ${Math.abs(BZ.US10Y.c).toFixed(0)}bp`:'';
+  // A flat index can hide a large rotation: sectors far apart, or a style spread well outside its range.
+  const spyT=(stat(i=>ys[i-lo]).sd||0)*Math.sqrt(hd),secR=secs.length?Math.max(...secs.map(x=>x.r))-Math.min(...secs.map(x=>x.r)):0;
+  const rot=quiet&&secs.length>1&&(secR>=2*spyT||styles.some(x=>x.z!=null&&Math.abs(x.z)>=1.5));
+  const byR=[...secs].sort((a,b)=>b.r-a.r);
+  const reg=rot?['Rotation under a flat index',`SPY barely moved, but money moved between groups: ${byR[0].l} ${dpct(byR[0].r)} vs ${byR[byR.length-1].l} ${dpct(byR[byR.length-1].r)}`]:
+    quiet?['Quiet','SPY moved less than usual for this horizon']:
+    up?(yUp?['Reflation',`stocks and yields rose together (${y10}), a growth-led move`]:yDn?['Rates relief',`${y10} and stocks rose with it`]:['Equity-led rally','stocks rose with yields little changed']):
+       (yUp?['Rate pressure',`${y10} and stocks fell`]:yDn?['Risk-off',`stocks fell while ${y10}: a growth scare or a flight to safety`]:['Equity-led selloff','stocks fell with yields little changed']);
+  const flag=[];const fz15=(c,hi,lo)=>{const z=zs(c);if(z!=null){if(z>=1.5&&hi)flag.push(hi);else if(z<=-1.5&&lo)flag.push(lo);}};
+  fz15('VIX','volatility jumped','volatility collapsed');fz15('HYCR','credit rallied','credit spreads widened');
+  fz15('DXY','the dollar surged','the dollar slid');fz15('CL','oil spiked','oil slumped');fz15('USDJPY',null,'the yen surged (a carry-trade unwind risk)');fz15('MOVE','bond volatility jumped',null);
+
+  const nar=[];
+  if(secs.length&&spy!=null){
+    const same=secs.filter(x=>Math.sign(x.c)===Math.sign(spy)||!spy),lead=up?same[0]:same[same.length-1]||secs[secs.length-1],off=up?secs[secs.length-1]:secs[0];
+    const share=spy?lead.c/spy:0,nUp=secs.filter(x=>x.r>0).length;
+    if(quiet||Math.abs(spy)<0.15)nar.push(`Sector moves largely offset: <b>${secs[0].l}</b> added ${f2(secs[0].c)} pts and <b>${secs[secs.length-1].l}</b> subtracted ${Math.abs(secs[secs.length-1].c).toFixed(2)} pts.`);
+    else if(share>1)nar.push(`<b>${lead.l}</b> more than accounted for the move: ${f2(lead.c)} pts against SPY's ${dpct(spy)}, on a ${dpct(lead.r)} move; the other sectors net ${f2(spy-lead.c)} pts. ${nUp} of ${secs.length} sectors rose.`);
+    else nar.push(`<b>${lead.l}</b> ${share>0.5?(up?'did most of the work':'did most of the damage'):'led'}: ${f2(lead.c)} of SPY's ${dpct(spy)} (${Math.round(share*100)}%), on a ${dpct(lead.r)} move. ${nUp} of ${secs.length} sectors rose${off&&Math.sign(off.c)!==Math.sign(spy)?`; biggest offset ${off.l} ${f2(off.c)} pts`:''}.`);
+  }
+  if(tops.length){const rsp=styles.find(s=>s.a==='RSP'&&s.b==='SPY');
+    nar.push(`The ${tops.length} largest holdings (${(topW*100).toFixed(0)}% of the index) contributed <b>${f2(topC)} pts</b>; everything else ${f2(spy-topC)} pts.`
+      +(rsp&&rsp.z!=null?(rsp.z<=-1?` Equal weight lagged cap weight by ${Math.abs(rsp.r).toFixed(1)} pts: a narrow, mega-cap-led move.`:rsp.z>=1?` Equal weight beat cap weight by ${rsp.r.toFixed(1)} pts: broad participation beyond the giants.`:' Equal and cap weight moved roughly together.'):''));}
+  {const big=styles.filter(s=>s.z!=null&&Math.abs(s.z)>=1).sort((a,b)=>Math.abs(b.z)-Math.abs(a.z)).slice(0,3);
+   nar.push(big.length?`Style moves that stood out: ${big.map(s=>`<b>${s.label}</b> ${f2(s.r,1)} pts (${fz(s.z)})`).join(', ')}.`:'No style spread moved more than one typical move: little factor rotation.');}
+  {const big=baro.filter(b=>b.z!=null&&Math.abs(b.z)>=1).sort((a,b)=>Math.abs(b.z)-Math.abs(a.z)).slice(0,3),c10=BZ.US10Y&&BZ.US10Y.cor;
+   nar.push((big.length?`Macro moves that stood out: ${big.map(b=>`<b>${b.label}</b> ${fu(b.unit,b.c)} (${fz(b.z)})`).join(', ')}.`:'No macro barometer moved more than one typical move.')
+     +(c10!=null&&Math.abs(c10)>=0.3?` Over the past 3 months the S&P has tended to move ${c10>0?'<b>with</b> yields':'<b>against</b> yields'} (correlation ${f2(c10)}), so ${c10>0?'growth news more than rates':'rates'} ${c10>0?'has':'have'} been setting the tone.`:''));}
+  if(model)nar.push(`At their past-year sensitivities, ${model.parts.map(p=>(DRB[p.code]||{}).short||p.l).join(', ').replace(/, ([^,]*)$/,' and $1')} account for <b>≈${f2(model.ex)} pts</b>; the other <b>${f2(model.res)} pts</b> is equity-specific: earnings, company news, positioning. Together they explain ${Math.round(model.r2*100)}% of daily S&P moves over the past year.`);
+  if(tiers.length>1){const s=[...tiers].sort((a,b)=>b.r-a.r);nar.push(`In the AI stack, <b>${s[0].l}</b> led (${dpct(s[0].r)} vs QQQ) and <b>${s[s.length-1].l}</b> lagged (${dpct(s[s.length-1].r)}).`);}
+  // Breadth check: do the gauges that should move with a real rally (or selloff) agree with it?
+  if(!quiet&&spy!=null){const d=Math.sign(spy),sty=(a,b)=>(styles.find(s=>s.a===a&&s.b===b)||{}).r,g=[
+      ['equal weight',drRet('RSP',i0,i1)],['small caps',drRet('IWM',i0,i1)],['high beta vs low vol',sty('SPHB','SPLV')],
+      ['credit',BZ.HYCR&&BZ.HYCR.c],['VIX',BZ.VIX&&-BZ.VIX.c],['sector breadth',secs.length?secs.filter(x=>Math.sign(x.r)===d).length-secs.length/2:null]].filter(x=>x[1]!=null);
+    const miss=g.filter(x=>Math.sign(x[1])!==d).map(x=>x[0]);
+    nar.push(`Breadth check: <b>${g.length-miss.length} of ${g.length}</b> gauges confirmed the ${up?'rally':'decline'}${miss.length?` (not ${miss.join(', ')})`:''}.`);}
+
+  // ---- the page ----
+  const row=(lb,v,mx,a,b,title,attr='',cls='')=>`<${attr?'button type="button"':'div'} class="drrow${cls}"${attr} title="${title}"><span class="lb">${lb}</span>${dbar(v,mx)}<span class="v num">${a}</span><span class="v2 num">${b}</span></${attr?'button':'div'}>`;
+  const hd4=(a,b)=>`<div class="drrow drhd" aria-hidden="true"><span></span><span></span><span>${a}</span><span>${b}</span></div>`;
+  let h=`<div class="drtiles">${idxs.map(x=>`<div class="drtile" title="${x.t}${x.z!=null?`: a ${Math.abs(x.z).toFixed(1)}σ move for ${hd} session${hd>1?'s':''}`:''}"><span class="k">${IDXL[x.t]||x.t} · ${x.t}</span><span class="v">${dpct(x.r)}</span><span class="z">${x.z!=null?fz(x.z)+' vs typical':''}</span></div>`).join('')}</div>`;
+  h+=`<p class="drreg"><b>${reg[0]}</b> <span>· ${reg[1]}${flag.length?'; '+flag.join(', '):''}.</span></p><ul class="drnar">${nar.map(x=>`<li>${x}</li>`).join('')}</ul><div class="drgrid">`;
+  {const mx=drMax(secs.map(x=>x.c));
+   h+=`<div class="drcard"><h3>Sector contributions</h3><p class="hint">Weight × return, in points of SPY's ${dpct(spy)}. Weights: SPY's sector mix drifted by price.</p>${hd4('pts','return')}`
+     +secs.map(x=>row(x.l,x.c,mx,f2(x.c),dpct(x.r),`${x.l} (${x.t}): ${(x.w*100).toFixed(1)}% of SPY at the start × ${dpct(x.r)} = ${f2(x.c)} pts`)).join('')
+     +row('Unexplained',null,mx,f2(spy-secSum),'',`SPY's return minus the sum of sector contributions: sector-fund caps (XLK limits its largest names), Morningstar vs GICS sector lines, and weight drift`,'',' res')
+     +row('SPY',null,mx,f2(spy),'','SPY total return over the horizon','',' tot')+'</div>';}
+  if(tops.length){const mx=drMax([...tops.map(x=>x.c),spy-topC]);
+   h+=`<div class="drcard"><h3>Largest holdings</h3><p class="hint">Contribution of SPY's top ${tops.length} names (Alphabet's two share classes as one) against the rest of the index.</p>${hd4('pts','return')}`
+     +tops.map(x=>row(x.t+(D.names&&D.names[x.t]?` <span class="co">${D.names[x.t]}</span>`:''),x.c,mx,f2(x.c),dpct(x.r),`${x.t}: ${(x.w*100).toFixed(1)}% of SPY at the start × ${dpct(x.r)} = ${f2(x.c)} pts`)).join('')
+     +row(`Other ~${Math.max(0,503-tops.length)} names`,spy-topC,mx,f2(spy-topC),topW<1?dpct((spy-topC)/(1-topW)):'',`The rest of the index, ${((1-topW)*100).toFixed(0)}% of its weight; return implied from SPY minus the top holdings`,'',' res')+'</div>';}
+  {const mx=drMax(styles.map(s=>s.r));let g='';
+   h+=`<div class="drcard"><h3>Styles &amp; factors</h3><p class="hint">Relative return, A vs B. σ compares it with the spread's typical move over this many sessions. Click one to chart it in Compare.</p>${hd4('pts','σ')}`;
+   for(const s of styles){if(s.group!==g){g=s.group;h+=`<div class="drgrp">${g}</div>`;}
+     const side=x=>typeof x==='string'?x:x.join('+'),tok=x=>(typeof x==='string'?[x]:x).map(t=>'tk:'+t).join(',');
+     h+=row(s.label,s.r,mx,f2(s.r,1),fz(s.z),`${side(s.a)} vs ${side(s.b)}: ${f2(s.r,1)} pts relative${s.z!=null?`, ${fz(s.z)} against its typical ${hd}-session move`:''}. Click to chart it in Compare`,` data-a="${tok(s.a)}" data-b="${tok(s.b)}"`);}
+   h+='</div>';}
+  if(tiers.length){const mx=drMax(tiers.map(x=>x.r));
+   h+=`<div class="drcard"><h3>AI stack vs QQQ</h3><p class="hint">The seven tiers' equal-weight return relative to QQQ. Click one to open it.</p>${hd4('','rel.')}`
+     +tiers.map(x=>row(x.l,x.r,mx,'',dpct(x.r),`${x.l}: ${dpct(x.r)} relative to QQQ. Click to open`,` data-id="${x.id}"`)).join('')+'</div>';}
+  {const mx=3;let g='';
+   h+=`<div class="drcard drwide"><h3>Macro barometers</h3><p class="hint">Change over the horizon, and how unusual it was: σ is the change divided by the barometer's typical move over this many sessions (bars capped at ±3σ). Corr is its 3-month daily correlation with the S&amp;P; for VIX and yields a negative number is normal.</p>`
+     +`<div class="drrow m5 drhd" aria-hidden="true"><span></span><span class="lvl">level</span><span>change</span><span style="text-align:center">σ</span><span>corr</span></div>`;
+   for(const b of baro){if(b.group!==g){g=b.group;h+=`<div class="drgrp">${g}</div>`;}
+     h+=`<div class="drrow m5" title="${b.label}: ${fu(b.unit,b.c)}${b.z!=null?` (${fz(b.z)})`:''}${b.sd?`; a typical ${hd}-session move is about ${fu(b.unit,b.sd*Math.sqrt(hd)).replace(/^[+-]/,'±')}`:''}${b.cor!=null?`; 3-month correlation with the S&P ${f2(b.cor)}`:''}"><span class="lb">${b.label}</span><span class="v2 num lvl">${fLvl(b,b.lvl)}</span><span class="v num">${fu(b.unit,b.c)}</span>${dbar(b.z==null?null:Math.max(-3,Math.min(3,b.z)),mx)}<span class="v2 num">${b.cor==null?'':f2(b.cor)}</span></div>`;}
+   h+='</div>';}
+  if(model){const mx=drMax([...model.parts.map(p=>p.c),model.res,spy]);
+   h+=`<div class="drcard drwide"><h3>Macro model</h3><p class="hint">Daily S&amp;P returns regressed on these barometers' daily changes over the past ${model.n} sessions (R² ${Math.round(model.r2*100)}%). Each share is its sensitivity × its move over the horizon. Credit partly moves <em>with</em> stocks rather than ahead of them, so read its share as risk appetite, not cause.</p>${hd4('pts','move')}`
+     +model.parts.map(p=>row(p.l,p.c,mx,f2(p.c),fu(drUnit(p.code),p.mv),`${p.l}: ${f2(p.beta,3)}% S&P per ${{bp:'bp',pct:'1%',pts:'point',x:'unit'}[drUnit(p.code)]} (holding the others fixed) × ${fu(drUnit(p.code),p.mv)} = ${f2(p.c)} pts`)).join('')
+     +row('Equity-specific (residual)',model.res,mx,f2(model.res),'','What the macro barometers do not account for: earnings, company news, flows and positioning','',' res')
+     +row('SPY',spy,mx,f2(spy),'','SPY total return over the horizon','',' tot')+'</div>';}
+  h+=`</div><p class="drnote">Contributions are arithmetic; σ scores, correlations and the model describe what moved together over the past year, not what caused what. Weights ${DR.weights.source?'from '+DR.weights.source+', ':''}as of ${fmtD(DR.weights.asof)}, drifted by price to the start of the horizon. Total returns (dividends included) from Yahoo Finance.${live?' The last session is live and still moving.':''}</p>`;
+  body.innerHTML=h;
+}
+const drUnit=code=>(DRB[code]||{}).unit||'pct';
+$('drbtn').onclick=()=>{st.dr=!st.dr;writeHash(false);render();};
+$('drx').onclick=()=>{st.dr=false;writeHash(false);render();};
+$('drh').onclick=e=>{const b=e.target.closest('[data-v]');if(b&&b.dataset.v!==st.drh){st.drh=b.dataset.v;writeHash(false);drivers();}};
+$('drbody').addEventListener('click',e=>{const r=e.target.closest('button.drrow');if(!r)return;
+  if(r.dataset.id){go(r.dataset.id);return;}
+  st.ca=r.dataset.a.split(',');st.cb=r.dataset.b.split(',');st.cmp=true;loadHistory();writeHash(false);render();
+  $('cmp').scrollIntoView({behavior:'smooth',block:'nearest'});});
+
 // ---- Full history on demand ----
 const needHistory=()=>!!D.full_len&&D.full_len>D.dates.length;
 function requestedDateIndex(date,idx){let k=-1;for(let i=0;i<idx.length;i++){if(D.dates[idx[i]]<=date)k=i;else break;}return k;}
@@ -1648,7 +1903,7 @@ function loadHistory(){
     const ix=st.frame==='W'?weekIdx:dayIdx,keep=st.end!=null?D.dates[ix[st.end]]:null;
     D.dates=h.dates;for(const k in h.px)D.px[k]=h.px[k];
     N=D.dates.length;weekIdx=buildWeekIdx();dayIdx=[...Array(N).keys()];
-    for(const c of [SC,RC,MASK,CMPC,TRC])for(const k in c)delete c[k];
+    for(const c of [SC,RC,MASK,CMPC,TRC,DRS])for(const k in c)delete c[k];
     HIST_FAILED=false;
     if(keep&&st.endLegacy==null){st.endDate=keep;st.end=null;}
     render();return true;

@@ -74,4 +74,17 @@ function load(name,context){
   assert.equal(cleanItems(Array(100).fill(0).map((_,i)=>({n:'b'+i,k:[]})),ok).length,60);
 }
 
+// The Drivers macro model is a small least-squares fit; an exact linear relation must come back
+// exactly, intercept included, and a list of tickers is a daily-rebalanced equal-weight basket.
+{
+  const ols=load('ols',{Array,Math});
+  const X=Array.from({length:60},(_,i)=>[Math.sin(i),Math.cos(i*1.7)]),y=X.map(([a,b])=>1+2*a-3*b);
+  const fit=ols(X,y);
+  for(const [got,want] of [[fit.b[0],1],[fit.b[1],2],[fit.b[2],-3],[fit.r2,1]])assert.ok(Math.abs(got-want)<1e-4,`ols ${got} vs ${want}`);
+  const D={px:{A:[100,110,99],B:[100,100,100]}};
+  const drRet=load('drRet',{D});
+  assert.ok(Math.abs(drRet('A',0,2)-(-1))<1e-9);
+  assert.ok(Math.abs(drRet(['A','B'],0,2)-((1.05*0.95-1)*100))<1e-9);
+}
+
 console.log('UI regression checks passed');
